@@ -100,6 +100,8 @@ func step(w, dt: float) -> void:
 	if active and queue.is_empty() and w.enemies.is_empty():
 		active = false
 		w.stats.waves = index
+		if w.stats.lost == w.stats.lost_at_wave_start:
+			w.stats.flawless += 1
 		w.events.append({"e": "wave_cleared", "n": index})
 		w.add_alert("wave_clear", "Horda %d repelida. Reconstrua e prepare-se." % index, "info", null, 1.0)
 		w.trigger_lore("wave_cleared:%d" % index)
@@ -123,6 +125,7 @@ func start_wave(w) -> void:
 			queue.append({"type": g.type, "spawn": sp, "mods": mods})
 	index += 1
 	active = true
+	w.stats.lost_at_wave_start = w.stats.lost
 	spawn_timer = 0.0
 	timer = float(cfg.get("interval", 200))
 	next_spawn = _pick_spawn(w, main_spawn)

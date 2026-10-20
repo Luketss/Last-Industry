@@ -6,6 +6,7 @@ const UiTheme = preload("res://src/ui/ui_theme.gd")
 const Items = preload("res://src/sim/items.gd")
 const Defs = preload("res://src/sim/defs.gd")
 const Settings = preload("res://src/ui/settings.gd")
+const Bindings = preload("res://src/ui/bindings.gd")
 
 var main
 var root: Control
@@ -45,6 +46,11 @@ var menu_root: Control
 var menu_continue: Button
 var game_ui: Control
 var options_panel: PanelContainer
+var achievements_panel: PanelContainer
+var achievements_list: RichTextLabel
+var controls_panel: PanelContainer
+var _bind_buttons := {}
+var _rebinding := ""
 var hint_panel: PanelContainer
 var hint_label: Label
 var _hint_id := ""
@@ -84,9 +90,11 @@ func _ready() -> void:
 	_build_tooltip()
 	_build_overlays()
 	_build_options()
+	_build_achievements()
 	_build_minimap()
 	_build_hint()
 	_build_menu()
+	_refresh_bindings()
 	game_ui.visible = false
 
 
@@ -322,6 +330,7 @@ func _build_overlays() -> void:
 	_button(pv, "Carregar (F9)", main.load_game)
 	_button(pv, "Ajuda (H)", func(): help_panel.visible = not help_panel.visible)
 	_button(pv, "Opções", toggle_options)
+	_button(pv, "Conquistas", toggle_achievements)
 	_button(pv, "Menu principal", main.to_main_menu)
 	_button(pv, "Sair do jogo", main.quit_game)
 
@@ -368,6 +377,7 @@ func _build_menu() -> void:
 	menu_continue.custom_minimum_size = Vector2(300, 46)
 	_button(vb, "Como jogar", func(): help_panel.visible = not help_panel.visible).custom_minimum_size = Vector2(300, 46)
 	_button(vb, "Opções", toggle_options).custom_minimum_size = Vector2(300, 46)
+	_button(vb, "Conquistas", toggle_achievements).custom_minimum_size = Vector2(300, 46)
 	_button(vb, "Sair", main.quit_game).custom_minimum_size = Vector2(300, 46)
 	var ver := _label(menu_root, "v%s — protótipo (MVP)  ·  Windows / Linux" % ProjectSettings.get_setting("application/config/version", "0.1.0"), 12, UiTheme.DIM)
 	_place(ver, Control.PRESET_BOTTOM_LEFT, Vector2(16, 12))
@@ -468,8 +478,71 @@ func _build_options() -> void:
 	_button(row, "Rever todas as dicas", func():
 		Settings.set_value("hints_seen", [])
 		toast("As dicas voltarão a aparecer"))
+	_button(row, "Controles…", toggle_controls)
 	_button(row, "Fechar", toggle_options)
-	_label(v, "Idioma: Português (Brasil). Remapeamento de teclas: em breve.", 12, UiTheme.DIM)
+	_label(v, "Idioma: Português (Brasil).", 12, UiTheme.DIM)
+	_build_controls()
+
+
+func _build_controls() -> void:
+	controls_panel = _center_panel(760)
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 8)
+	controls_panel.add_child(v)
+	_label(v, "CONTROLES", 18, UiTheme.ACCENT)
+	_label(v, "Clique numa ação e pressione a nova tecla (Esc cancela). Teclas em uso são trocadas entre as ações.", 13, UiTheme.DIM)
+	var grid := GridContainer.new()
+	grid.columns = 4
+	grid.add_theme_constant_override("h_separation", 14)
+	grid.add_theme_constant_override("v_separation", 4)
+	v.add_child(grid)
+	for a in Bindings.ACTIONS:
+		_label(grid, a[1], 13)
+		var b := _button(grid, Bindings.label(a[0]), _start_rebind.bind(a[0]))
+		b.custom_minimum_size = Vector2(110, 26)
+		b.add_theme_font_size_override("font_size", 12)
+		_bind_buttons[a[0]] = b
+	_label(v, "Fixos: Esc (menu/cancelar) · Ctrl+C / Ctrl+V (copiar/colar) · Shift (seleção em área, girar ao contrário, câmera rápida) · setas (câmera) · mouse.", 12, UiTheme.DIM)
+	var row := HBoxContainer.new()
+	v.add_child(row)
+	_button(row, "Restaurar padrões", func():
+		Bindings.reset()
+		_refresh_bindings())
+	_button(row, "Fechar", toggle_controls)
+
+
+func toggle_controls() -> void:
+	controls_panel.visible = not controls_panel.visible
+	_rebinding = ""
+	_refresh_bindings()
+
+
+func _start_rebind(action: String) -> void:
+	_rebinding = action
+	_refresh_bindings()
+	_bind_buttons[action].text = "pressione…"
+
+
+func _refresh_bindings() -> void:
+	for a in _bind_buttons:
+		_bind_buttons[a].text = Bindings.label(a)
+	var menu: Array = main.data.game.build_menu
+	for i in menu.size():
+		var b: Button = hot_buttons[menu[i]]
+		var k := Bindings.label("slot%d" % (i + 1)) if i < 12 else ""
+		b.text = "%s\n%s" % [k, main.data.buildings[menu[i]].name]
+
+
+func _input(event: InputEvent) -> void:
+	if _rebinding == "" or not (event is InputEventKey) or not event.pressed or event.echo:
+		return
+	if event.keycode != KEY_ESCAPE and not (event.keycode in [KEY_SHIFT, KEY_CTRL, KEY_ALT, KEY_META]):
+		Bindings.rebind(_rebinding, event.keycode)
+	elif event.keycode in [KEY_SHIFT, KEY_CTRL, KEY_ALT, KEY_META]:
+		return
+	_rebinding = ""
+	_refresh_bindings()
+	get_viewport().set_input_as_handled()
 
 
 func _set_option(k: String, v) -> void:
@@ -652,8 +725,12 @@ func toggle_research() -> void:
 
 
 func close_overlays() -> bool:
-	var any := help_panel.visible or stats_panel.visible or research_panel.visible or options_panel.visible
+	var any := help_panel.visible or stats_panel.visible or research_panel.visible or options_panel.visible or controls_panel.visible or achievements_panel.visible
+	if _rebinding != "":
+		return true
+	controls_panel.visible = false
 	options_panel.visible = false
+	achievements_panel.visible = false
 	help_panel.visible = false
 	stats_panel.visible = false
 	research_panel.visible = false
@@ -662,6 +739,39 @@ func close_overlays() -> bool:
 
 func toggle_help() -> void:
 	help_panel.visible = not help_panel.visible
+
+
+func achievement(d: Dictionary) -> void:
+	toast("★ Conquista desbloqueada: %s" % d.name)
+	_toast_t = 4.0
+	main.audio.click()
+
+
+func _build_achievements() -> void:
+	achievements_panel = _center_panel(620)
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 6)
+	achievements_panel.add_child(v)
+	_label(v, "CONQUISTAS", 18, UiTheme.ACCENT)
+	achievements_list = _rich(v)
+	achievements_list.custom_minimum_size.x = 600
+	_button(v, "Fechar", toggle_achievements)
+
+
+func toggle_achievements() -> void:
+	achievements_panel.visible = not achievements_panel.visible
+	if not achievements_panel.visible:
+		return
+	var a = main.achievements
+	var t := ""
+	var n := 0
+	for d in a.defs:
+		var got: bool = a.unlocked.has(d.id)
+		if got:
+			n += 1
+		t += "[color=#%s]%s %s[/color]  [color=#8f877c]%s[/color]\n" % ["73f27f" if got else "8f877c", "★" if got else "☆", d.name, d.desc]
+	var st: String = main.steam.status
+	achievements_list.text = "[b]%d de %d[/b]   [color=#8f877c]Steam: %s[/color]\n\n" % [n, a.defs.size(), st] + t
 
 
 func toast(text: String) -> void:
@@ -1089,12 +1199,13 @@ func _update_stats(w) -> void:
 
 const HELP_TEXT := """[b]Objetivo:[/b] manter o Núcleo vivo. Se ele cair, a partida termina. Sobreviva às 10 hordas da campanha.
 
+[color=#8f877c]Teclas padrão — todas podem ser alteradas em Opções › Controles.[/color]
 [b]Câmera[/b]: WASD/setas movem · roda do mouse aproxima · botão do meio arrasta · Z/C giram a câmera.
 [b]Construção[/b]: teclas 1–0, -, = ou barra inferior escolhem a estrutura · clique esquerdo constrói (arraste para esteiras, muros e postes) · R gira (Shift+R inverte) · clique direito demole (arraste para várias) · Q copia o tipo sob o cursor · Ctrl+C / Ctrl+V copiam a configuração de uma máquina · G reconstrói tudo que foi destruído · Del demole a seleção.
 [b]Seleção e plantas[/b]: Shift+arrastar seleciona uma área · Ctrl+C copia a seleção como planta · R gira a planta · clique cola · B reutiliza a última planta · Ctrl+V cola a configuração em todas as selecionadas.
 [b]Diagnóstico[/b]: V liga o rastreamento de fluxo — passe o mouse sobre uma estrutura para ver suas [color=#ffa040]fontes[/color] e [color=#50d8ff]destinos[/color] · Tab mostra gargalos · clique num alerta para ir até ele · clique no minimapa para mover a câmera.
 [b]Pesquisa[/b]: construa um Laboratório e leve Pacotes de Pesquisa (Montadora: placa + componente) por esteira. T abre a árvore. Pacotes Militares (munição + componente) liberam a linha de defesa avançada.
-[b]Jogo[/b]: Espaço pausa · +/− velocidade · N chama a próxima horda agora · Tab estatísticas · F3 depuração (rotas, redes, alvos) · F5 salvar · F9 carregar · Esc menu.
+[b]Jogo[/b]: Espaço pausa · ponto/vírgula (ou +/− do teclado numérico) mudam a velocidade · N chama a próxima horda agora · Tab estatísticas · F3 depuração (rotas, redes, alvos) · F5 salvar · F9 carregar · Esc menu.
 
 [b]Fluxo de itens[/b]: mineradoras e máquinas enviam produtos pela saída (seta amarela). Esteiras levam o item para o que estiver à frente. Máquinas recebem de esteiras apontadas para elas. Torres, geradores e estações de reparo também [i]puxam[/i] o que precisam de qualquer esteira encostada nelas — passe uma linha de munição ao lado das torres. O Núcleo aceita tudo e seu estoque paga as construções.
 [b]Energia[/b]: o Núcleo e os Postes distribuem energia na área ao redor; postes próximos se conectam sozinhos. Grupos separados formam redes independentes. Se faltar energia, [color=#ff8060]defesas[/color] são atendidas antes da [color=#ffc04a]produção[/color]. Baterias guardam o excedente.

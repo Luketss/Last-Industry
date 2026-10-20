@@ -2,9 +2,10 @@ extends RefCounted
 ## Player preferences persisted in user://settings.cfg (independent of save games).
 
 const PATH := "user://settings.cfg"
+static var path := PATH     ## overridable by tests
 const DEFAULTS := {
 	"volume": 0.8, "fullscreen": false, "ui_scale": 1.0, "hints": true,
-	"edge_pan": false, "camera_speed": 1.0, "minimap": true, "hints_seen": [],
+	"edge_pan": false, "camera_speed": 1.0, "minimap": true, "hints_seen": [], "bindings": {},
 }
 
 static var values := DEFAULTS.duplicate(true)
@@ -13,7 +14,7 @@ static var values := DEFAULTS.duplicate(true)
 static func load_all() -> void:
 	values = DEFAULTS.duplicate(true)
 	var cf := ConfigFile.new()
-	if cf.load(PATH) != OK:
+	if cf.load(path) != OK:
 		return
 	for k in DEFAULTS:
 		values[k] = cf.get_value("game", k, DEFAULTS[k])
@@ -23,7 +24,7 @@ static func save_all() -> void:
 	var cf := ConfigFile.new()
 	for k in values:
 		cf.set_value("game", k, values[k])
-	cf.save(PATH)
+	cf.save(path)
 
 
 static func get_value(k: String):

@@ -12,7 +12,7 @@ verificáveis e testes automatizados.
 | 5 | Integração produção ↔ defesa | ✅ Concluída |
 | 6 | Pesquisa, objetivos e progressão | ✅ Concluída |
 | 7 | Otimização, interface e experiência | ✅ Concluída (remapeamento de teclas e localização ficam para a Fase 8) |
-| 8 | Builds de teste e distribuição Steam | 🟡 Exports e CI prontos. Falta integração Steamworks (ver STEAM.md) |
+| 8 | Builds de teste e distribuição Steam | ✅ Pipeline, conquistas, integração Steam opcional e remapeamento prontos. Dependem da sua conta: App ID, depots e segredos (ver STEAM.md) |
 
 ## Critérios de conclusão e testes
 
@@ -69,8 +69,19 @@ terminais de lore nas ruínas e a estrutura final Genesis com os três finais.
 - Testes: `test_tools.gd` (rastreamento, planta com custo, rotação de planta), `test_large_base_performance`,
   `test_blocked_belt_resumes_when_freed`.
 
-### Pendências
-Remapeamento de teclas, localização (EN/ES), filtros no divisor, perfil de renderização em GPU dedicada.
+### Fase 8 — Builds de teste e distribuição
+- `scripts/build.sh`: exporta, testa o binário exportado e empacota (zip/tar.gz + SHA-256).
+- `release.yml`: tag → versão carimbada, testes, pacotes, GitHub Release; job de upload Steam
+  (`game-ci/steam-deploy`) ativado por variável + segredos; tags com sufixo vão ao branch beta.
+- `steam/*.vdf` + `scripts/steam_upload.sh` para upload manual com steamcmd.
+- `SteamService` (GodotSteam opcional, fallback offline), 12 conquistas locais + Steam, Rich Presence.
+- Remapeamento de teclas em Opções › Controles (troca automática de conflitos, persistente).
+- Testes: `test_platform.gd` (conquistas e persistência, estatísticas de elite/sem perdas,
+  remapeamento, fallback offline, ids das conquistas).
+
+### Pendências gerais
+Suporte a controle / Steam Deck, localização (EN/ES), filtros no divisor, estrutura final Genesis
+com os três finais, perfil de renderização em GPU dedicada.
 
 ## Como executar
 

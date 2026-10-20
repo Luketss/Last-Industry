@@ -10,6 +10,7 @@ const Defs = preload("res://src/sim/defs.gd")
 const Building = preload("res://src/sim/building.gd")
 const Blueprint = preload("res://src/sim/blueprint.gd")
 const Meshes = preload("res://src/view/meshes.gd")
+const Bindings = preload("res://src/ui/bindings.gd")
 
 const BLUEPRINT_TOOL := "@blueprint"
 
@@ -152,8 +153,16 @@ func handle_input(event: InputEvent) -> bool:
 				_drag = ""
 			return true
 	if event is InputEventKey and event.pressed and not event.echo:
-		match event.keycode:
-			KEY_R:
+		if event.ctrl_pressed:
+			if event.keycode == KEY_C:
+				_copy()
+				return true
+			if event.keycode == KEY_V:
+				_paste()
+				return true
+			return false
+		match Bindings.action_for(event):
+			"rotate":
 				var dirn := -1 if event.shift_pressed else 1
 				if tool == BLUEPRINT_TOOL:
 					for i in posmod(dirn, 4):
@@ -164,21 +173,14 @@ func handle_input(event: InputEvent) -> bool:
 						w.rotate_building(w.buildings.get(selected), rot)
 				_preview_key = ""
 				return true
-			KEY_Q:
+			"pipette":
 				_pipette()
 				return true
-			KEY_C:
-				if event.ctrl_pressed:
-					_copy()
-					return true
-			KEY_V:
-				if event.ctrl_pressed:
-					_paste()
-					return true
+			"trace":
 				trace_mode = not trace_mode
 				main.hud.toast("Rastreamento de fluxo: %s" % ("ligado — passe o mouse sobre uma estrutura" if trace_mode else "desligado"))
 				return true
-			KEY_B:
+			"blueprint":
 				if not blueprint.is_empty():
 					tool = BLUEPRINT_TOOL
 					_preview_key = ""
@@ -186,11 +188,11 @@ func handle_input(event: InputEvent) -> bool:
 				else:
 					main.hud.toast("Nenhuma planta copiada. Selecione uma área (Shift+arrastar) e pressione Ctrl+C")
 				return true
-			KEY_G:
+			"rebuild":
 				var n: int = w.rebuild_all_ghosts()
 				main.hud.toast("%d estruturas reconstruídas" % n if n > 0 else "Nada para reconstruir (ou recursos insuficientes)")
 				return true
-			KEY_DELETE, KEY_X:
+			"demolish":
 				if not selection.is_empty():
 					demolish_selection()
 					return true

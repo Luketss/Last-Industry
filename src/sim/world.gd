@@ -442,6 +442,8 @@ func flush_dead() -> void:
 	for e in _dead_enemies:
 		if enemies.erase(e.id):
 			stats.kills += 1
+			if e.elite:
+				stats.elite_kills += 1
 			events.append({"e": "enemy_died", "pos": e.pos, "type": e.type, "elite": e.elite})
 	_dead_enemies.clear()
 

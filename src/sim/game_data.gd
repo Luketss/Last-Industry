@@ -11,6 +11,7 @@ var game: Dictionary
 var objectives: Array
 var lore: Array
 var research: Array
+var achievements: Array
 
 
 func _init(base_path: String = "res://data") -> void:
@@ -23,6 +24,7 @@ func _init(base_path: String = "res://data") -> void:
 	objectives = _load(base_path + "/objectives.json")
 	lore = _load(base_path + "/lore.json")
 	research = _load(base_path + "/research.json")
+	achievements = _load(base_path + "/achievements.json")
 
 
 func item_name(id: String) -> String:

@@ -1,0 +1,12 @@
+"DepotBuild"
+{
+	"DepotID" "@DEPOT_LINUX@"
+	"ContentRoot" "@ROOT@/linux"
+	"FileMapping"
+	{
+		"LocalPath" "*"
+		"DepotPath" "."
+		"Recursive" "1"
+	}
+	"FileExclusion" "steam_appid.txt"
+}

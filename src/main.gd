@@ -12,6 +12,9 @@ const BuildController = preload("res://src/view/build_controller.gd")
 const GameAudio = preload("res://src/view/audio.gd")
 const Hud = preload("res://src/ui/hud.gd")
 const Settings = preload("res://src/ui/settings.gd")
+const Bindings = preload("res://src/ui/bindings.gd")
+const Achievements = preload("res://src/platform/achievements.gd")
+const SteamService = preload("res://src/platform/steam_service.gd")
 
 const MAX_STEPS_PER_FRAME := 12
 const SPEEDS := [1.0, 2.0, 3.0]
@@ -29,12 +32,18 @@ var menu_paused := false
 var speed := 1.0
 var _acc := 0.0
 var _end_shown := false
+var achievements
+var steam
+var _ach_timer := 0.0
 var _smoke := -1
 var _shots_dir := ""
 
 
 func _ready() -> void:
 	data = GameData.new()
+	steam = SteamService.new()
+	add_child(steam)
+	achievements = Achievements.new(data.achievements)
 	view = WorldView.new()
 	add_child(view)
 	camera = CameraRig.new()
@@ -44,6 +53,7 @@ func _ready() -> void:
 	audio = GameAudio.new(self)
 	add_child(audio)
 	Settings.load_all()
+	Bindings.reload()
 	hud = Hud.new(self)
 	add_child(hud)
 	Settings.apply(self)
@@ -146,52 +156,50 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _global_key(e: InputEventKey) -> bool:
-	match e.keycode:
-		KEY_ESCAPE:
-			if hud.close_overlays():
-				pass
-			elif not controller.cancel():
-				set_menu_paused(not menu_paused)
-			return true
-		KEY_SPACE:
+	if e.keycode == KEY_ESCAPE:
+		if hud.close_overlays():
+			pass
+		elif not controller.cancel():
+			set_menu_paused(not menu_paused)
+		return true
+	if e.keycode == KEY_F1:
+		hud.toggle_help()
+		return true
+	if e.keycode == KEY_KP_ADD or e.keycode == KEY_KP_SUBTRACT:
+		_change_speed(1 if e.keycode == KEY_KP_ADD else -1)
+		return true
+	var action := Bindings.action_for(e)
+	match action:
+		"pause":
 			paused = not paused
-			return true
-		KEY_TAB:
+		"stats":
 			hud.toggle_stats()
-			return true
-		KEY_T:
+		"research":
 			hud.toggle_research()
-			return true
-		KEY_H, KEY_F1:
+		"help":
 			hud.toggle_help()
-			return true
-		KEY_F3:
+		"debug":
 			view.debug = not view.debug
-			return true
-		KEY_F5:
+		"save":
 			save_game()
-			return true
-		KEY_F9:
+		"load":
 			load_game()
-			return true
-		KEY_N:
+		"next_wave":
 			if world.state == "playing" and world.waves.has_more(world) and not world.waves.active:
 				world.waves.timer = 0.0
-			return true
-		KEY_EQUAL, KEY_KP_ADD, KEY_PLUS:
-			if e.keycode == KEY_EQUAL and not e.shift_pressed:
-				return _hotkey(11)
-			speed = SPEEDS[mini(SPEEDS.find(speed) + 1, SPEEDS.size() - 1)]
-			return true
-		KEY_MINUS, KEY_KP_SUBTRACT:
-			if e.keycode == KEY_MINUS and not e.shift_pressed:
-				return _hotkey(10)
-			speed = SPEEDS[maxi(SPEEDS.find(speed) - 1, 0)]
-			return true
-	if e.keycode >= KEY_0 and e.keycode <= KEY_9 and not e.ctrl_pressed:
-		var i: int = 9 if e.keycode == KEY_0 else e.keycode - KEY_1
-		return _hotkey(i)
-	return false
+		"speed_up":
+			_change_speed(1)
+		"speed_down":
+			_change_speed(-1)
+		_:
+			if action.begins_with("slot"):
+				return _hotkey(int(action.trim_prefix("slot")) - 1)
+			return false
+	return true
+
+
+func _change_speed(d: int) -> void:
+	speed = SPEEDS[clampi(SPEEDS.find(speed) + d, 0, SPEEDS.size() - 1)]
 
 
 func _hotkey(i: int) -> bool:
@@ -219,6 +227,13 @@ func _process(delta: float) -> void:
 	hud.on_events(ev)
 	audio.on_events(ev)
 	view.camera_focus = camera.position
+	_ach_timer -= delta
+	if in_game and _ach_timer <= 0.0 and _smoke < 0:
+		_ach_timer = 1.0
+		for d in achievements.check(world.stats):
+			steam.unlock(d.id)
+			hud.achievement(d)
+		steam.set_presence("Horda %d · %d estruturas" % [world.waves.index, world.buildings.size()])
 	if in_game and world.state != "playing" and not _end_shown:
 		_end_shown = true
 		hud.show_end(world.state)
@@ -282,6 +297,14 @@ func _smoke_step() -> void:
 			_shot("08_options")
 			hud.toggle_options()
 			controller.trace_mode = false
+			hud.toggle_controls()
+		356:
+			_shot("09_controls")
+			hud.toggle_controls()
+			hud.toggle_achievements()
+		362:
+			_shot("10_achievements")
+			hud.toggle_achievements()
 		420:
 			_shot("06_loaded")
 			print("SMOKE OK tick=%d enemies=%d buildings=%d" % [world.tick, world.enemies.size(), world.buildings.size()])

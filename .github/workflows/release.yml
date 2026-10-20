@@ -1,0 +1,113 @@
+name: Release
+
+# Tag a version (git tag v0.2.0 && git push origin v0.2.0) or run manually.
+# Tags with a suffix (v0.2.0-beta.1) become pre-releases.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Versão (ex.: 0.2.0-playtest)"
+        required: true
+
+env:
+  GODOT_VERSION: "4.3"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Builds de release
+    runs-on: ubuntu-22.04
+    outputs:
+      version: ${{ steps.ver.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: ver
+        run: |
+          v="${{ github.event.inputs.version }}"
+          [ -z "$v" ] && v="${GITHUB_REF_NAME#v}"
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+      - name: Stamp version
+        run: |
+          v="${{ steps.ver.outputs.version }}"
+          sed -i "s/^config\/version=.*/config\/version=\"$v\"/" project.godot
+          num="$(echo "$v" | sed 's/[^0-9.].*//')"
+          sed -i "s/^application\/file_version=.*/application\/file_version=\"$num.0\"/; s/^application\/product_version=.*/application\/product_version=\"$num.0\"/" export_presets.cfg
+      - name: Cache Godot + templates
+        id: cache-tpl
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/godot
+            ~/.local/share/godot/export_templates
+          key: godot-${{ env.GODOT_VERSION }}-templates
+      - name: Download Godot + export templates
+        if: steps.cache-tpl.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ~/godot && cd ~/godot
+          curl -sSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q godot.zip && rm godot.zip
+          mv "Godot_v${GODOT_VERSION}-stable_linux.x86_64" godot
+          curl -sSL -o tpl.tpz "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
+          unzip -q tpl.tpz -d tpl
+          dest=~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
+          mkdir -p "$dest"
+          cp tpl/templates/linux_release.x86_64 tpl/templates/linux_debug.x86_64 \
+             tpl/templates/windows_release_x86_64.exe tpl/templates/windows_debug_x86_64.exe \
+             tpl/templates/version.txt "$dest/"
+          rm -rf tpl tpl.tpz
+      - name: Tests
+        run: GODOT=~/godot/godot tests/run.sh
+      - name: Build and package
+        run: GODOT=~/godot/godot scripts/build.sh "${{ steps.ver.outputs.version }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ steps.ver.outputs.version }}
+          path: build/release/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: steam-content
+          path: |
+            build/windows/
+            build/linux/
+
+  github-release:
+    name: GitHub Release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-${{ needs.build.outputs.version }}
+          path: dist
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          prerelease: ${{ contains(needs.build.outputs.version, '-') }}
+          generate_release_notes: true
+
+  steam:
+    name: Upload Steam
+    needs: build
+    # Enable with the repository variable STEAM_ENABLED=true and the secrets listed in docs/STEAM.md.
+    if: vars.STEAM_ENABLED == 'true'
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: steam-content
+          path: build
+      - uses: game-ci/steam-deploy@v3
+        with:
+          username: ${{ secrets.STEAM_USERNAME }}
+          configVdf: ${{ secrets.STEAM_CONFIG_VDF }}
+          appId: ${{ secrets.STEAM_APP_ID }}
+          buildDescription: Last Industry ${{ needs.build.outputs.version }}
+          rootPath: build
+          depot1Path: windows
+          depot2Path: linux
+          releaseBranch: ${{ contains(needs.build.outputs.version, '-') && 'beta' || '' }}

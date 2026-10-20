@@ -16,7 +16,7 @@ precisa ser fabricada, cada torre consome energia, cada reparo custa materiais.
 
 **Plataformas:** Windows e Linux (x86_64) · **Engine:** Godot 4.3 (GDScript) · **Modo:** solo, offline · **Destino:** Steam
 
-## Estado atual: MVP jogável + Fases 6 e 7 (pesquisa, ferramentas e desempenho)
+## Estado atual: Fases 1 a 8 (MVP, pesquisa, ferramentas, desempenho e preparação para a Steam)
 
 | Item do MVP | Implementado |
 |---|---|
@@ -47,6 +47,9 @@ rastreamento da origem e do destino dos itens, minimapa clicável, alertas que l
 problema, dicas contextuais, menu de opções salvo entre sessões e otimização para bases com
 milhares de estruturas.
 
+**Fase 8:** pipeline de release (pacotes versionados, GitHub Release por tag, upload Steam pelo CI),
+integração Steam opcional via GodotSteam, 12 conquistas, Rich Presence e remapeamento de teclas.
+
 Também incluídos: objetivos guiados com recompensas, narrativa por transmissões e arquivos
 corrompidos, sobreposição de depuração (F3: rotas, redes elétricas, alvos), áudio procedural.
 
@@ -72,7 +75,8 @@ rode pelo editor:
 | Selecionar área / copiar como planta / reutilizar planta | Shift+arrastar / Ctrl+C na seleção / B |
 | Rastrear fluxo de itens | V (passe o mouse sobre uma estrutura) |
 | Reconstruir ruínas | G |
-| Pausar / velocidade / chamar horda | Espaço / + − / N |
+| Pausar / velocidade / chamar horda | Espaço / . e , (ou + − do numérico) / N |
+| Remapear teclas | Opções › Controles |
 | Estatísticas / pesquisa / ajuda / depuração | Tab / T / H / F3 |
 | Salvar / carregar / menu | F5 / F9 / Esc |
 
@@ -103,6 +107,12 @@ godot --headless --path . --export-release "Windows Desktop" build/windows/LastI
 
 O CI (`.github/workflows/ci.yml`) roda os testes e o teste de fumaça, gera os builds de Windows e
 Linux e testa o binário Linux exportado a cada push.
+
+### Releases
+
+`git tag v0.2.0 && git push origin v0.2.0` publica um GitHub Release com os pacotes de Windows e
+Linux. Para a Steam, veja [docs/STEAM.md](docs/STEAM.md): o upload pelo CI liga sozinho quando o App ID
+e os segredos da sua conta Steamworks forem configurados.
 
 ### Documentação
 
