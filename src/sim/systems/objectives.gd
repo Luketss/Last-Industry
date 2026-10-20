@@ -43,7 +43,7 @@ func target(w):
 				return null
 			return Vector2(w.spawn_points[w.waves.next_spawn]) + Vector2(0.5, 0.5)
 		"ore":
-			var t := Defs.T_IRON if p[1] == "iron" else Defs.T_COAL
+			var t: int = {"iron": Defs.T_IRON, "coal": Defs.T_COAL, "crystal": Defs.T_CRYSTAL}.get(p[1], Defs.T_IRON)
 			var best = null
 			var bd := INF
 			for i in w.terrain.size():

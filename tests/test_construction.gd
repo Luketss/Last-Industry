@@ -74,3 +74,28 @@ func test_fog_of_war_blocks_building_until_revealed() -> void:
 	eq(w.can_place("wall", far, 0), "", "constrói depois de revelar")
 	var w2 = World.from_dict(data(), w.to_dict())
 	check(w2.is_revealed(far), "névoa salva")
+
+
+func test_rare_crystal_deposits_far_from_core() -> void:
+	for s in [5, 99]:
+		var w = World.new(data(), s)
+		var center := Vector2(w.width * 0.5, w.height * 0.5)
+		var n := 0
+		var nearest := INF
+		for i in w.terrain.size():
+			if w.terrain[i] == Defs.T_CRYSTAL:
+				n += 1
+				nearest = minf(nearest, Vector2(i % w.width, i / w.width).distance_to(center))
+		check(n >= 6, "seed %d: jazidas de cristal (%d)" % [s, n])
+		check(nearest > 20.0, "seed %d: longe do Núcleo (%.1f)" % [s, nearest])
+	var w2 = empty_world()
+	for y in [15, 16]:
+		for x in [8, 9]:
+			w2.set_terrain(Vector2i(x, y), Defs.T_CRYSTAL, 50)
+	var m: int = w2.place("miner", Vector2i(8, 15), 0)
+	check(m != 0, "mineradora sobre cristal")
+	w2.place("pole", Vector2i(10, 17), 0)
+	for x in range(10, 15):
+		w2.place("belt", Vector2i(x, 15), 0)
+	run_seconds(w2, 20.0)
+	check(int(w2.storage.get("crystal", 0)) > 0, "cristal chega ao Núcleo")

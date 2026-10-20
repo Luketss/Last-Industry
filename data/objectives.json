@@ -8,6 +8,7 @@
 	{"id": "research", "point": "core", "text": "Construa um Laboratório, alimente-o com Pacotes de Pesquisa e conclua uma tecnologia (T)", "stat": "researched", "n": 1, "reward": {"gear": 15}},
 	{"id": "gears", "point": "kind:assembler", "text": "Produza 30 Componentes Mecânicos para expandir", "stat": "produced:gear", "n": 30},
 	{"id": "anti_air", "point": "kind:lab", "text": "Pesquise Defesa Antiaérea: criaturas voadoras chegam na sexta horda", "stat": "tech:anti_air", "n": 1, "reward": {"iron_plate": 40}},
+	{"id": "crystal", "point": "ore:crystal", "text": "Expanda pela névoa até uma jazida rara e entregue 20 Cristais Genesis ao Núcleo", "stat": "delivered:crystal", "n": 20, "reward": {"gear": 30}},
 	{"id": "wave5", "point": "nest:next", "text": "Sobreviva à quinta horda", "stat": "waves", "n": 5, "reward": {"gear": 20}},
 	{"id": "final", "point": "nest:next", "text": "Resista até o fim da décima horda", "stat": "waves", "n": 10}
 ]

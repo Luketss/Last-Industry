@@ -82,7 +82,7 @@ ITEM_ICONS = {
     "iron_ore": ("scifi_items", "18.png", False), "coal": ("scifi_items", "16.png", True),
     "iron_plate": ("scifi_items", "1.png", False), "gear": ("scifi_items", "5.png", False),
     "ammo": ("apoc_icons", "18.png", False), "research_pack": ("scifi_items", "13.png", False),
-    "military_pack": ("scifi_items", "4.png", False), "shell": ("scifi_items", "12.png", False),
+    "military_pack": ("scifi_items", "4.png", False), "crystal": ("scifi_items", "17.png", False), "shell": ("scifi_items", "12.png", False),
 }
 
 UI_STYLES = {

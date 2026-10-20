@@ -28,6 +28,13 @@ static func generate(w, p_seed: int) -> void:
 		var a2 := base_angle + (i - 0.5) * 2.4 + rng.randf_range(-0.3, 0.3)
 		_patch(w, rng, center + Vector2.from_angle(a2) * rng.randf_range(16.0, 24.0), 3.0, Defs.T_COAL, 600, 1000)
 
+	# Two rare crystal deposits near the edges, opposite each other: Genesis needs them,
+	# so the factory has to reach out through the fog.
+	var ca := base_angle + PI * 0.5 + rng.randf_range(-0.4, 0.4)
+	for k in 2:
+		var reach := minf(center.x, center.y) - rng.randf_range(6.0, 8.0)
+		_patch(w, rng, center + Vector2.from_angle(ca + PI * k) * reach, 2.0, Defs.T_CRYSTAL, 250, 400)
+
 	# Keep the starting area clear.
 	for y in range(-6, 7):
 		for x in range(-6, 7):

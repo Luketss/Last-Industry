@@ -381,12 +381,16 @@ func _rebuild_ore() -> void:
 		var i: int = cells[k]
 		var c := Vector2(i % w, i / w)
 		var iron: bool = world.terrain[i] == Defs.T_IRON
+		var crystal: bool = world.terrain[i] == Defs.T_CRYSTAL
 		for j in 3:
 			var s := rng.randf_range(0.6, 1.4)
-			var basis := Basis.from_euler(Vector3(rng.randf_range(-0.4, 0.4), rng.randf() * TAU, rng.randf_range(-0.4, 0.4))).scaled(Vector3(s, s, s))
-			var p := Vector3(c.x + rng.randf_range(0.2, 0.8), 0.06 * s, c.y + rng.randf_range(0.2, 0.8))
+			var tall := Vector3(0.7, 2.2, 0.7) if crystal else Vector3.ONE
+			var basis := Basis.from_euler(Vector3(rng.randf_range(-0.4, 0.4), rng.randf() * TAU, rng.randf_range(-0.4, 0.4))).scaled(tall * s)
+			var p := Vector3(c.x + rng.randf_range(0.2, 0.8), 0.06 * s * tall.y, c.y + rng.randf_range(0.2, 0.8))
 			mm.set_instance_transform(k * 3 + j, Transform3D(basis, p))
 			var col := Color(0.55, 0.26, 0.12) if iron else Color(0.07, 0.065, 0.06)
+			if crystal:
+				col = Color(0.5, 1.6, 1.4)   # > 1: glows through the HDR glow pass
 			mm.set_instance_color(k * 3 + j, col * rng.randf_range(0.75, 1.15))
 	ore_mm.multimesh = mm
 

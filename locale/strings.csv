@@ -492,7 +492,7 @@ Torre de Canhão,Cannon Turret,Torre de Cañón
 Torre Antiaérea,AA Turret,Torre Antiaérea
 Rastreia e abate criaturas voadoras. Não atinge alvos terrestres. Usa pentes de munição.,Tracks and shoots down flying creatures. Cannot hit ground targets. Uses ammo magazines.,Rastrea y derriba criaturas voladoras. No alcanza objetivos terrestres. Usa cargadores de munición.
 Estrutura Genesis,Genesis Structure,Estructura Genesis
-"Ativa o Projeto Genesis. Precisa de energia contínua por 4 minutos enquanto as hordas convergem de todos os ninhos. Ao final, você decide o destino do mundo.","Activates Project Genesis. Needs continuous power for 4 minutes while the hordes converge from every nest. At the end, you decide the fate of the world.","Activa el Proyecto Genesis. Necesita energía continua durante 4 minutos mientras las hordas convergen desde todos los nidos. Al final, tú decides el destino del mundo."
+"Ativa o Projeto Genesis. Custa Cristal Genesis, minerado nas jazidas raras perto das bordas do mapa. Precisa de energia contínua por 4 minutos enquanto as hordas convergem de todos os ninhos. Ao final, você decide o destino do mundo.","Activates Project Genesis. Costs Genesis Crystal, mined from the rare deposits near the edges of the map. Needs continuous power for 4 minutes while the hordes converge from every nest. At the end, you decide the fate of the world.","Activa el Proyecto Genesis. Cuesta Cristal Genesis, extraído de los yacimientos raros cerca de los bordes del mapa. Necesita energía continua durante 4 minutos mientras las hordas convergen desde todos los nidos. Al final, tú decides el destino del mundo."
 Sensor de Horda,Horde Sensor,Sensor de Hordas
 "Antena de varredura: revela uma grande área da névoa ao redor, mostrando ruínas, jazidas, terminais e criaturas.","Scanning antenna: reveals a large area of fog around it, showing ruins, deposits, terminals and creatures.","Antena de barrido: revela una gran zona de niebla a su alrededor, mostrando ruinas, yacimientos, terminales y criaturas."
 Hub de Drones,Drone Hub,Centro de Drones
@@ -524,6 +524,8 @@ Pacote Militar,Military Pack,Paquete Militar
 Militar,Military,Militar
 Projétil de Canhão,Cannon Shell,Proyectil de Cañón
 Projéteis,Shells,Proyectiles
+Cristal Genesis,Genesis Crystal,Cristal Genesis
+Cristal,Crystal,Cristal
 DIRETRIZ PRIMÁRIA,PRIMARY DIRECTIVE,DIRECTIVA PRIMARIA
 MANTER A PRODUÇÃO. PRESERVAR O NÚCLEO. SOBREVIVER.,KEEP PRODUCTION RUNNING. PRESERVE THE CORE. SURVIVE.,MANTENER LA PRODUCCIÓN. PRESERVAR EL NÚCLEO. SOBREVIVIR.
 SISTEMA CENTRAL,CENTRAL SYSTEM,SISTEMA CENTRAL
@@ -583,6 +585,7 @@ Sobreviva à primeira horda,Survive the first horde,Sobrevive a la primera horda
 "Construa um Laboratório, alimente-o com Pacotes de Pesquisa e conclua uma tecnologia (T)","Build a Lab, feed it Research Packs and complete a technology (T)","Construye un Laboratorio, aliméntalo con Paquetes de Investigación y completa una tecnología (T)"
 Produza 30 Componentes Mecânicos para expandir,Produce 30 Mechanical Components to expand,Produce 30 Componentes Mecánicos para expandirte
 Pesquise Defesa Antiaérea: criaturas voadoras chegam na sexta horda,Research Anti-Air Defense: flying creatures arrive in the sixth horde,Investiga Defensa Antiaérea: las criaturas voladoras llegan en la sexta horda
+Expanda pela névoa até uma jazida rara e entregue 20 Cristais Genesis ao Núcleo,Expand through the fog to a rare deposit and deliver 20 Genesis Crystals to the Core,Expándete por la niebla hasta un yacimiento raro y entrega 20 Cristales Genesis al Núcleo
 Sobreviva à quinta horda,Survive the fifth horde,Sobrevive a la quinta horda
 Resista até o fim da décima horda,Hold out until the end of the tenth horde,Resiste hasta el final de la décima horda
 Fundir Ferro,Smelt Iron,Fundir Hierro

@@ -6,5 +6,6 @@
 	"ammo": {"name": "Pente de Munição", "color": "#e3b341", "short": "Munição"},
 	"research_pack": {"name": "Pacote de Pesquisa", "short": "Pesquisa", "color": "#4fb3d9"},
 	"military_pack": {"name": "Pacote Militar", "short": "Militar", "color": "#c94a3a"},
-	"shell": {"name": "Projétil de Canhão", "short": "Projéteis", "color": "#8c7a5a"}
+	"shell": {"name": "Projétil de Canhão", "short": "Projéteis", "color": "#8c7a5a"},
+	"crystal": {"name": "Cristal Genesis", "short": "Cristal", "color": "#6fe3c9"}
 }

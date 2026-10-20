@@ -857,6 +857,8 @@ func bind_world(w) -> void:
 					c = Color(0.3, 0.29, 0.27)
 				Defs.T_IRON:
 					c = Color(0.5, 0.25, 0.12)
+				Defs.T_CRYSTAL:
+					c = Color(0.35, 0.95, 0.85)
 				Defs.T_COAL:
 					c = Color(0.04, 0.04, 0.04)
 			_mini_base.set_pixel(x, y, c)
@@ -1033,7 +1035,9 @@ func _hex(c: Color) -> String:
 
 func _update_top(w) -> void:
 	var parts := []
-	for item in ["iron_ore", "coal", "iron_plate", "gear", "ammo"]:
+	for item in ["iron_ore", "coal", "iron_plate", "gear", "ammo", "crystal"]:
+		if item == "crystal" and Items.count(w.storage, item) == 0:
+			continue
 		var r: int = w.stats.rate(item)
 		parts.append("%s %s [b]%d[/b] [color=#8f877c]+%d/min[/color]" % [
 			_item_icon(w, item, 22), str(w.data.items[item].get("short", w.data.item_name(item))), Items.count(w.storage, item), r])

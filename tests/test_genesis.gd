@@ -12,6 +12,7 @@ func _powered_world():
 	w.storage["iron_plate"] = 5000
 	w.storage["gear"] = 5000
 	w.storage["ammo"] = 500
+	w.storage["crystal"] = 100
 	return w
 
 
