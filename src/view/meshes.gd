@@ -317,8 +317,8 @@ static func build(type: String, def: Dictionary, rot: int) -> Dictionary:
 			var arrow := Node3D.new()
 			arrow.position = Vector3(w * 0.5 + 0.28, 0.02, -d * 0.5 + 0.5 + i)
 			body.add_child(arrow)
-			box(arrow, Vector3(0.26, 0.025, 0.07), Vector3(0.0, 0, -0.07), am, Vector3(0, deg_to_rad(38), 0))
-			box(arrow, Vector3(0.26, 0.025, 0.07), Vector3(0.0, 0, 0.07), am, Vector3(0, deg_to_rad(-38), 0))
+			box(arrow, Vector3(0.26, 0.025, 0.07), Vector3(0.0, 0, -0.07), am, Vector3(0, deg_to_rad(-38), 0))
+			box(arrow, Vector3(0.26, 0.025, 0.07), Vector3(0.0, 0, 0.07), am, Vector3(0, deg_to_rad(38), 0))
 	if def.get("kind", type) not in ["belt", "wall", "pole"]:
 		# Status lamp on a short post at the footprint corner.
 		cyl(root, 0.025, 0.7, Vector3(0.14, 0.35, 0.14), mdark, -1.0, 5)
