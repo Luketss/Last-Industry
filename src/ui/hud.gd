@@ -17,6 +17,8 @@ var top_label: RichTextLabel
 var wave_label: RichTextLabel
 var obj_label: Label
 var obj_bar: ProgressBar
+var obj_go: Button
+var _target_timer := 0.0
 var trans_title: Label
 var trans_label: Label
 var alerts_box: VBoxContainer
@@ -203,6 +205,19 @@ func _build_left() -> void:
 	obj_label = _label(vb, "")
 	obj_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	obj_label.custom_minimum_size.x = 340
+	obj_go = Button.new()
+	obj_go.flat = true
+	obj_go.focus_mode = Control.FOCUS_NONE
+	obj_go.text = I18n.t("⌖ Mostrar no mapa")
+	obj_go.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	obj_go.add_theme_font_override("font", ThemeDB.fallback_font)
+	obj_go.add_theme_font_size_override("font_size", 12)
+	obj_go.add_theme_color_override("font_color", UiTheme.WARN)
+	obj_go.pressed.connect(func():
+		if main.view.objective_target != null:
+			var t: Vector2 = main.view.objective_target
+			main.camera.focus(Vector3(t.x, 0, t.y)))
+	vb.add_child(obj_go)
 	obj_bar = ProgressBar.new()
 	obj_bar.custom_minimum_size = Vector2(340, 12)
 	obj_bar.show_percentage = false
@@ -1032,6 +1047,11 @@ func _update_top(w) -> void:
 
 
 func _update_objective(w) -> void:
+	_target_timer -= 0.12
+	if _target_timer <= 0.0:
+		_target_timer = 1.0
+		main.view.objective_target = w.objectives.target(w)
+	obj_go.visible = main.view.objective_target != null
 	var o = w.objectives.current_objective()
 	if o == null:
 		obj_label.text = I18n.t("Todos os objetivos concluídos. Sobreviva.") if not w.survival else I18n.t("Modo Sobrevivência: resista o máximo possível.")

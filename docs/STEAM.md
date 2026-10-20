@@ -20,7 +20,7 @@ Logs de execução do jogo (para relatórios de bugs dos testadores): `user://lo
 
 - `src/platform/steam_service.gd` usa o **GodotSteam** se o plugin estiver instalado e houver App ID.
   Sem isso, todas as chamadas são inofensivas e o jogo roda offline (testado em `test_platform.gd`).
-- **Conquistas** (`data/achievements.json`, 12 no total) são avaliadas a partir das estatísticas da
+- **Conquistas** (`data/achievements.json`, 16 no total) são avaliadas a partir das estatísticas da
   partida, salvas localmente em `user://achievements.cfg` e espelhadas na Steam com
   `setAchievement` + `storeStats`. Os `id`s já estão no formato da Steam (MAIÚSCULAS).
 - **Rich Presence:** “Horda N · M estruturas”.
@@ -30,9 +30,10 @@ Logs de execução do jogo (para relatórios de bugs dos testadores): `user://lo
 
 1. **Steamworks:** pague o Steam Direct, crie o app e anote o **App ID**. Crie dois depots:
    Windows (`App ID + 1`) e Linux (`App ID + 2`). Essa numeração é a que o CI espera.
-2. **Conquistas na Steam:** em *Stats & Achievements*, crie as 12 conquistas com os mesmos API names
+2. **Conquistas na Steam:** em *Stats & Achievements*, crie as 16 conquistas com os mesmos API names
    de `data/achievements.json` (FIRST_LINE, FIRST_NIGHT, WAVE_5, CAMPAIGN, BOSS, KILLS_500, FLAWLESS,
-   RESEARCH_ALL, GENESIS, POWER_1000, FACTORY_500, SURVIVAL_20) e publique.
+   RESEARCH_ALL, GENESIS, POWER_1000, FACTORY_500, SURVIVAL_20, ENDING_RESTORE, ENDING_DESTROY,
+   ENDING_FORTRESS, ARCHIVIST) e publique.
 3. **GodotSteam:** baixe a versão GDExtension compatível com Godot 4.3 em <https://godotsteam.com>,
    extraia em `addons/godotsteam/` e habilite. Em *Project Settings › steam/app_id*, coloque o App ID
    (para testes locais, `480` é o app de teste da Valve).

@@ -34,6 +34,8 @@ var debug_mesh := ImmediateMesh.new()
 var fx: Array = []
 var particles: Node3D       ## fx.gd: pooled one-shot particle effects
 var terminal_nodes := {}    ## cell index -> {root, lamp, light}
+var objective_target = null ## Vector2 map position of the active objective (set by the HUD)
+var _marker: Node3D
 var ash: GPUParticles3D
 var _ghosts_ver := -1
 var _power_ver := -1
@@ -55,6 +57,8 @@ func _ready() -> void:
 	add_child(ghosts_root)
 	particles = Fx.new()
 	add_child(particles)
+	_marker = _make_marker()
+	add_child(_marker)
 	items_mm = _make_mm(Meshes.box_mesh(Vector3(0.22, 0.16, 0.22)), Meshes.mat("items", Color.WHITE, {"vcol": true, "rough": 0.6}))
 	bars_mm = _make_mm(Meshes.box_mesh(Vector3(1, 0.05, 0.1)), Meshes.mat("bars", Color.WHITE, {"vcol": true, "unshaded": true}))
 	bars_mm.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -129,6 +133,21 @@ func _build_environment() -> void:
 	add_child(ash)
 
 
+## Bouncing arrow and ground ring over the active objective's location.
+func _make_marker() -> Node3D:
+	var n := Node3D.new()
+	var m := Meshes.mat("marker", Color(1.0, 0.75, 0.25), {"emit": Color(1.0, 0.7, 0.2), "energy": 2.5, "unshaded": true})
+	var arrow := Meshes.add(n, Meshes.cyl_mesh(0.45, 0.0, 0.8, 4), Vector3(0, 2.6, 0), m)
+	arrow.name = "Arrow"
+	Meshes.add(n, Meshes.cyl_mesh(0.14, 0.14, 0.7, 6), Vector3(0, 3.35, 0), m).name = "Shaft"
+	var ring := Meshes.add(n, Meshes.cyl_mesh(1.1, 1.1, 0.03, 24), Vector3(0, 0.03, 0), Meshes.mat("markerring", Color(1.0, 0.75, 0.25, 0.25), {"alpha": true, "unshaded": true}))
+	ring.name = "Ring"
+	for c in n.get_children():
+		c.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	n.visible = false
+	return n
+
+
 func _make_mm(mesh: Mesh, m: Material) -> MultiMeshInstance3D:
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
@@ -146,6 +165,7 @@ func _make_mm(mesh: Mesh, m: Material) -> MultiMeshInstance3D:
 
 func bind(p_world) -> void:
 	world = p_world
+	objective_target = null
 	for c in terrain_root.get_children():
 		c.queue_free()
 	for c in buildings_root.get_children():
@@ -459,6 +479,13 @@ func _process(delta: float) -> void:
 	_update_debug()
 	ground_mat.set_shader_parameter("grid_alpha", 1.0 if show_grid else 0.0)
 	ash.position = Vector3(camera_focus.x, 14, camera_focus.z)
+	_marker.visible = objective_target != null
+	if _marker.visible:
+		_marker.position = Vector3(objective_target.x, 0.0, objective_target.y)
+		var bob := absf(sin(_t * 3.0)) * 0.5
+		for part in ["Arrow", "Shaft"]:
+			_marker.get_node(part).position.y = (2.6 if part == "Arrow" else 3.35) + bob
+		_marker.get_node("Ring").scale = Vector3.ONE * (0.8 + 0.25 * sin(_t * 3.0))
 
 
 func _update_lighting(delta: float) -> void:
