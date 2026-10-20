@@ -54,6 +54,8 @@ func wave_def(n: int) -> Dictionary:
 		{"type": "crawler", "count": int(float(s.get("base_crawler", 20)) * g)},
 		{"type": "runner", "count": int(float(s.get("base_runner", 10)) * g), "spawn": "other"},
 		{"type": "brute", "count": int(float(s.get("base_brute", 3)) * g)},
+		{"type": "glider", "count": int(float(s.get("base_glider", 8)) * g)},
+		{"type": "saboteur", "count": int(float(s.get("base_saboteur", 5)) * g), "spawn": "other"},
 		{"type": "brute", "count": 1, "elite": true, "hp_mult": 4.0 + k, "size_mult": 1.6, "damage_mult": 2.0, "spawn": "other"},
 	]}
 
@@ -98,6 +100,8 @@ func step(w, dt: float) -> void:
 	if active and queue.is_empty() and w.enemies.is_empty():
 		active = false
 		w.stats.waves = index
+		if w.stats.lost == w.stats.lost_at_wave_start:
+			w.stats.flawless += 1
 		w.events.append({"e": "wave_cleared", "n": index})
 		w.add_alert("wave_clear", "Horda %d repelida. Reconstrua e prepare-se." % index, "info", null, 1.0)
 		w.trigger_lore("wave_cleared:%d" % index)
@@ -121,6 +125,7 @@ func start_wave(w) -> void:
 			queue.append({"type": g.type, "spawn": sp, "mods": mods})
 	index += 1
 	active = true
+	w.stats.lost_at_wave_start = w.stats.lost
 	spawn_timer = 0.0
 	timer = float(cfg.get("interval", 200))
 	next_spawn = _pick_spawn(w, main_spawn)
@@ -136,7 +141,11 @@ func _patrol(w) -> void:
 	var sp := _pick_spawn(w, -1)
 	var n := 2 + mini(index, 6)
 	for i in n:
-		_spawn_at(w, "runner" if i % 3 == 2 else "crawler", sp, {})
+		# The hordes adapt as the facility researches: saboteurs join the patrols.
+		var t := "runner" if i % 3 == 2 else "crawler"
+		if w.stats.researched >= 2 and i % 2 == 0:
+			t = "saboteur"
+		_spawn_at(w, t, sp, {})
 	w.add_alert("patrol", "Movimento hostil inesperado detectado ao %s!" % Defs.compass(Vector2(w.spawn_points[sp]), w.width, w.height), "danger", null, 1.0)
 
 

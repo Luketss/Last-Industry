@@ -1,0 +1,14 @@
+[
+	{"id": "FIRST_LINE", "name": "Linha de Montagem", "desc": "Produza 20 Pentes de Munição automaticamente.", "stat": "produced:ammo", "n": 20},
+	{"id": "FIRST_NIGHT", "name": "A Primeira Noite", "desc": "Sobreviva à primeira horda.", "stat": "waves", "n": 1},
+	{"id": "WAVE_5", "name": "Ainda de Pé", "desc": "Sobreviva à quinta horda.", "stat": "waves", "n": 5},
+	{"id": "CAMPAIGN", "name": "O Núcleo Sobreviveu", "desc": "Resista até o fim da décima horda.", "stat": "waves", "n": 10},
+	{"id": "BOSS", "name": "Queda do Alfa", "desc": "Abata uma criatura de elite.", "stat": "elite_kills", "n": 1},
+	{"id": "KILLS_500", "name": "Linha de Fogo", "desc": "Abata 500 criaturas em uma partida.", "stat": "kills", "n": 500},
+	{"id": "FLAWLESS", "name": "Sem Cicatrizes", "desc": "Repila uma horda sem perder nenhuma estrutura.", "stat": "flawless", "n": 1},
+	{"id": "RESEARCH_ALL", "name": "Conhecimento Proibido", "desc": "Conclua todas as pesquisas.", "stat": "researched", "n": 10},
+	{"id": "GENESIS", "name": "Fragmento Genesis", "desc": "Decodifique os arquivos selados da instalação.", "stat": "tech:genesis_1", "n": 1},
+	{"id": "POWER_1000", "name": "Rede Industrial", "desc": "Alcance 1000 kW de capacidade de geração.", "stat": "peak_power", "n": 1000},
+	{"id": "FACTORY_500", "name": "A Última Indústria", "desc": "Mantenha 500 estruturas ao mesmo tempo.", "stat": "structures", "n": 500},
+	{"id": "SURVIVAL_20", "name": "Fortaleza Eterna", "desc": "Sobreviva a 20 hordas.", "stat": "waves", "n": 20}
+]

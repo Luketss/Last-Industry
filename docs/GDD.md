@@ -67,8 +67,10 @@ Banco de Baterias, Torre Balística, Torre Elétrica, Muro, Estação de Reparo.
 | Aríete | Destruidor de muros | Blindado, lento, atravessa muros, dano em área |
 | Elite/Chefe | Variante | Multiplicadores de vida, tamanho e dano definidos na horda |
 
-Planejados (pós-MVP): sabotadores de infraestrutura (priorizam geradores/esteiras), voadores (exigem
-antiaérea), criaturas de dano contínuo, e mudanças de comportamento ligadas à pesquisa (narrativa Genesis).
+| Sabotador | Infraestrutura | Caça geradores, painéis, baterias, postes, esteiras e laboratórios num raio de 4,5 |
+| Planador | Voador | Ignora muros e terreno, voa até a infraestrutura. Só Antiaérea e Torre Elétrica o atingem |
+
+Planejados: criaturas de dano contínuo (ácido) e mais mudanças de comportamento ligadas à pesquisa.
 
 ## Narrativa: o Projeto Genesis
 
@@ -85,11 +87,18 @@ anunciadas, iniciadas e repelidas (`data/lore.json`). Arco planejado:
 Conforme a pesquisa avança, as hordas passam a priorizar setores específicos e novas criaturas
 aparecem perto de estruturas avançadas. A ameaça reage ao que você fabrica.
 
-## Progressão futura (Fase 6+)
+## Pesquisa (implementada)
 
-- **Pesquisa:** laboratório consome pacotes de pesquisa fabricados. A árvore desbloqueia máquinas
-  mais eficientes, novas receitas, torres (canhão, longo alcance, ácido, antiaérea), munições
-  especiais, robôs de construção/reparo, energia solar/turbinas e sensores de emergência.
+O Laboratório consome Pacotes de Pesquisa (placa + componente) e Pacotes Militares (munição +
+componente), fabricados na Montadora. Pesquisar custa recursos que poderiam virar munição: é uma
+aposta no futuro contra a próxima horda. Árvore atual (`data/research.json`): Automação Básica,
+Perfuração Profunda, Esteiras Reforçadas, Energia Solar, Logística Militar, Defesa Antiaérea,
+Artilharia, Balística Avançada, Fortificação, Fragmento Genesis.
+
+## Progressão futura
+
+- **Pesquisa adicional:** torre de longo alcance, ácido, munições especiais, robôs de
+  construção/reparo, turbinas e sensores de emergência.
 - **Exploração:** névoa de guerra, regiões com jazidas raras, terminais com arquivos de Genesis,
   ninhos que podem ser destruídos.
 - **Estrutura final:** construção que encerra a campanha (ativação de Genesis).

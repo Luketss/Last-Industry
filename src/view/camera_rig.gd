@@ -1,7 +1,9 @@
 extends Node3D
 ## Isometric orthographic camera: pan (WASD / arrows / middle mouse), zoom (wheel),
 ## rotate in 90° steps (Z / C). Ground picking via ray/plane intersection.
+## Keys come from Bindings and can be remapped in the options.
 
+const Bindings = preload("res://src/ui/bindings.gd")
 const PITCH := -50.0
 const ZOOM_MIN := 10.0
 const ZOOM_MAX := 70.0
@@ -12,6 +14,8 @@ var yaw := 45.0
 var zoom := 28.0
 var input_enabled := true
 var orbit := false            ## slow automatic rotation used behind the main menu
+var edge_pan := false         ## move when the mouse touches the screen border
+var speed := 1.0
 var bounds := Rect2(0, 0, 64, 64)
 var _yaw := 45.0
 var _zoom := 28.0
@@ -40,17 +44,30 @@ func _process(delta: float) -> void:
 		yaw += delta * 3.0
 	elif input_enabled:
 		var v := Vector2.ZERO
-		if Input.is_key_pressed(KEY_W) or Input.is_key_pressed(KEY_UP):
-			v.y -= 1
-		if Input.is_key_pressed(KEY_S) or Input.is_key_pressed(KEY_DOWN):
-			v.y += 1
-		if Input.is_key_pressed(KEY_A) or Input.is_key_pressed(KEY_LEFT):
-			v.x -= 1
-		if Input.is_key_pressed(KEY_D) or Input.is_key_pressed(KEY_RIGHT):
-			v.x += 1
+		var typing: bool = Input.is_key_pressed(KEY_CTRL)
+		if not typing:
+			if Bindings.held("cam_up") or Input.is_key_pressed(KEY_UP):
+				v.y -= 1
+			if Bindings.held("cam_down") or Input.is_key_pressed(KEY_DOWN):
+				v.y += 1
+			if Bindings.held("cam_left") or Input.is_key_pressed(KEY_LEFT):
+				v.x -= 1
+			if Bindings.held("cam_right") or Input.is_key_pressed(KEY_RIGHT):
+				v.x += 1
+		if edge_pan and DisplayServer.window_is_focused():
+			var mp := get_viewport().get_mouse_position()
+			var vs := get_viewport().get_visible_rect().size
+			if mp.x < 6:
+				v.x -= 1
+			elif mp.x > vs.x - 6:
+				v.x += 1
+			if mp.y < 6:
+				v.y -= 1
+			elif mp.y > vs.y - 6:
+				v.y += 1
 		if v != Vector2.ZERO:
 			var fast := 2.0 if Input.is_key_pressed(KEY_SHIFT) else 1.0
-			target += _plane_dir(v.normalized()) * delta * _zoom * 0.9 * fast
+			target += _plane_dir(v.normalized()) * delta * _zoom * 0.9 * fast * speed
 	target.x = clampf(target.x, bounds.position.x, bounds.end.x)
 	target.z = clampf(target.z, bounds.position.y, bounds.end.y)
 	var k := minf(delta * 10.0, 1.0)
@@ -88,10 +105,10 @@ func handle_input(event: InputEvent) -> bool:
 		target -= _plane_dir(event.relative) * px_to_world * Vector3(1, 0, 1).length() * 1.3
 		return true
 	if event is InputEventKey and event.pressed and not event.echo:
-		if event.keycode == KEY_Z:
+		if Bindings.is_action(event, "cam_rot_left"):
 			yaw -= 90.0
 			return true
-		if event.keycode == KEY_C and not event.ctrl_pressed:
+		if Bindings.is_action(event, "cam_rot_right"):
 			yaw += 90.0
 			return true
 	return false

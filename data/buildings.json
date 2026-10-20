@@ -1,71 +1,20 @@
 {
-	"core": {
-		"name": "Núcleo", "kind": "core", "size": [3, 3], "hp": 3000, "cost": {}, "unique": true,
-		"power_out": 80, "supply_radius": 4.5, "wire_range": 9.0,
-		"desc": "O coração da instalação. Armazena recursos e fornece energia residual. Se for destruído, tudo acaba."
-	},
-	"belt": {
-		"name": "Esteira", "kind": "belt", "size": [1, 1], "hp": 40, "cost": {"iron_plate": 1}, "speed": 2.0,
-		"desc": "Transporta itens na direção indicada. Arraste para traçar linhas."
-	},
-	"miner": {
-		"name": "Mineradora", "kind": "miner", "size": [2, 2], "hp": 220, "cost": {"iron_plate": 10, "gear": 3},
-		"power": 30, "priority": 1, "rate": 0.5, "buffer": 4,
-		"desc": "Extrai minério do depósito abaixo dela e o envia pela saída."
-	},
-	"smelter": {
-		"name": "Fundição", "kind": "crafter", "size": [2, 2], "hp": 250, "cost": {"iron_plate": 12},
-		"power": 40, "priority": 1, "recipes": ["smelt_iron"], "out_cap": 10,
-		"desc": "Transforma minério de ferro em placas. Recebe itens de esteiras apontadas para ela."
-	},
-	"assembler": {
-		"name": "Montadora", "kind": "crafter", "size": [2, 2], "hp": 250, "cost": {"iron_plate": 10, "gear": 5},
-		"power": 50, "priority": 1, "recipes": ["ammo", "gear"], "out_cap": 20,
-		"desc": "Monta componentes e munição. Selecione-a para trocar a receita."
-	},
-	"generator": {
-		"name": "Gerador a Carvão", "kind": "generator", "size": [2, 2], "hp": 300, "cost": {"iron_plate": 15, "gear": 4},
-		"power_out": 150, "fuel": "coal", "fuel_value": 3000, "accepts": {"coal": 10}, "pull": true,
-		"desc": "Queima carvão para gerar energia. Puxa carvão de esteiras adjacentes."
-	},
-	"pole": {
-		"name": "Poste de Energia", "kind": "pole", "size": [1, 1], "hp": 60, "cost": {"iron_plate": 2},
-		"supply_radius": 2.5, "wire_range": 7.5,
-		"desc": "Conecta estruturas à rede elétrica. Postes próximos se ligam automaticamente."
-	},
-	"battery": {
-		"name": "Banco de Baterias", "kind": "battery", "size": [2, 2], "hp": 200, "cost": {"iron_plate": 10, "gear": 6},
-		"battery_capacity": 6000, "battery_rate": 150,
-		"desc": "Armazena o excedente de energia e o libera quando a demanda supera a geração."
-	},
-	"turret_gun": {
-		"name": "Torre Balística", "kind": "turret_gun", "size": [2, 2], "hp": 400, "cost": {"iron_plate": 15, "gear": 6},
-		"power": 5, "priority": 0, "range": 7.5, "damage": 12, "cooldown": 0.35,
-		"ammo_item": "ammo", "rounds_per_item": 10, "accepts": {"ammo": 8}, "pull": true,
-		"desc": "Dispara contra inimigos comuns. Consome pentes de munição puxados de esteiras adjacentes."
-	},
-	"turret_tesla": {
-		"name": "Torre Elétrica", "kind": "turret_tesla", "size": [2, 2], "hp": 350, "cost": {"iron_plate": 20, "gear": 10},
-		"power": 110, "priority": 0, "range": 6.0, "damage": 35, "cooldown": 0.8, "shot_cost": 180,
-		"chain": 3, "chain_range": 2.5,
-		"desc": "Descarga em cadeia que atinge grupos. Não usa munição, mas compete pela energia da fábrica."
-	},
-	"wall": {
-		"name": "Muro", "kind": "wall", "size": [1, 1], "hp": 600, "cost": {"iron_plate": 4},
-		"desc": "Bloqueia e atrasa inimigos. Criaturas preferem contorná-lo, mas Aríetes o atravessam."
-	},
-	"repair": {
-		"name": "Estação de Reparo", "kind": "repair", "size": [2, 2], "hp": 250, "cost": {"iron_plate": 15, "gear": 5},
-		"power": 25, "priority": 0, "radius": 6.0, "heal_rate": 25, "heal_per_item": 60, "item": "iron_plate",
-		"accepts": {"iron_plate": 20}, "pull": true,
-		"desc": "Repara estruturas próximas consumindo placas de ferro de esteiras adjacentes."
-	},
-	"depot": {
-		"name": "Depósito", "kind": "depot", "size": [2, 2], "hp": 300, "cost": {"iron_plate": 8}, "capacity": 100,
-		"desc": "Armazena itens recebidos e os libera pela saída quando há espaço. Ótimo como reserva estratégica."
-	},
-	"splitter": {
-		"name": "Divisor", "kind": "splitter", "size": [1, 1], "hp": 60, "cost": {"iron_plate": 4, "gear": 1},
-		"desc": "Distribui itens alternadamente para a esquerda, frente e direita."
-	}
+	"core": {"name": "Núcleo", "kind": "core", "size": [3, 3], "hp": 3000, "cost": {}, "unique": true, "power_out": 80, "supply_radius": 4.5, "wire_range": 9.0, "desc": "O coração da instalação. Armazena recursos e fornece energia residual. Se for destruído, tudo acaba."},
+	"belt": {"name": "Esteira", "kind": "belt", "size": [1, 1], "hp": 40, "cost": {"iron_plate": 1}, "speed": 2.0, "desc": "Transporta itens na direção indicada. Arraste para traçar linhas."},
+	"miner": {"name": "Mineradora", "kind": "miner", "size": [2, 2], "hp": 220, "cost": {"iron_plate": 10, "gear": 3}, "power": 30, "priority": 1, "rate": 0.5, "buffer": 4, "desc": "Extrai minério do depósito abaixo dela e o envia pela saída."},
+	"smelter": {"name": "Fundição", "kind": "crafter", "size": [2, 2], "hp": 250, "cost": {"iron_plate": 12}, "power": 40, "priority": 1, "recipes": ["smelt_iron"], "out_cap": 10, "desc": "Transforma minério de ferro em placas. Recebe itens de esteiras apontadas para ela."},
+	"assembler": {"name": "Montadora", "kind": "crafter", "size": [2, 2], "hp": 250, "cost": {"iron_plate": 10, "gear": 5}, "power": 50, "priority": 1, "recipes": ["ammo", "gear", "research_pack", "military_pack", "shell"], "out_cap": 20, "desc": "Monta componentes e munição. Selecione-a para trocar a receita."},
+	"generator": {"name": "Gerador a Carvão", "kind": "generator", "size": [2, 2], "hp": 300, "cost": {"iron_plate": 15, "gear": 4}, "power_out": 150, "fuel": "coal", "fuel_value": 3000, "accepts": {"coal": 10}, "pull": true, "desc": "Queima carvão para gerar energia. Puxa carvão de esteiras adjacentes."},
+	"pole": {"name": "Poste de Energia", "kind": "pole", "size": [1, 1], "hp": 60, "cost": {"iron_plate": 2}, "supply_radius": 2.5, "wire_range": 7.5, "desc": "Conecta estruturas à rede elétrica. Postes próximos se ligam automaticamente."},
+	"battery": {"name": "Banco de Baterias", "kind": "battery", "size": [2, 2], "hp": 200, "cost": {"iron_plate": 10, "gear": 6}, "battery_capacity": 6000, "battery_rate": 150, "desc": "Armazena o excedente de energia e o libera quando a demanda supera a geração."},
+	"turret_gun": {"name": "Torre Balística", "kind": "turret_gun", "size": [2, 2], "hp": 400, "cost": {"iron_plate": 15, "gear": 6}, "power": 5, "priority": 0, "range": 7.5, "damage": 12, "cooldown": 0.35, "ammo_item": "ammo", "rounds_per_item": 10, "accepts": {"ammo": 8}, "pull": true, "desc": "Dispara contra inimigos comuns. Consome pentes de munição puxados de esteiras adjacentes.", "targets": "ground"},
+	"turret_tesla": {"name": "Torre Elétrica", "kind": "turret_tesla", "size": [2, 2], "hp": 350, "cost": {"iron_plate": 20, "gear": 10}, "power": 110, "priority": 0, "range": 6.0, "damage": 35, "cooldown": 0.8, "shot_cost": 180, "chain": 3, "chain_range": 2.5, "desc": "Descarga em cadeia que atinge grupos. Não usa munição, mas compete pela energia da fábrica.", "targets": "both"},
+	"wall": {"name": "Muro", "kind": "wall", "size": [1, 1], "hp": 600, "cost": {"iron_plate": 4}, "desc": "Bloqueia e atrasa inimigos. Criaturas preferem contorná-lo, mas Aríetes o atravessam."},
+	"repair": {"name": "Estação de Reparo", "kind": "repair", "size": [2, 2], "hp": 250, "cost": {"iron_plate": 15, "gear": 5}, "power": 25, "priority": 0, "radius": 6.0, "heal_rate": 25, "heal_per_item": 60, "item": "iron_plate", "accepts": {"iron_plate": 20}, "pull": true, "desc": "Repara estruturas próximas consumindo placas de ferro de esteiras adjacentes."},
+	"depot": {"name": "Depósito", "kind": "depot", "size": [2, 2], "hp": 300, "cost": {"iron_plate": 8}, "capacity": 100, "desc": "Armazena itens recebidos e os libera pela saída quando há espaço. Ótimo como reserva estratégica."},
+	"splitter": {"name": "Divisor", "kind": "splitter", "size": [1, 1], "hp": 60, "cost": {"iron_plate": 4, "gear": 1}, "desc": "Distribui itens alternadamente para a esquerda, frente e direita."},
+	"lab": {"name": "Laboratório", "kind": "lab", "size": [2, 2], "hp": 250, "cost": {"iron_plate": 20, "gear": 10}, "power": 60, "priority": 1, "unit_time": 4.0, "accepts": {"research_pack": 10, "military_pack": 10}, "pull": true, "desc": "Consome pacotes de pesquisa para desbloquear tecnologias (T abre a árvore). Recebe pacotes por esteira."},
+	"solar": {"name": "Painel Solar", "kind": "solar", "size": [2, 2], "hp": 120, "cost": {"iron_plate": 12, "gear": 6}, "power_out": 35, "locked": true, "desc": "Gera energia sem combustível, mas rende muito pouco à noite, justamente quando as hordas chegam."},
+	"turret_cannon": {"name": "Torre de Canhão", "kind": "turret_gun", "size": [2, 2], "hp": 500, "cost": {"iron_plate": 25, "gear": 12}, "locked": true, "power": 10, "priority": 0, "range": 9.0, "damage": 45, "cooldown": 2.0, "splash": 1.6, "targets": "ground", "ammo_item": "shell", "rounds_per_item": 2, "accepts": {"shell": 8}, "pull": true, "desc": "Projéteis explosivos com dano em área, ideais contra grupos. Consome Projéteis de Canhão."},
+	"turret_aa": {"name": "Torre Antiaérea", "kind": "turret_gun", "size": [2, 2], "hp": 350, "cost": {"iron_plate": 20, "gear": 10}, "locked": true, "power": 8, "priority": 0, "range": 10.0, "damage": 16, "cooldown": 0.22, "targets": "air", "ammo_item": "ammo", "rounds_per_item": 10, "accepts": {"ammo": 8}, "pull": true, "desc": "Rastreia e abate criaturas voadoras. Não atinge alvos terrestres. Usa pentes de munição."}
 }

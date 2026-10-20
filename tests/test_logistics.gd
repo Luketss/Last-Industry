@@ -94,3 +94,16 @@ func test_belt_destroyed_cuts_supply() -> void:
 	w.rebuild_all_ghosts()
 	run_seconds(w, 20.0)
 	check(w.storage.get("iron_ore", 0) > 0, "abastecimento restaurado")
+
+
+func test_blocked_belt_resumes_when_freed() -> void:
+	var w = empty_world()
+	var a: int = w.place("belt", Vector2i(5, 5), 0)
+	var wall: int = w.place("wall", Vector2i(6, 5), 0)
+	w.buildings[a].belt_items = [["iron_plate", 0.95]]
+	run_seconds(w, 1.0)
+	eq(w.buildings[a].belt_items.size(), 1, "item parado diante do bloqueio")
+	w.remove(wall)
+	w.place("belt", Vector2i(6, 5), 0)
+	run_seconds(w, 0.5)
+	eq(w.buildings[a].belt_items.size(), 0, "esteira volta a andar após liberar o destino")

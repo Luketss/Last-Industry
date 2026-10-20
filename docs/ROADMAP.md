@@ -10,9 +10,9 @@ verificáveis e testes automatizados.
 | 3 | Energia e fabricação de munição | ✅ Concluída |
 | 4 | Torres, muros, inimigos e combate | ✅ Concluída |
 | 5 | Integração produção ↔ defesa | ✅ Concluída |
-| 6 | Pesquisa, objetivos e progressão | 🟡 Objetivos, narrativa e modo sobrevivência prontos. Falta a árvore de pesquisa |
-| 7 | Otimização, interface e experiência | 🟡 Diagnóstico, depuração e MultiMesh prontos. Faltam seleção em área, blueprints, opções |
-| 8 | Builds de teste e distribuição Steam | 🟡 Exports e CI prontos. Falta integração Steamworks (ver STEAM.md) |
+| 6 | Pesquisa, objetivos e progressão | ✅ Concluída |
+| 7 | Otimização, interface e experiência | ✅ Concluída (remapeamento de teclas e localização ficam para a Fase 8) |
+| 8 | Builds de teste e distribuição Steam | ✅ Pipeline, conquistas, integração Steam opcional e remapeamento prontos. Dependem da sua conta: App ID, depots e segredos (ver STEAM.md) |
 
 ## Critérios de conclusão e testes
 
@@ -40,17 +40,48 @@ verificáveis e testes automatizados.
 - Hordas, vitória/derrota, salvamento determinístico.
 - Testes: `test_integration.gd`, `test_waves.gd`, `test_save.gd`, `test_belt_destroyed_cuts_supply`.
 
-### Fase 6 — Próximos passos
-1. Laboratório + pacotes de pesquisa (nova receita) + `data/research.json`.
-2. Árvore inicial: mineradora II, esteira rápida, torre de canhão (dano em área), munição perfurante,
-   painel solar, sensor de horda (aviso antecipado), drone de reparo.
-3. Inimigos 4–6: sabotador (alvo = geradores/esteiras), voador (ignora muros, exige antiaérea), cuspidor (ácido em área).
-4. Névoa de guerra e terminais de lore nas ruínas.
+### Fase 6 — Pesquisa e progressão
+- Laboratório consome Pacotes de Pesquisa (placa + componente) e Militares (munição + componente).
+  Vários laboratórios dividem o trabalho sem desperdiçar pacotes.
+- 10 tecnologias em `data/research.json` com pré-requisitos, modificadores e desbloqueios. Estruturas e
+  receitas bloqueadas ficam visíveis na barra com o nome da pesquisa necessária.
+- Conteúdo novo: Torre de Canhão, Torre Antiaérea, Painel Solar, Sabotador, Planador.
+- Objetivos de pesquisa e antiaérea; transmissões sobre Genesis por pesquisa; patrulhas com
+  sabotadores após 2 pesquisas.
+- Testes: `test_research.gd` (10 testes: bloqueios, laboratório, dois laboratórios, fortificação,
+  esteiras, canhão em área, voador × antiaérea, sabotador, solar, salvamento da pesquisa).
 
-### Fase 7 — Próximos passos
-Seleção em retângulo e cópia/colagem de áreas (blueprints), filtros no divisor, menu de opções
-(volume, resolução, idioma, teclas), tutorial contextual, tooltips de rastreamento de origem de
-recursos, perfil de desempenho com 1000+ estruturas.
+### Pendências para fases futuras
+Cuspidor (ácido em área), drones de reparo/abastecimento, sensor de horda, névoa de guerra,
+terminais de lore nas ruínas e a estrutura final Genesis com os três finais.
+
+### Fase 7 — Otimização, interface e experiência
+- **Desempenho:** campo de fluxo em float64 (o arredondamento em float32 causava reexpansões em
+  cascata: 30 s → 80 ms numa base de 3000 estruturas), esteiras bloqueadas dormem, rede elétrica sem
+  varreduras por tick. 3130 estruturas + 300 inimigos: 17 → 7–13 ms por tick.
+- **Seleção em área** (Shift+arrastar) com resumo por estado, ligar/desligar, demolir e custo de réplica.
+- **Plantas:** copiar a seleção, girar em 90°, colar com prévia por estrutura (verde/vermelho), receitas
+  e estado preservados.
+- **Rastreamento de fluxo** (V): fontes e destinos de itens de qualquer estrutura.
+- **Saídas consistentes com a rotação** em máquinas de tamanho par, com seta no chão marcando a saída.
+- **Minimapa** clicável, **alertas clicáveis**, **dicas contextuais** (dispensáveis, lembradas entre sessões).
+- **Opções:** volume, escala da interface, velocidade da câmera, tela cheia, câmera pela borda, dicas, minimapa.
+- Testes: `test_tools.gd` (rastreamento, planta com custo, rotação de planta), `test_large_base_performance`,
+  `test_blocked_belt_resumes_when_freed`.
+
+### Fase 8 — Builds de teste e distribuição
+- `scripts/build.sh`: exporta, testa o binário exportado e empacota (zip/tar.gz + SHA-256).
+- `release.yml`: tag → versão carimbada, testes, pacotes, GitHub Release; job de upload Steam
+  (`game-ci/steam-deploy`) ativado por variável + segredos; tags com sufixo vão ao branch beta.
+- `steam/*.vdf` + `scripts/steam_upload.sh` para upload manual com steamcmd.
+- `SteamService` (GodotSteam opcional, fallback offline), 12 conquistas locais + Steam, Rich Presence.
+- Remapeamento de teclas em Opções › Controles (troca automática de conflitos, persistente).
+- Testes: `test_platform.gd` (conquistas e persistência, estatísticas de elite/sem perdas,
+  remapeamento, fallback offline, ids das conquistas).
+
+### Pendências gerais
+Suporte a controle / Steam Deck, localização (EN/ES), filtros no divisor, estrutura final Genesis
+com os três finais, perfil de renderização em GPU dedicada.
 
 ## Como executar
 

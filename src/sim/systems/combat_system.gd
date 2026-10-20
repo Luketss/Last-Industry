@@ -48,8 +48,16 @@ func _step_gun(w, b, dt: float) -> void:
 		b.rounds -= 1
 		w.stats.shots += 1
 		var to: Vector2 = e.pos
-		w.damage_enemy(e, float(b.def.damage))
-		w.events.append({"e": "shot", "id": b.id, "from": b.center(), "to": to})
+		var dmg: float = float(b.def.damage) * (1.0 + w.research.mod("turret_damage"))
+		var splash := float(b.def.get("splash", 0.0))
+		if splash > 0.0:
+			for o in w.enemies.values():
+				if not o.dead and not o.def.get("flying", false) and o.pos.distance_to(to) <= splash:
+					w.damage_enemy(o, dmg * (1.0 if o == e else 0.6))
+			w.events.append({"e": "shell", "id": b.id, "from": b.center(), "to": to, "r": splash})
+		else:
+			w.damage_enemy(e, dmg)
+			w.events.append({"e": "shot", "id": b.id, "from": b.center(), "to": to, "air": e.def.get("flying", false)})
 
 
 func _step_tesla(w, b, dt: float) -> void:
@@ -79,7 +87,7 @@ func _step_tesla(w, b, dt: float) -> void:
 		hit[cur.id] = true
 		pts.append(cur.pos)
 		w.damage_enemy(cur, float(b.def.damage) * (1.0 if i == 0 else 0.7))
-		cur = _nearest_enemy(w, cur.pos, float(b.def.chain_range), hit)
+		cur = _nearest_enemy(w, cur.pos, float(b.def.chain_range), hit, "both")
 		if cur == null:
 			break
 	w.events.append({"e": "arc", "id": b.id, "points": pts})
@@ -97,18 +105,22 @@ func _acquire(w, b, dt: float):
 	if b.scan > 0.0:
 		return null
 	b.scan = 0.2
-	e = _nearest_enemy(w, c, rng, {})
+	e = _nearest_enemy(w, c, rng, {}, str(b.def.get("targets", "ground")))
 	if e != null:
 		b.target = e.id
 		b.aim = atan2(e.pos.y - c.y, e.pos.x - c.x)
 	return e
 
 
-static func _nearest_enemy(w, p: Vector2, radius: float, exclude: Dictionary):
+## `targets`: "ground", "air" or "both".
+static func _nearest_enemy(w, p: Vector2, radius: float, exclude: Dictionary, targets: String):
 	var best = null
 	var bd := radius * radius
 	for e in w.enemies.values():
 		if e.dead or exclude.has(e.id):
+			continue
+		var fly: bool = e.def.get("flying", false)
+		if (fly and targets == "ground") or (not fly and targets == "air"):
 			continue
 		var d: float = p.distance_squared_to(e.pos)
 		if d <= bd:

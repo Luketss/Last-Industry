@@ -11,10 +11,12 @@ precisa ser fabricada, cada torre consome energia, cada reparo custa materiais.
 
 ![Menu](docs/img/menu.png)
 ![Base em funcionamento](docs/img/base.png)
+![Árvore de pesquisa](docs/img/pesquisa.png)
+![Seleção, planta, rastreamento de fluxo, dica e minimapa](docs/img/ferramentas.png)
 
 **Plataformas:** Windows e Linux (x86_64) · **Engine:** Godot 4.3 (GDScript) · **Modo:** solo, offline · **Destino:** Steam
 
-## Estado atual: MVP jogável (Fases 1 a 5, partes da 6 e 7)
+## Estado atual: Fases 1 a 8 (MVP, pesquisa, ferramentas, desempenho e preparação para a Steam)
 
 | Item do MVP | Implementado |
 |---|---|
@@ -34,6 +36,19 @@ precisa ser fabricada, cada torre consome energia, cada reparo custa materiais.
 | Interface de produção e alertas | HUD, inspetor, estatísticas por minuto, diagnóstico de gargalos, alertas, luzes de estado |
 | Salvamento local | F5 / F9, determinístico |
 | Ciclo completo | Menu → partida → hordas → vitória/derrota → sobrevivência |
+
+**Fase 6:** Laboratório e árvore de 10 tecnologias (T) alimentada por Pacotes de Pesquisa e Militares;
+Torre de Canhão (dano em área), Torre Antiaérea, Painel Solar (fraco à noite); novos inimigos
+Sabotador (caça infraestrutura) e Planador (voa sobre muros); modificadores de mineração, máquinas,
+esteiras, dano e muros; hordas e patrulhas que reagem ao avanço da pesquisa.
+
+**Fase 7:** seleção em área com ações em grupo, plantas (copiar, girar e colar grupos de estruturas),
+rastreamento da origem e do destino dos itens, minimapa clicável, alertas que levam a câmera ao
+problema, dicas contextuais, menu de opções salvo entre sessões e otimização para bases com
+milhares de estruturas.
+
+**Fase 8:** pipeline de release (pacotes versionados, GitHub Release por tag, upload Steam pelo CI),
+integração Steam opcional via GodotSteam, 12 conquistas, Rich Presence e remapeamento de teclas.
 
 Também incluídos: objetivos guiados com recompensas, narrativa por transmissões e arquivos
 corrompidos, sobreposição de depuração (F3: rotas, redes elétricas, alvos), áudio procedural.
@@ -57,9 +72,12 @@ rode pelo editor:
 | Construir / girar | Clique esquerdo (arraste para esteiras, muros, postes) / R (Shift+R inverte) |
 | Demolir | Clique direito (arraste para várias) · Del na seleção |
 | Conta-gotas / copiar e colar configuração | Q / Ctrl+C, Ctrl+V |
+| Selecionar área / copiar como planta / reutilizar planta | Shift+arrastar / Ctrl+C na seleção / B |
+| Rastrear fluxo de itens | V (passe o mouse sobre uma estrutura) |
 | Reconstruir ruínas | G |
-| Pausar / velocidade / chamar horda | Espaço / + − / N |
-| Estatísticas / ajuda / depuração | Tab / H / F3 |
+| Pausar / velocidade / chamar horda | Espaço / . e , (ou + − do numérico) / N |
+| Remapear teclas | Opções › Controles |
+| Estatísticas / pesquisa / ajuda / depuração | Tab / T / H / F3 |
 | Salvar / carregar / menu | F5 / F9 / Esc |
 
 ### Primeiros passos
@@ -70,6 +88,8 @@ rode pelo editor:
 3. Alimente uma **Montadora** com placas e carvão para produzir **munição**.
 4. Passe a linha de munição **ao lado** das Torres Balísticas: elas puxam os pentes da esteira.
 5. Feche brechas com muros e mantenha uma Estação de Reparo abastecida. A primeira horda chega em 6 minutos.
+6. Construa um **Laboratório** e alimente-o com Pacotes de Pesquisa. Pesquise **Defesa Antiaérea**
+   antes da 6ª horda, quando chegam os Planadores.
 
 ## Desenvolvimento
 
@@ -87,6 +107,12 @@ godot --headless --path . --export-release "Windows Desktop" build/windows/LastI
 
 O CI (`.github/workflows/ci.yml`) roda os testes e o teste de fumaça, gera os builds de Windows e
 Linux e testa o binário Linux exportado a cada push.
+
+### Releases
+
+`git tag v0.2.0 && git push origin v0.2.0` publica um GitHub Release com os pacotes de Windows e
+Linux. Para a Steam, veja [docs/STEAM.md](docs/STEAM.md): o upload pelo CI liga sozinho quando o App ID
+e os segredos da sua conta Steamworks forem configurados.
 
 ### Documentação
 

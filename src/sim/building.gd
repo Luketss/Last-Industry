@@ -11,7 +11,7 @@ const STATUS_LEVEL := {
 	"reparando": 0, "pronta": 0, "armazenando": 0, "ociosa": 1, "ocioso": 1,
 	"sem insumos": 1, "saída bloqueada": 1, "carregando": 1, "sem combustível": 2,
 	"sem materiais": 1, "sem energia": 2, "sem munição": 2, "esgotado": 2, "desligado": 2,
-	"energia baixa": 1, "sem conexão": 2,
+	"energia baixa": 1, "sem conexão": 2, "pesquisando": 0, "sem pesquisa": 1,
 }
 
 var id := 0
@@ -94,14 +94,17 @@ func output_cell() -> Vector2i:
 	return output_cell_for(pos, size, rot)
 
 
+## The output tile sits on the front edge. For even sizes it is the tile that
+## rotates with the building (the "upper" tile when facing east), so rotating a
+## layout keeps every output aligned with its belt.
 static func output_cell_for(p: Vector2i, s: Vector2i, r: int) -> Vector2i:
 	match posmod(r, 4):
 		0:
 			return Vector2i(p.x + s.x, p.y + (s.y - 1) / 2)
 		1:
-			return Vector2i(p.x + (s.x - 1) / 2, p.y + s.y)
+			return Vector2i(p.x + s.x / 2, p.y + s.y)
 		2:
-			return Vector2i(p.x - 1, p.y + (s.y - 1) / 2)
+			return Vector2i(p.x - 1, p.y + s.y / 2)
 		_:
 			return Vector2i(p.x + (s.x - 1) / 2, p.y - 1)
 

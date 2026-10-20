@@ -13,6 +13,13 @@ var lost := 0
 var burned := 0
 var loaded := 0
 var waves := 0
+var researched := 0
+var elite_kills := 0
+var flawless := 0
+var peak_power := 0
+var structures := 0
+var lost_at_wave_start := 0
+var techs := {}
 var _ring_p := {}     ## item -> Array[int] (one slot per second)
 var _ring_c := {}
 var _slot := 0
@@ -46,6 +53,8 @@ func _ring_add(ring: Dictionary, item: String, n: int) -> void:
 
 
 func step(w, _dt: float) -> void:
+	structures = w.buildings.size()
+	peak_power = maxi(peak_power, int(w.power.totals.get("cap", 0.0)))
 	var s := int(w.time) % WINDOW
 	if s != _slot:
 		_slot = s
@@ -85,12 +94,25 @@ func value(key: String) -> int:
 			return loaded
 		"waves":
 			return waves
+		"researched":
+			return researched
+		"elite_kills":
+			return elite_kills
+		"flawless":
+			return flawless
+		"peak_power":
+			return peak_power
+		"structures":
+			return structures
+		"tech":
+			return int(techs.get(parts[1], 0))
 	return 0
 
 
 func to_dict() -> Dictionary:
 	return {"p": produced, "c": consumed, "d": delivered, "b": built, "kills": kills, "shots": shots,
-		"lost": lost, "burned": burned, "loaded": loaded, "waves": waves, "rp": _ring_p, "rc": _ring_c, "slot": _slot}
+		"lost": lost, "burned": burned, "loaded": loaded, "waves": waves, "researched": researched, "techs": techs,
+		"elite": elite_kills, "flawless": flawless, "peak_power": peak_power, "lost_ws": lost_at_wave_start, "rp": _ring_p, "rc": _ring_c, "slot": _slot}
 
 
 func load_dict(d: Dictionary) -> void:
@@ -105,6 +127,12 @@ func load_dict(d: Dictionary) -> void:
 	burned = int(d.burned)
 	loaded = int(d.loaded)
 	waves = int(d.waves)
+	researched = int(d.get("researched", 0))
+	elite_kills = int(d.get("elite", 0))
+	flawless = int(d.get("flawless", 0))
+	peak_power = int(d.get("peak_power", 0))
+	lost_at_wave_start = int(d.get("lost_ws", 0))
+	techs = Items.from_json(d.get("techs", {}))
 	_slot = int(d.slot)
 	_ring_p = _ring_from(d.rp)
 	_ring_c = _ring_from(d.rc)

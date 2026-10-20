@@ -11,6 +11,10 @@ const CameraRig = preload("res://src/view/camera_rig.gd")
 const BuildController = preload("res://src/view/build_controller.gd")
 const GameAudio = preload("res://src/view/audio.gd")
 const Hud = preload("res://src/ui/hud.gd")
+const Settings = preload("res://src/ui/settings.gd")
+const Bindings = preload("res://src/ui/bindings.gd")
+const Achievements = preload("res://src/platform/achievements.gd")
+const SteamService = preload("res://src/platform/steam_service.gd")
 
 const MAX_STEPS_PER_FRAME := 12
 const SPEEDS := [1.0, 2.0, 3.0]
@@ -28,12 +32,18 @@ var menu_paused := false
 var speed := 1.0
 var _acc := 0.0
 var _end_shown := false
+var achievements
+var steam
+var _ach_timer := 0.0
 var _smoke := -1
 var _shots_dir := ""
 
 
 func _ready() -> void:
 	data = GameData.new()
+	steam = SteamService.new()
+	add_child(steam)
+	achievements = Achievements.new(data.achievements)
 	view = WorldView.new()
 	add_child(view)
 	camera = CameraRig.new()
@@ -42,8 +52,11 @@ func _ready() -> void:
 	add_child(controller)
 	audio = GameAudio.new(self)
 	add_child(audio)
+	Settings.load_all()
+	Bindings.reload()
 	hud = Hud.new(self)
 	add_child(hud)
+	Settings.apply(self)
 	to_main_menu()
 	for a in OS.get_cmdline_user_args():
 		if a == "--smoke":
@@ -55,6 +68,7 @@ func _ready() -> void:
 func _bind(w) -> void:
 	world = w
 	view.bind(w)
+	hud.bind_world(w)
 	camera.bounds = Rect2(0, 0, w.width, w.height)
 	var c = w.core()
 	var focus := Vector3(w.width * 0.5, 0, w.height * 0.5) if c == null else Vector3(c.center().x, 0, c.center().y)
@@ -142,50 +156,50 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _global_key(e: InputEventKey) -> bool:
-	match e.keycode:
-		KEY_ESCAPE:
-			if hud.help_panel.visible or hud.stats_panel.visible:
-				hud.help_panel.visible = false
-				hud.stats_panel.visible = false
-			elif not controller.cancel():
-				set_menu_paused(not menu_paused)
-			return true
-		KEY_SPACE:
+	if e.keycode == KEY_ESCAPE:
+		if hud.close_overlays():
+			pass
+		elif not controller.cancel():
+			set_menu_paused(not menu_paused)
+		return true
+	if e.keycode == KEY_F1:
+		hud.toggle_help()
+		return true
+	if e.keycode == KEY_KP_ADD or e.keycode == KEY_KP_SUBTRACT:
+		_change_speed(1 if e.keycode == KEY_KP_ADD else -1)
+		return true
+	var action := Bindings.action_for(e)
+	match action:
+		"pause":
 			paused = not paused
-			return true
-		KEY_TAB:
+		"stats":
 			hud.toggle_stats()
-			return true
-		KEY_H, KEY_F1:
+		"research":
+			hud.toggle_research()
+		"help":
 			hud.toggle_help()
-			return true
-		KEY_F3:
+		"debug":
 			view.debug = not view.debug
-			return true
-		KEY_F5:
+		"save":
 			save_game()
-			return true
-		KEY_F9:
+		"load":
 			load_game()
-			return true
-		KEY_N:
+		"next_wave":
 			if world.state == "playing" and world.waves.has_more(world) and not world.waves.active:
 				world.waves.timer = 0.0
-			return true
-		KEY_EQUAL, KEY_KP_ADD, KEY_PLUS:
-			if e.keycode == KEY_EQUAL and not e.shift_pressed:
-				return _hotkey(11)
-			speed = SPEEDS[mini(SPEEDS.find(speed) + 1, SPEEDS.size() - 1)]
-			return true
-		KEY_MINUS, KEY_KP_SUBTRACT:
-			if e.keycode == KEY_MINUS and not e.shift_pressed:
-				return _hotkey(10)
-			speed = SPEEDS[maxi(SPEEDS.find(speed) - 1, 0)]
-			return true
-	if e.keycode >= KEY_0 and e.keycode <= KEY_9 and not e.ctrl_pressed:
-		var i: int = 9 if e.keycode == KEY_0 else e.keycode - KEY_1
-		return _hotkey(i)
-	return false
+		"speed_up":
+			_change_speed(1)
+		"speed_down":
+			_change_speed(-1)
+		_:
+			if action.begins_with("slot"):
+				return _hotkey(int(action.trim_prefix("slot")) - 1)
+			return false
+	return true
+
+
+func _change_speed(d: int) -> void:
+	speed = SPEEDS[clampi(SPEEDS.find(speed) + d, 0, SPEEDS.size() - 1)]
 
 
 func _hotkey(i: int) -> bool:
@@ -213,6 +227,13 @@ func _process(delta: float) -> void:
 	hud.on_events(ev)
 	audio.on_events(ev)
 	view.camera_focus = camera.position
+	_ach_timer -= delta
+	if in_game and _ach_timer <= 0.0 and _smoke < 0:
+		_ach_timer = 1.0
+		for d in achievements.check(world.stats):
+			steam.unlock(d.id)
+			hud.achievement(d)
+		steam.set_presence("Horda %d · %d estruturas" % [world.waves.index, world.buildings.size()])
 	if in_game and world.state != "playing" and not _end_shown:
 		_end_shown = true
 		hud.show_end(world.state)
@@ -240,6 +261,10 @@ func _smoke_step() -> void:
 		275:
 			_shot("04_stats")
 			hud.toggle_stats()
+			hud.toggle_research()
+		278:
+			_shot("04b_research")
+			hud.toggle_research()
 			view.debug = true
 			controller.set_tool("turret_tesla")
 		290:
@@ -249,6 +274,37 @@ func _smoke_step() -> void:
 			save_game()
 		300:
 			load_game()
+		330:
+			# Phase 7 tools: area selection -> blueprint -> paste; flow tracing.
+			var c: Vector2i = world.core().pos
+			world.storage["iron_plate"] = 2000
+			world.storage["gear"] = 1000
+			controller._drag_start = c + Vector2i(-10, -1)
+			controller.hover = c + Vector2i(-2, 2)
+			controller._finish_area_select()
+			print("smoke: selected %d" % controller.selection.size())
+			controller.copy_selection_blueprint()
+			controller.hover_point = Vector2(c.x - 5, c.y + 14)
+		336:
+			controller._paste_blueprint()
+			controller.set_tool("")
+			controller.trace_mode = true
+			controller.hover = world.core().pos + Vector2i(-6, 0)
+		345:
+			_shot("07_tools")
+			hud.toggle_options()
+		350:
+			_shot("08_options")
+			hud.toggle_options()
+			controller.trace_mode = false
+			hud.toggle_controls()
+		356:
+			_shot("09_controls")
+			hud.toggle_controls()
+			hud.toggle_achievements()
+		362:
+			_shot("10_achievements")
+			hud.toggle_achievements()
 		420:
 			_shot("06_loaded")
 			print("SMOKE OK tick=%d enemies=%d buildings=%d" % [world.tick, world.enemies.size(), world.buildings.size()])
@@ -301,6 +357,16 @@ func _demo_base() -> void:
 	W.place("repair", c + Vector2i(2, 5), 0)
 	W.place("depot", c + Vector2i(7, -1), 0)
 	W.place("pole", c + Vector2i(4, -1), 0)
+	W.research.complete(W, "military_1")
+	W.research.complete(W, "anti_air")
+	W.research.complete(W, "automation_1")
+	W.research.complete(W, "solar")
+	W.place("lab", c + Vector2i(-6, -4), 0)
+	W.place("solar", c + Vector2i(-9, -4), 0)
+	W.place("turret_aa", c + Vector2i(2, -6), 0)
+	W.research.complete(W, "artillery")
+	W.place("turret_cannon", c + Vector2i(-3, 5), 0)
+	W.research.select(W, "ballistics")
 	for i in range(-6, 9):
 		W.place("wall", c + Vector2i(9, i), 0)
 		W.place("wall", c + Vector2i(-12, i), 0)

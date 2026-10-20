@@ -1,5 +1,8 @@
 {
 	"smelt_iron": {"name": "Fundir Ferro", "time": 1.6, "inputs": {"iron_ore": 1}, "outputs": {"iron_plate": 1}},
 	"ammo": {"name": "Pente de Munição", "time": 2.0, "inputs": {"iron_plate": 1, "coal": 1}, "outputs": {"ammo": 2}},
-	"gear": {"name": "Componente Mecânico", "time": 1.5, "inputs": {"iron_plate": 2}, "outputs": {"gear": 1}}
+	"gear": {"name": "Componente Mecânico", "time": 1.5, "inputs": {"iron_plate": 2}, "outputs": {"gear": 1}},
+	"research_pack": {"name": "Pacote de Pesquisa", "time": 4.0, "inputs": {"iron_plate": 1, "gear": 1}, "outputs": {"research_pack": 1}},
+	"military_pack": {"name": "Pacote Militar", "time": 5.0, "inputs": {"ammo": 1, "gear": 1}, "outputs": {"military_pack": 1}, "locked": true},
+	"shell": {"name": "Projétil de Canhão", "time": 3.0, "inputs": {"iron_plate": 2, "coal": 1}, "outputs": {"shell": 2}, "locked": true}
 }

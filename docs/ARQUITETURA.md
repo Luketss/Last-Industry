@@ -10,6 +10,7 @@ src/
     building.gd, enemy.gd  Estado de entidades
     map_generator.gd       Terreno procedural, jazidas, ninhos, corredores garantidos
     save_system.gd         Arquivos locais em user://saves
+    blueprint.gd           Plantas: capturar, girar, custear e colar grupos de estruturas
     systems/
       power_system.gd      Redes elétricas, prioridades, geradores, baterias
       logistics_system.gd  Esteiras, saídas de máquinas, divisores, coleta adjacente
@@ -20,13 +21,15 @@ src/
       wave_system.gd       Hordas anunciadas, patrulhas, sobrevivência, ciclo noite
       stats.gd             Produção/consumo com janela móvel de 1 minuto
       objectives.gd        Objetivos guiados, recompensas, gatilhos narrativos
+      research_system.gd   Árvore de pesquisa, laboratórios, modificadores e desbloqueios
   view/                    APRESENTAÇÃO — lê a simulação, nunca decide regras
     world_view.gd          Ambiente, terreno, estruturas, MultiMesh de itens/inimigos, efeitos, depuração
     meshes.gd              Modelos procedurais e materiais
     camera_rig.gd          Câmera isométrica ortográfica
     build_controller.gd    Entrada de construção → comandos no World
     audio.gd               Paisagem sonora procedural
-  ui/                      Interface (HUD, menus, painéis)
+  ui/                      Interface (HUD, menus, painéis, minimapa, dicas)
+    settings.gd            Preferências do jogador em user://settings.cfg
 data/                      Conteúdo: estruturas, receitas, itens, inimigos, hordas, objetivos, narrativa
 tests/                     Testes headless (unidade, integração, desempenho)
 ```
@@ -70,6 +73,13 @@ reconstruir caches sujos (logística, energia)
   encontra uma estrutura na rota a ataca. Rastejantes também mordem estruturas próximas (aggro).
 
 ## Desempenho
+
+- Campo de fluxo: Dijkstra com heap binário inline e distâncias em float64. Com float32, o
+  arredondamento fazia células resolvidas parecerem melhoráveis e uma base de 3000 estruturas levava
+  30 s por recálculo (agora ~80 ms).
+- Esteiras bloqueadas e comprimidas dormem 0,2 s (campo `cooldown`) em vez de tentar a cada tick.
+- Rastreamento de fluxo (`logistics.flow_graph`/`trace`) é calculado sob demanda e reaproveitado
+  enquanto o layout não muda.
 
 - Itens em esteiras, inimigos e barras de vida são desenhados com `MultiMesh` (uma chamada por tipo).
 - Projéteis são hitscan com traçadores em `ImmediateMesh`.

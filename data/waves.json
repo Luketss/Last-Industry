@@ -3,16 +3,194 @@
 	"interval": 210,
 	"spawn_gap": 0.35,
 	"waves": [
-		{"groups": [{"type": "crawler", "count": 6}]},
-		{"groups": [{"type": "crawler", "count": 10}]},
-		{"groups": [{"type": "crawler", "count": 10}, {"type": "runner", "count": 6}]},
-		{"groups": [{"type": "crawler", "count": 14}, {"type": "runner", "count": 8}]},
-		{"groups": [{"type": "brute", "count": 1}, {"type": "crawler", "count": 12}]},
-		{"groups": [{"type": "crawler", "count": 18}, {"type": "runner", "count": 12}]},
-		{"groups": [{"type": "brute", "count": 2}, {"type": "crawler", "count": 16}, {"type": "runner", "count": 8}]},
-		{"groups": [{"type": "crawler", "count": 22}, {"type": "runner", "count": 14}, {"type": "brute", "count": 2, "spawn": "other"}]},
-		{"groups": [{"type": "brute", "count": 4}, {"type": "crawler", "count": 20}, {"type": "runner", "count": 14, "spawn": "other"}]},
-		{"boss": true, "groups": [{"type": "brute", "count": 1, "elite": true, "hp_mult": 7.0, "size_mult": 1.7, "damage_mult": 2.0}, {"type": "crawler", "count": 24}, {"type": "runner", "count": 16, "spawn": "other"}, {"type": "brute", "count": 3, "spawn": "other"}]}
+		{
+			"groups": [
+				{
+					"type": "crawler",
+					"count": 6
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"type": "crawler",
+					"count": 10
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"type": "crawler",
+					"count": 10
+				},
+				{
+					"type": "runner",
+					"count": 6
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"type": "crawler",
+					"count": 14
+				},
+				{
+					"type": "runner",
+					"count": 8
+				},
+				{
+					"type": "saboteur",
+					"count": 3,
+					"spawn": "other"
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"type": "brute",
+					"count": 1
+				},
+				{
+					"type": "crawler",
+					"count": 12
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"type": "crawler",
+					"count": 18
+				},
+				{
+					"type": "runner",
+					"count": 12
+				},
+				{
+					"type": "glider",
+					"count": 5
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"type": "brute",
+					"count": 2
+				},
+				{
+					"type": "crawler",
+					"count": 16
+				},
+				{
+					"type": "runner",
+					"count": 8
+				},
+				{
+					"type": "saboteur",
+					"count": 5,
+					"spawn": "other"
+				},
+				{
+					"type": "glider",
+					"count": 6
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"type": "crawler",
+					"count": 22
+				},
+				{
+					"type": "runner",
+					"count": 14
+				},
+				{
+					"type": "brute",
+					"count": 2,
+					"spawn": "other"
+				},
+				{
+					"type": "glider",
+					"count": 8,
+					"spawn": "other"
+				}
+			]
+		},
+		{
+			"groups": [
+				{
+					"type": "brute",
+					"count": 4
+				},
+				{
+					"type": "crawler",
+					"count": 20
+				},
+				{
+					"type": "runner",
+					"count": 14,
+					"spawn": "other"
+				},
+				{
+					"type": "saboteur",
+					"count": 6
+				},
+				{
+					"type": "glider",
+					"count": 10
+				}
+			]
+		},
+		{
+			"boss": true,
+			"groups": [
+				{
+					"type": "brute",
+					"count": 1,
+					"elite": true,
+					"hp_mult": 7.0,
+					"size_mult": 1.7,
+					"damage_mult": 2.0
+				},
+				{
+					"type": "crawler",
+					"count": 24
+				},
+				{
+					"type": "runner",
+					"count": 16,
+					"spawn": "other"
+				},
+				{
+					"type": "brute",
+					"count": 3,
+					"spawn": "other"
+				},
+				{
+					"type": "glider",
+					"count": 12
+				},
+				{
+					"type": "saboteur",
+					"count": 8,
+					"spawn": "other"
+				}
+			]
+		}
 	],
-	"survival": {"base_crawler": 20, "base_runner": 12, "base_brute": 3, "growth": 0.18}
+	"survival": {
+		"base_crawler": 20,
+		"base_runner": 12,
+		"base_brute": 3,
+		"growth": 0.18,
+		"base_glider": 10,
+		"base_saboteur": 6
+	}
 }
