@@ -67,6 +67,8 @@ func test_ui_assets_exist() -> void:
 	check(UiTheme.font().fallbacks.size() > 0, "fonte tem fallback para acentos e símbolos")
 	for name in ["panel", "panel_info", "button", "button_hover", "button_pressed", "button_disabled"]:
 		check(UiTheme.texture(UiTheme.UI % name) != null, "moldura %s" % name)
+	for item in data().items:
+		check(UiTheme.icon("items/" + item) != null, "ícone do item %s" % item)
 	for type in data().game.build_menu:
 		check(UiTheme.icon("buildings/" + type) != null, "ícone de %s" % type)
 	for n in ["gear", "trophy", "exitRight", "right", "import", "question", "information"]:

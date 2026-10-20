@@ -166,7 +166,17 @@ Volume geral,Master volume,Volumen general
 Música,Music,Música
 Efeitos sonoros,Sound effects,Efectos de sonido
 Escala da interface,Interface scale,Escala de la interfaz
+Sombras,Shadows,Sombras
+Desligadas,Off,Desactivadas
+Baixas,Low,Bajas
+Altas,High,Altas
+Antisserrilhamento,Anti-aliasing,Antialiasing
+Desligado,Off,Desactivado
+Limite de FPS,FPS limit,Límite de FPS
+Sem limite,Unlimited,Sin límite
 Velocidade da câmera,Camera speed,Velocidad de la cámara
+Sincronização vertical (V-Sync),Vertical sync (V-Sync),Sincronización vertical (V-Sync)
+Cinzas no ar,Ash in the air,Ceniza en el aire
 Tela cheia,Fullscreen,Pantalla completa
 Mover câmera pela borda da tela,Move camera at the screen edge,Mover la cámara por el borde de la pantalla
 Dicas contextuais,Contextual hints,Consejos contextuales

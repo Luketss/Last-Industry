@@ -5,7 +5,8 @@ const PATH := "user://settings.cfg"
 static var path := PATH     ## overridable by tests
 const DEFAULTS := {
 	"language": "", "volume": 0.8, "music_volume": 0.6, "sfx_volume": 0.9, "fullscreen": false, "ui_scale": 1.0, "hints": true,
-	"edge_pan": false, "camera_speed": 1.0, "minimap": true, "hints_seen": [], "bindings": {},
+	"edge_pan": false, "camera_speed": 1.0, "minimap": true,
+	"shadows": 2, "msaa": 1, "fps_limit": 0, "vsync": true, "particles": true, "hints_seen": [], "bindings": {},
 }
 
 static var values := DEFAULTS.duplicate(true)
@@ -47,5 +48,22 @@ static func apply(main) -> void:
 		if DisplayServer.window_get_mode() != want:
 			DisplayServer.window_set_mode(want)
 	main.get_tree().root.content_scale_factor = float(values.ui_scale)
+	_apply_graphics(main)
 	main.camera.edge_pan = bool(values.edge_pan)
 	main.camera.speed = float(values.camera_speed)
+
+
+## Graphics quality: shadows (0 off, 1 low, 2 high), MSAA (0 off, 1 2×, 2 4×),
+## frame cap (0 = none), vsync and ambient particles.
+static func _apply_graphics(main) -> void:
+	var view = main.view
+	var sh := int(values.shadows)
+	view.sun.shadow_enabled = sh > 0
+	view.sun.directional_shadow_max_distance = 60.0 if sh == 1 else 90.0
+	RenderingServer.directional_shadow_atlas_set_size(2048 if sh == 1 else 4096, true)
+	main.get_viewport().msaa_3d = [Viewport.MSAA_DISABLED, Viewport.MSAA_2X, Viewport.MSAA_4X][clampi(int(values.msaa), 0, 2)]
+	Engine.max_fps = int(values.fps_limit)
+	view.ash.emitting = bool(values.particles)
+	view.ash.visible = bool(values.particles)
+	if DisplayServer.get_name() != "headless":
+		DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_ENABLED if values.vsync else DisplayServer.VSYNC_DISABLED)

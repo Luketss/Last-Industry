@@ -477,7 +477,7 @@ func add_alert(key: String, text: String, level: String = "warn", p = null, cool
 	alerts.push_front({"text": text, "level": level, "time": time, "pos": p})
 	if alerts.size() > 7:
 		alerts.resize(7)
-	events.append({"e": "alert", "level": level, "text": text})
+	events.append({"e": "alert", "key": key, "level": level, "text": text})
 
 
 func trigger_lore(trigger: String) -> void:

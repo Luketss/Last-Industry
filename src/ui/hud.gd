@@ -565,6 +565,17 @@ func _build_options() -> void:
 	sc.selected = maxi(scales.find(float(Settings.get_value("ui_scale"))), 1) if float(Settings.get_value("ui_scale")) != 0.85 else 0
 	sc.item_selected.connect(func(i): _set_option("ui_scale", scales[i]))
 	grid.add_child(sc)
+	for opt in [["shadows", I18n.t("Sombras"), [I18n.t("Desligadas"), I18n.t("Baixas"), I18n.t("Altas")], [0, 1, 2]],
+			["msaa", I18n.t("Antisserrilhamento"), [I18n.t("Desligado"), "MSAA 2×", "MSAA 4×"], [0, 1, 2]],
+			["fps_limit", I18n.t("Limite de FPS"), ["30", "60", "120", I18n.t("Sem limite")], [30, 60, 120, 0]]]:
+		_label(grid, opt[1])
+		var ob := OptionButton.new()
+		ob.focus_mode = Control.FOCUS_NONE
+		for n in opt[2]:
+			ob.add_item(n)
+		ob.selected = maxi(opt[3].find(int(Settings.get_value(opt[0]))), 0)
+		ob.item_selected.connect(func(i): _set_option(opt[0], opt[3][i]))
+		grid.add_child(ob)
 	_label(grid, I18n.t("Velocidade da câmera"))
 	var cs := HSlider.new()
 	cs.min_value = 0.5
@@ -574,7 +585,7 @@ func _build_options() -> void:
 	cs.custom_minimum_size.x = 260
 	cs.value_changed.connect(func(x): _set_option("camera_speed", x))
 	grid.add_child(cs)
-	for opt in [["fullscreen", I18n.t("Tela cheia")], ["edge_pan", I18n.t("Mover câmera pela borda da tela")], ["hints", I18n.t("Dicas contextuais")], ["minimap", I18n.t("Minimapa")]]:
+	for opt in [["vsync", I18n.t("Sincronização vertical (V-Sync)")], ["particles", I18n.t("Cinzas no ar")], ["fullscreen", I18n.t("Tela cheia")], ["edge_pan", I18n.t("Mover câmera pela borda da tela")], ["hints", I18n.t("Dicas contextuais")], ["minimap", I18n.t("Minimapa")]]:
 		_label(grid, opt[1])
 		var cb := CheckButton.new()
 		cb.button_pressed = bool(Settings.get_value(opt[0]))
@@ -941,6 +952,14 @@ func _process(delta: float) -> void:
 	_update_research(w)
 
 
+## Painted item icon as BBCode (assets/icons/items), or a coloured square.
+func _item_icon(w, item: String, size: int) -> String:
+	var path := UiTheme.ICON % ("items/" + item)
+	if ResourceLoader.exists(path):
+		return "[img=%dx%d]%s[/img]" % [size, size, path]
+	return "[color=#%s]■[/color]" % _hex(w.data.item_color(item).lightened(0.2))
+
+
 func _hex(c: Color) -> String:
 	return c.to_html(false)
 
@@ -949,8 +968,8 @@ func _update_top(w) -> void:
 	var parts := []
 	for item in ["iron_ore", "coal", "iron_plate", "gear", "ammo"]:
 		var r: int = w.stats.rate(item)
-		parts.append("[color=#%s]■[/color] %s [b]%d[/b] [color=#8f877c]+%d/min[/color]" % [
-			_hex(w.data.item_color(item).lightened(0.2)), str(w.data.items[item].get("short", w.data.item_name(item))), Items.count(w.storage, item), r])
+		parts.append("%s %s [b]%d[/b] [color=#8f877c]+%d/min[/color]" % [
+			_item_icon(w, item, 22), str(w.data.items[item].get("short", w.data.item_name(item))), Items.count(w.storage, item), r])
 	var pt: Dictionary = w.power.totals
 	var pcol := UiTheme.OK if float(pt.get("sat", 1.0)) > 0.98 else (UiTheme.WARN if float(pt.get("sat", 1.0)) > 0.6 else UiTheme.BAD)
 	var bat := ""
@@ -1341,7 +1360,7 @@ func _update_stats(w) -> void:
 		var c: int = w.stats.rate(item, true)
 		var col := "d8cfc2" if p >= c else "ff6a50"
 		t += "[cell]%s[/cell][cell][color=#%s]%d[/color][/cell][cell]%d[/cell][cell]%d[/cell][cell]%d[/cell]" % [
-			w.data.item_name(item), col, p, c, int(w.stats.produced.get(item, 0)), Items.count(w.storage, item)]
+			_item_icon(w, item, 18) + " " + w.data.item_name(item), col, p, c, int(w.stats.produced.get(item, 0)), Items.count(w.storage, item)]
 	t += I18n.t("[/table]\n\n[b]Energia[/b]\n")
 	for net in w.power.networks:
 		t += I18n.t("Rede #%d: %d nós, %d estruturas — geração %d kW, demanda %d kW, atendimento %d%%%s\n") % [

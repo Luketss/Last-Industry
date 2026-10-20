@@ -15,6 +15,7 @@ const SOUNDS := {
 	"explosion": [-6.0, 0.1], "explosion2": [-6.0, 0.1], "wave": [-6.0, 1.0], "build": [-10.0, 0.05],
 	"demolish": [-10.0, 0.05], "click": [-12.0, 0.03], "hover": [-20.0, 0.03], "error": [-10.0, 0.2],
 	"objective": [-6.0, 0.5], "achievement": [-4.0, 0.5], "research": [-6.0, 0.5],
+	"transmission": [-8.0, 1.0], "bite": [-12.0, 0.15], "die": [-12.0, 0.08],
 }
 
 var main
@@ -134,6 +135,16 @@ func on_events(events: Array) -> void:
 				play("objective")
 			"research":
 				play("research")
+			"transmission":
+				play("transmission")
+			"bite":
+				play("bite", ev.pos)
+			"enemy_died":
+				play("die", ev.pos, 3.0 if ev.elite else 0.0)
+			"alert":
+				# The core being hit gets the siren even between hordes.
+				if ev.get("key", "") == "core_hit":
+					_alarm = maxf(_alarm, 1.4)
 
 
 func _desired_track() -> String:

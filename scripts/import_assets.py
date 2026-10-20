@@ -37,6 +37,8 @@ SOURCES = {
     "icons": ("https://opengameart.org/content/game-icons", "Kenney_gameIcons.zip", "Kenney", "CC0"),
     "scifi_sfx": ("https://opengameart.org/content/sci-fi-sounds", "sci-fi_sounds.zip", "Kenney", "CC0"),
     "ui_sfx": ("https://opengameart.org/content/interface-sounds", "kenney_interfaceSounds.zip", "Kenney", "CC0"),
+    "scifi_items": ("https://opengameart.org/content/different-sci-fi-item-icons", "Different-Sci-Fi-Item-Icons.zip", "CraftPix.net", "OGA-BY 3.0"),
+    "apoc_icons": ("https://opengameart.org/content/free-set-of-10-post-apocalypse-icons", "Post-apocalypse%20Game-Free-icons-pack1.zip", "CraftPix.net", "OGA-BY 3.0"),
     "monsters": ("https://opengameart.org/content/50-monsters-pack-3d", "50_monsters_pack_3d_version_1.0.zip", "isaiah658", "CC0"),
     "m_menu": ("https://opengameart.org/content/tragic-ambient-main-menu", "ambientmain_0.ogg", "HaelDB", "CC0"),
     "m_empty": ("https://opengameart.org/content/emptycity-background-music", "EmptyCity_0.ogg", "yd", "CC0"),
@@ -48,7 +50,8 @@ SOURCES = {
 
 TITLES = {
     "factory": "Factory Kit", "td": "Tower Defense Kit", "city": "City Kit (Industrial)", "ui": "UI Pack - Sci-Fi",
-    "icons": "Game Icons", "monsters": "50+ Monsters Pack 3D", "scifi_sfx": "Sci-Fi Sounds", "ui_sfx": "Interface Sounds",
+    "icons": "Game Icons", "monsters": "50+ Monsters Pack 3D",
+    "scifi_items": "Different Sci-Fi Item Icons", "apoc_icons": "Free Set of 10 Post-apocalypse Icons", "scifi_sfx": "Sci-Fi Sounds", "ui_sfx": "Interface Sounds",
     "m_menu": "Tragic ambient main menu", "m_empty": "EmptyCity: Background Music", "m_factory": "Factory ambiance",
     "m_scavenger": "Lone Scavenger", "m_iron": "Iron wasteland", "m_fight": "Cyborg Factory Fight Theme",
 }
@@ -72,6 +75,14 @@ MODELS = {
 # name -> (source, {tone: RGBA}).
 # enemy type -> monster number in the 50+ Monsters Pack (static OBJ + palette).
 ENEMIES = {"crawler": 53, "runner": 42, "brute": 43, "saboteur": 31, "glider": 14}
+
+# item -> (pack, file, darken): painted item icons shown in the HUD.
+ITEM_ICONS = {
+    "iron_ore": ("scifi_items", "18.png", False), "coal": ("scifi_items", "16.png", True),
+    "iron_plate": ("scifi_items", "1.png", False), "gear": ("scifi_items", "5.png", False),
+    "ammo": ("apoc_icons", "18.png", False), "research_pack": ("scifi_items", "13.png", False),
+    "military_pack": ("scifi_items", "4.png", False), "shell": ("scifi_items", "12.png", False),
+}
 
 UI_STYLES = {
     "panel": ("panel_glass_notches.png", {116: (8, 7, 6, 230), 150: (8, 7, 6, 235), 218: (14, 13, 11, 228), 255: (217, 128, 41, 170)}),
@@ -98,6 +109,9 @@ SFX = {
     "explosion": ("scifi_sfx", "explosionCrunch_000"),
     "explosion2": ("scifi_sfx", "explosionCrunch_002"),
     "wave": ("scifi_sfx", "computerNoise_001"),
+    "transmission": ("scifi_sfx", "computerNoise_002"),
+    "bite": ("scifi_sfx", "slime_000"),
+    "die": ("scifi_sfx", "slime_001"),
     "build": ("ui_sfx", "drop_002"),
     "demolish": ("ui_sfx", "scratch_002"),
     "click": ("ui_sfx", "click_002"),
@@ -221,7 +235,7 @@ def main() -> None:
     args = ap.parse_args()
     cache = Path(args.cache)
     cache.mkdir(parents=True, exist_ok=True)
-    for sub in ["models", "ui", "icons/ui", "fonts", "sfx", "music"]:  # icons/buildings: render_icons.gd
+    for sub in ["models", "ui", "icons/ui", "icons/items", "fonts", "sfx", "music"]:  # icons/buildings: render_icons.gd
         shutil.rmtree(OUT / sub, ignore_errors=True)
 
     for kit, names in MODELS.items():
@@ -246,6 +260,18 @@ def main() -> None:
 
     for name, (pack, stem) in SFX.items():
         ffmpeg(find(fetch(cache, pack), stem + ".ogg"), OUT / "sfx" / (name + ".ogg"), 4, -16)
+    for item, (pack, f, dark) in ITEM_ICONS.items():
+        im = Image.open(find(fetch(cache, pack), f)).convert("RGBA")
+        im.thumbnail((64, 64), Image.LANCZOS)
+        if dark:  # white rock -> lump of coal
+            px = im.load()
+            for y in range(im.height):
+                for x in range(im.width):
+                    r, g, b, a = px[x, y]
+                    v = (r + g + b) // 3
+                    px[x, y] = (v * 30 // 100, v * 28 // 100, v * 26 // 100, a)
+        (OUT / "icons" / "items").mkdir(parents=True, exist_ok=True)
+        im.save(OUT / "icons" / "items" / (item + ".png"))
     monsters = fetch(cache, "monsters")
     for kind, n in ENEMIES.items():
         dst = OUT / "models" / "enemies"
@@ -255,7 +281,7 @@ def main() -> None:
     for name, key in MUSIC.items():
         ffmpeg(fetch(cache, key), OUT / "music" / (name + ".ogg"), 2, -20)
 
-    used = sorted(set(MODELS) | {"ui", "icons", "monsters"} | {p for p, _ in SFX.values()} | set(MUSIC.values()))
+    used = sorted(set(MODELS) | {"ui", "icons", "monsters"} | {p for p, _, _ in ITEM_ICONS.values()} | {p for p, _ in SFX.values()} | set(MUSIC.values()))
     manifest = {k: {"title": TITLES[k], "page": SOURCES[k][0], "file": SOURCES[k][1].replace("%20", " "), "author": SOURCES[k][2],
                     "license": SOURCES[k][3]} for k in used}
     (OUT / "sources.json").write_text(json.dumps(manifest, indent=1, ensure_ascii=False) + "\n")

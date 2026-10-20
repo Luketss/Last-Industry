@@ -1,4 +1,11 @@
 {
+ "apoc_icons": {
+  "title": "Free Set of 10 Post-apocalypse Icons",
+  "page": "https://opengameart.org/content/free-set-of-10-post-apocalypse-icons",
+  "file": "Post-apocalypse Game-Free-icons-pack1.zip",
+  "author": "CraftPix.net",
+  "license": "OGA-BY 3.0"
+ },
  "city": {
   "title": "City Kit (Industrial)",
   "page": "https://opengameart.org/content/city-kit-industrial",
@@ -68,6 +75,13 @@
   "file": "50_monsters_pack_3d_version_1.0.zip",
   "author": "isaiah658",
   "license": "CC0"
+ },
+ "scifi_items": {
+  "title": "Different Sci-Fi Item Icons",
+  "page": "https://opengameart.org/content/different-sci-fi-item-icons",
+  "file": "Different-Sci-Fi-Item-Icons.zip",
+  "author": "CraftPix.net",
+  "license": "OGA-BY 3.0"
  },
  "scifi_sfx": {
   "title": "Sci-Fi Sounds",

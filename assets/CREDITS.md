@@ -11,6 +11,8 @@ por máquina fica em [`sources.json`](sources.json); o jogo a exibe em **Menu �
 | Núcleo, gerador, painel solar, ruínas do mapa | [City Kit (Industrial)](https://opengameart.org/content/city-kit-industrial) | Kenney | CC0 |
 | Molduras de painéis e botões, fonte Kenney Future | [UI Pack - Sci-Fi](https://opengameart.org/content/ui-pack-sci-fi) | Kenney | CC0 |
 | Inimigos (Rastejante, Corredor, Aríete, Sabotador, Planador) | [50+ Monsters Pack 3D](https://opengameart.org/content/50-monsters-pack-3d) | isaiah658 | CC0 |
+| Ícones dos itens (minério, placa, componente, pacotes, projétil) | [Different Sci-Fi Item Icons](https://opengameart.org/content/different-sci-fi-item-icons) | CraftPix.net | OGA-BY 3.0 |
+| Ícone do pente de munição | [Free Set of 10 Post-apocalypse Icons](https://opengameart.org/content/free-set-of-10-post-apocalypse-icons) | CraftPix.net | OGA-BY 3.0 |
 | Ícones dos menus | [Game Icons](https://opengameart.org/content/game-icons) | Kenney | CC0 |
 | Tiros, explosões, descarga elétrica, alerta | [Sci-Fi Sounds](https://opengameart.org/content/sci-fi-sounds) | Kenney | CC0 |
 | Cliques, construção, objetivos, conquistas | [Interface Sounds](https://opengameart.org/content/interface-sounds) | Kenney | CC0 |
