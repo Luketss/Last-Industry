@@ -450,7 +450,7 @@ func on_events(events: Array) -> void:
 				for i in range(1, ev.points.size()):
 					particles.play("sparks", _v3(ev.points[i], 0.4), 0.6)
 			"drone":
-				fx.append({"k": "drone", "a": _v3(ev.from, 1.0), "b": _v3(ev.to, 0.8), "c": Color(0.4, 1.0, 0.5), "t": 0.0, "life": 0.9})
+				fx.append({"k": "drone", "a": _v3(ev.from, 1.0), "b": _v3(ev.to, 0.8), "c": Color(1.0, 0.7, 0.25) if ev.get("supply", false) else Color(0.4, 1.0, 0.5), "t": 0.0, "life": 0.9})
 			"repair":
 				fx.append({"k": "line", "a": _v3(ev.from, 1.0), "b": _v3(ev.to, 0.6), "c": Color(0.3, 1.0, 0.45), "t": 0.0, "life": 0.35})
 			"enemy_died":

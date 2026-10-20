@@ -26,6 +26,7 @@
 		"turret_cannon",
 		"turret_aa",
 		"drone_hub",
+		"supply_hub",
 		"sensor",
 		"genesis"
 	],

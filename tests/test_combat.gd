@@ -1,4 +1,5 @@
 extends "res://tests/test_base.gd"
+const Items = preload("res://src/sim/items.gd")
 
 
 func test_gun_kills_enemy_with_ammo() -> void:
@@ -121,3 +122,19 @@ func test_drone_hub_repairs_far_with_core_plates() -> void:
 	check(w.buildings[wall].hp > 50.0, "muro distante reparado")
 	check(int(w.storage.iron_plate) < plates, "placas saem do estoque do Núcleo")
 	check(drones > 0, "drones voando")
+
+
+func test_supply_hub_feeds_turrets_from_core() -> void:
+	var w = empty_world({"width": 40, "height": 40})
+	for t in ["automation_1", "military_1", "drones", "drones_2"]:
+		w.research.complete(w, t)
+	var c: Vector2i = w.core().pos
+	var hub: int = w.place("supply_hub", c + Vector2i(-4, 0), 0)
+	check(hub != 0, "hub construído (%s)" % w.can_place("supply_hub", c + Vector2i(-4, 0), 0))
+	var gun: int = w.place("turret_gun", c + Vector2i(-12, 0), 0)
+	var far: int = w.place("turret_gun", c + Vector2i(6, 14), 0)
+	w.storage["ammo"] = 50
+	run_seconds(w, 8.0)
+	check(Items.count(w.buildings[gun].inv, "ammo") > 0, "torre no alcance recebe munição sem esteira")
+	check(int(w.storage.ammo) < 50, "munição sai do estoque do Núcleo")
+	eq(Items.count(w.buildings[far].inv, "ammo"), 0, "torre fora do alcance não recebe")

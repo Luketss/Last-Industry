@@ -34,6 +34,7 @@ sem conexão,not connected,sin conexión
 pesquisando,researching,investigando
 sem pesquisa,no research,sin investigación
 ativando,activating,activando
+abastecendo,supplying,abasteciendo
 Leste,East,Este
 Sul,South,Sur
 Oeste,West,Oeste
@@ -506,6 +507,8 @@ Sensor de Horda,Horde Sensor,Sensor de Hordas
 "Antena de varredura: revela uma grande área da névoa ao redor, mostrando ruínas, jazidas, terminais e criaturas.","Scanning antenna: reveals a large area of fog around it, showing ruins, deposits, terminals and creatures.","Antena de barrido: revela una gran zona de niebla a su alrededor, mostrando ruinas, yacimientos, terminales y criaturas."
 Hub de Drones,Drone Hub,Centro de Drones
 Drones consertam estruturas num raio de 13 tiles usando placas de ferro do estoque do Núcleo.,Drones repair structures within 13 tiles using iron plates from the Core's stock.,Los drones reparan estructuras en un radio de 13 casillas usando placas de hierro de la reserva del Núcleo.
+Hub de Abastecimento,Supply Hub,Centro de Abastecimiento
+"Drones levam munição, projéteis, placas e carvão do estoque do Núcleo para torres, estações de reparo e geradores a até 12 tiles.","Drones carry ammo, shells, plates and coal from the Core's stock to turrets, repair stations and generators within 12 tiles.","Los drones llevan munición, proyectiles, placas y carbón de la reserva del Núcleo a torres, estaciones de reparación y generadores a 12 casillas o menos."
 Rastejante,Crawler,Rastrero
 Criatura básica. Ataca qualquer estrutura próxima de sua rota.,Basic creature. Attacks any structure near its route.,Criatura básica. Ataca cualquier estructura cercana a su ruta.
 Corredor,Runner,Corredor
@@ -625,3 +628,5 @@ Protocolo Genesis,Genesis Protocol,Protocolo Genesis
 "Desbloqueia a Estrutura Genesis, que encerra a campanha.","Unlocks the Genesis Structure, which ends the campaign.","Desbloquea la Estructura Genesis, que termina la campaña."
 Drones de Reparo,Repair Drones,Drones de Reparación
 Desbloqueia o Hub de Drones: reparos automáticos à distância com placas do Núcleo.,Unlocks the Drone Hub: automatic long-range repairs with plates from the Core.,Desbloquea el Centro de Drones: reparaciones automáticas a distancia con placas del Núcleo.
+Logística por Drones,Drone Logistics,Logística con Drones
+Desbloqueia o Hub de Abastecimento: drones levam munição e insumos do Núcleo às defesas.,Unlocks the Supply Hub: drones carry ammo and supplies from the Core to the defenses.,Desbloquea el Centro de Abastecimiento: los drones llevan munición e insumos del Núcleo a las defensas.

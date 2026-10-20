@@ -263,7 +263,7 @@ func _build_hotbar() -> void:
 		var type: String = menu[i]
 		var def: Dictionary = main.data.buildings[type]
 		var b := _button(hotbar, def.name, main.controller.set_tool.bind(type))
-		b.custom_minimum_size = Vector2(106, 78)
+		b.custom_minimum_size = Vector2(106 if menu.size() <= 18 else 96, 82)
 		b.icon = UiTheme.icon("buildings/" + type)
 		b.expand_icon = true
 		b.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -271,9 +271,10 @@ func _build_hotbar() -> void:
 		b.add_theme_color_override("icon_normal_color", Color.WHITE)
 		b.add_theme_color_override("icon_hover_color", Color(1.15, 1.1, 1.0))
 		b.add_theme_color_override("icon_pressed_color", Color.WHITE)
-		b.clip_text = true
+		b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		b.add_theme_font_override("font", ThemeDB.fallback_font)
 		b.add_theme_font_size_override("font_size", 10)
+		b.add_theme_constant_override("line_spacing", -3)
 		var key := _label(b, keys[i] if i < keys.size() else "", 11, UiTheme.ACCENT)
 		key.position = Vector2(7, 4)
 		key.add_theme_constant_override("outline_size", 4)

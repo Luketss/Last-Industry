@@ -11,6 +11,8 @@ func request(w) -> void:
 		b.power_req = float(b.def.power) if b.enabled else 0.0
 	for b in w.list("turret_tesla"):
 		b.power_req = float(b.def.power) if b.enabled and b.energy < float(b.def.shot_cost) else 0.0
+	for b in w.list("supply_hub"):
+		b.power_req = float(b.def.power) if b.enabled else 0.0
 	for b in w.list("repair"):
 		var stock: Dictionary = w.storage if b.def.get("from_storage", false) else b.inv
 		var has_mat: bool = b.energy > 0.0 or Items.count(stock, str(b.def.item)) > 0
@@ -24,6 +26,50 @@ func step(w, dt: float) -> void:
 		_step_tesla(w, b, dt)
 	for b in w.list("repair"):
 		_step_repair(w, b, dt)
+	for b in w.list("supply_hub"):
+		_step_supply(w, b, dt)
+
+
+## Supply hub: drones carry ammo, shells, plates and coal from the Core's stock to
+## the turrets, repair stations and generators in range that are running low.
+const SUPPLY_KINDS := ["turret_gun", "repair", "generator"]
+
+
+func _step_supply(w, b, dt: float) -> void:
+	if not b.enabled:
+		b.status = "desligado"
+		return
+	if b.power_sat < 0.5:
+		b.status = "sem energia"
+		return
+	b.scan -= dt
+	if b.scan > 0.0:
+		return
+	b.scan = float(b.def.interval)
+	var best = null
+	var best_item := ""
+	var best_fill := 0.75   # only top up below 75%
+	var c: Vector2 = b.center()
+	for o in w.buildings.values():
+		if not (o.kind in SUPPLY_KINDS) or o.def.get("from_storage", false) or c.distance_to(o.center()) > float(b.def.radius):
+			continue
+		var acc: Dictionary = o.def.get("accepts", {})
+		for item in acc:
+			if Items.count(w.storage, item) <= 0:
+				continue
+			var fill := float(Items.count(o.inv, item)) / float(acc[item])
+			if fill < best_fill:
+				best_fill = fill
+				best = o
+				best_item = item
+	if best == null:
+		b.status = "ocioso"
+		return
+	var n := mini(int(b.def.get("carry", 2)), mini(Items.count(w.storage, best_item), int(best.def.accepts[best_item]) - Items.count(best.inv, best_item)))
+	Items.take(w.storage, best_item, n)
+	Items.add(best.inv, best_item, n)
+	b.status = "abastecendo"
+	w.events.append({"e": "drone", "from": c, "to": best.center(), "supply": true})
 
 
 func _step_gun(w, b, dt: float) -> void:
