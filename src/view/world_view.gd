@@ -6,6 +6,10 @@ const Defs = preload("res://src/sim/defs.gd")
 const Meshes = preload("res://src/view/meshes.gd")
 const GroundShader = preload("res://src/view/ground.gdshader")
 const Logistics = preload("res://src/sim/systems/logistics_system.gd")
+const Kit = preload("res://src/view/kit.gd")
+const RUIN_MODELS := ["city/building-a", "city/building-e", "city/building-f", "city/building-g", "city/building-l",
+	"city/building-n", "city/building-p", "city/building-q", "city/building-r", "city/water-tower",
+	"city/chimney-large", "city/detail-tank-large", "city/windmill-low", "factory/machine-bed", "factory/crane"]
 
 var world
 var nodes := {}           ## building id -> visual handles
@@ -192,13 +196,39 @@ func _build_terrain() -> void:
 		for x in w:
 			if world.terrain[y * w + x] == Defs.T_ROCK:
 				rocks.append(Vector2i(x, y))
+	var rng := RandomNumberGenerator.new()
+	rng.seed = world.map_seed
+	# Some ruin cells hold the shell of an old industrial building (Kenney city kit).
+	var shells := {}
+	var blocks := []
+	for c in rocks:
+		var name: String = RUIN_MODELS[rng.randi() % RUIN_MODELS.size()]
+		if rng.randf() < 0.24 and Kit.has(name):
+			if not shells.has(name):
+				shells[name] = []
+			shells[name].append(c)
+		else:
+			blocks.append(c)
+	for name in shells:
+		var smm := MultiMesh.new()
+		smm.transform_format = MultiMesh.TRANSFORM_3D
+		smm.mesh = Kit.merged_mesh(name)
+		smm.instance_count = shells[name].size()
+		for i in shells[name].size():
+			var c: Vector2i = shells[name][i]
+			var s := rng.randf_range(0.95, 1.15)
+			var basis := Basis(Vector3.UP, rng.randi_range(0, 3) * PI * 0.5 + rng.randf_range(-0.08, 0.08))
+			basis = Basis(Vector3(1, 0, 0), rng.randf_range(-0.05, 0.05)) * basis.scaled(Vector3(s, s * rng.randf_range(0.8, 1.3), s))
+			smm.set_instance_transform(i, Transform3D(basis, Vector3(c.x + 0.5, -0.05, c.y + 0.5)))
+		var smi := MultiMeshInstance3D.new()
+		smi.multimesh = smm
+		terrain_root.add_child(smi)
+	rocks = blocks
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
 	mm.use_colors = true
 	mm.mesh = Meshes.box_mesh(Vector3.ONE)
 	mm.instance_count = rocks.size()
-	var rng := RandomNumberGenerator.new()
-	rng.seed = world.map_seed
 	for i in rocks.size():
 		var c: Vector2i = rocks[i]
 		var ht := rng.randf_range(0.3, 2.6) if rng.randf() < 0.55 else rng.randf_range(0.2, 0.7)

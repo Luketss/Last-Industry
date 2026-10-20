@@ -52,7 +52,7 @@ milhares de estruturas.
 integração Steam opcional via GodotSteam, 12 conquistas, Rich Presence e remapeamento de teclas.
 
 Também incluídos: objetivos guiados com recompensas, narrativa por transmissões e arquivos
-corrompidos, sobreposição de depuração (F3: rotas, redes elétricas, alvos), áudio procedural.
+corrompidos, sobreposição de depuração (F3: rotas, redes elétricas, alvos), trilha sonora dinâmica (menu, ambiente, hordas) e efeitos sonoros com camada procedural de vento e maquinário.
 
 ## Como jogar
 
@@ -124,6 +124,20 @@ e os segredos da sua conta Steamworks forem configurados.
 - [Decisão de engine (ADR 0001)](docs/adr/0001-engine-godot.md)
 - [Roteiro por fases e critérios de conclusão](docs/ROADMAP.md)
 - [Preparação para a Steam](docs/STEAM.md)
+
+### Arte e áudio
+
+Modelos 3D, molduras da interface, ícones, efeitos sonoros e músicas vêm de pacotes do
+[OpenGameArt.org](https://opengameart.org) (kits da Kenney, também no itch.io, e trilhas de
+vários autores), todos com licença comercial sem *share-alike*. Créditos completos em
+[assets/CREDITS.md](assets/CREDITS.md) e em **Menu › Créditos**.
+
+```bash
+python3 scripts/import_assets.py   # baixa os pacotes, recolore os modelos e regenera assets/
+xvfb-run -a godot --path . --rendering-driver opengl3 -s res://scripts/render_icons.gd  # ícones da barra
+```
+
+Se um recurso faltar, o jogo volta aos modelos e sons procedurais.
 
 ### Ajustar o conteúdo
 

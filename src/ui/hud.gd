@@ -20,6 +20,8 @@ var trans_label: Label
 var alerts_box: VBoxContainer
 var hotbar: GridContainer
 var hot_buttons := {}
+var hot_keys := {}
+var credits_panel: PanelContainer
 var info_panel: PanelContainer
 var info_title: Label
 var info_status: Label
@@ -131,6 +133,15 @@ func _label(parent: Control, text: String = "", size: int = 15, color: Color = U
 	return l
 
 
+## Section title in the display font (Kenney Future).
+func _heading(parent: Control, text: String, size: int = 14, color: Color = UiTheme.ACCENT) -> Label:
+	var l := _label(parent, text, size, color)
+	var f := UiTheme.font()
+	if f != null:
+		l.add_theme_font_override("font", f)
+	return l
+
+
 func _rich(parent: Control, fit: bool = true) -> RichTextLabel:
 	var r := RichTextLabel.new()
 	r.bbcode_enabled = true
@@ -142,9 +153,14 @@ func _rich(parent: Control, fit: bool = true) -> RichTextLabel:
 	return r
 
 
-func _button(parent: Control, text: String, cb: Callable) -> Button:
+func _button(parent: Control, text: String, cb: Callable, icon_name: String = "") -> Button:
 	var b := Button.new()
 	b.text = text
+	if icon_name != "":
+		b.icon = UiTheme.icon("ui/" + icon_name)
+		b.expand_icon = false
+		b.add_theme_constant_override("icon_max_width", 22)
+	b.mouse_entered.connect(func(): main.audio.play("hover"))
 	b.pressed.connect(cb)
 	b.focus_mode = Control.FOCUS_NONE
 	parent.add_child(b)
@@ -158,8 +174,7 @@ func _build_top() -> void:
 	var hb := HBoxContainer.new()
 	hb.add_theme_constant_override("separation", 24)
 	p.add_child(hb)
-	var title := _label(hb, "LAST INDUSTRY", 15, UiTheme.ACCENT)
-	title.add_theme_constant_override("outline_size", 0)
+	_heading(hb, "LAST INDUSTRY", 15)
 	top_label = _rich(hb)
 	top_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top_label.autowrap_mode = TextServer.AUTOWRAP_OFF
@@ -178,7 +193,7 @@ func _build_left() -> void:
 	var vb := VBoxContainer.new()
 	vb.custom_minimum_size.x = 340
 	p.add_child(vb)
-	_label(vb, "OBJETIVO", 12, UiTheme.ACCENT)
+	_heading(vb, "OBJETIVO", 11)
 	obj_label = _label(vb, "")
 	obj_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	obj_label.custom_minimum_size.x = 340
@@ -225,9 +240,23 @@ func _build_hotbar() -> void:
 	for i in menu.size():
 		var type: String = menu[i]
 		var def: Dictionary = main.data.buildings[type]
-		var b := _button(hotbar, "%s\n%s" % [keys[i] if i < keys.size() else "", def.name], main.controller.set_tool.bind(type))
-		b.custom_minimum_size = Vector2(104, 42)
-		b.add_theme_font_size_override("font_size", 12)
+		var b := _button(hotbar, def.name, main.controller.set_tool.bind(type))
+		b.custom_minimum_size = Vector2(106, 78)
+		b.icon = UiTheme.icon("buildings/" + type)
+		b.expand_icon = true
+		b.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		b.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
+		b.add_theme_color_override("icon_normal_color", Color.WHITE)
+		b.add_theme_color_override("icon_hover_color", Color(1.15, 1.1, 1.0))
+		b.add_theme_color_override("icon_pressed_color", Color.WHITE)
+		b.clip_text = true
+		b.add_theme_font_override("font", ThemeDB.fallback_font)
+		b.add_theme_font_size_override("font_size", 10)
+		var key := _label(b, keys[i] if i < keys.size() else "", 11, UiTheme.ACCENT)
+		key.position = Vector2(7, 4)
+		key.add_theme_constant_override("outline_size", 4)
+		key.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
+		hot_keys[type] = key
 		b.tooltip_text = _build_tooltip_text(def)
 		b.toggle_mode = true
 		hot_buttons[type] = b
@@ -254,11 +283,11 @@ func _cost_text(cost: Dictionary) -> String:
 
 func _build_info() -> void:
 	info_panel = _panel(game_ui)
-	_place(info_panel, Control.PRESET_BOTTOM_RIGHT, Vector2(12, 128))
+	_place(info_panel, Control.PRESET_BOTTOM_RIGHT, Vector2(12, 200))
 	var vb := VBoxContainer.new()
 	vb.custom_minimum_size.x = 320
 	info_panel.add_child(vb)
-	info_title = _label(vb, "", 18, UiTheme.ACCENT)
+	info_title = _heading(vb, "", 16)
 	info_status = _label(vb, "")
 	info_hp = ProgressBar.new()
 	info_hp.custom_minimum_size = Vector2(300, 12)
@@ -299,7 +328,7 @@ func _build_overlays() -> void:
 	stats_panel = _center_panel(760)
 	var sv := VBoxContainer.new()
 	stats_panel.add_child(sv)
-	_label(sv, "ESTATÍSTICAS E DIAGNÓSTICO  (Tab)", 16, UiTheme.ACCENT)
+	_heading(sv, "ESTATÍSTICAS E DIAGNÓSTICO  (Tab)", 16)
 	stats_body = _rich(sv)
 	stats_body.custom_minimum_size = Vector2(740, 0)
 
@@ -307,7 +336,7 @@ func _build_overlays() -> void:
 	var rv := VBoxContainer.new()
 	rv.add_theme_constant_override("separation", 6)
 	research_panel.add_child(rv)
-	_label(rv, "ÁRVORE DE PESQUISA  (T)", 16, UiTheme.ACCENT)
+	_heading(rv, "ÁRVORE DE PESQUISA  (T)", 16)
 	_label(rv, "Laboratórios consomem pacotes recebidos por esteira. Fabrique-os na Montadora.", 13, UiTheme.DIM)
 	research_list = VBoxContainer.new()
 	research_list.add_theme_constant_override("separation", 4)
@@ -316,7 +345,7 @@ func _build_overlays() -> void:
 	help_panel = _center_panel(820)
 	var hv := VBoxContainer.new()
 	help_panel.add_child(hv)
-	_label(hv, "COMO OPERAR A INSTALAÇÃO  (H)", 16, UiTheme.ACCENT)
+	_heading(hv, "COMO OPERAR A INSTALAÇÃO  (H)", 16)
 	var help := _rich(hv)
 	help.custom_minimum_size.x = 800
 	help.text = HELP_TEXT
@@ -325,28 +354,34 @@ func _build_overlays() -> void:
 	var pv := VBoxContainer.new()
 	pv.add_theme_constant_override("separation", 8)
 	pause_panel.add_child(pv)
-	_label(pv, "PAUSADO", 22, UiTheme.ACCENT).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_button(pv, "Continuar", func(): main.set_menu_paused(false))
-	_button(pv, "Salvar (F5)", main.save_game)
-	_button(pv, "Carregar (F9)", main.load_game)
-	_button(pv, "Ajuda (H)", func(): help_panel.visible = not help_panel.visible)
-	_button(pv, "Opções", toggle_options)
-	_button(pv, "Conquistas", toggle_achievements)
-	_button(pv, "Menu principal", main.to_main_menu)
-	_button(pv, "Sair do jogo", main.quit_game)
+	_heading(pv, "PAUSADO", 22).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	for e in [["Continuar", func(): main.set_menu_paused(false), "right"], ["Salvar (F5)", main.save_game, "save"],
+			["Carregar (F9)", main.load_game, "import"], ["Ajuda (H)", func(): help_panel.visible = not help_panel.visible, "question"],
+			["Opções", toggle_options, "gear"], ["Conquistas", toggle_achievements, "trophy"],
+			["Menu principal", main.to_main_menu, "home"], ["Sair do jogo", main.quit_game, "exitRight"]]:
+		_menu_button(pv, e[0], e[1], e[2], Vector2(280, 40))
 
 	end_panel = _center_panel(520)
 	var ev := VBoxContainer.new()
 	ev.add_theme_constant_override("separation", 10)
 	end_panel.add_child(ev)
-	end_title = _label(ev, "", 30, UiTheme.ACCENT)
+	end_title = _heading(ev, "", 28)
 	end_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	end_body = _label(ev, "")
 	end_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	end_body.custom_minimum_size.x = 500
-	end_continue = _button(ev, "Continuar no modo Sobrevivência", main.continue_survival)
-	_button(ev, "Nova partida", main.start_new_game)
-	_button(ev, "Menu principal", main.to_main_menu)
+	end_continue = _menu_button(ev, "Continuar no modo Sobrevivência", main.continue_survival, "fastForward", Vector2(0, 42))
+	_menu_button(ev, "Nova partida", main.start_new_game, "return", Vector2(0, 42))
+	_menu_button(ev, "Menu principal", main.to_main_menu, "home", Vector2(0, 42))
+
+
+## Large left-aligned button with an icon, used by the main, pause and end menus.
+func _menu_button(parent: Control, text: String, cb: Callable, icon_name: String, size: Vector2) -> Button:
+	var b := _button(parent, text, cb, icon_name)
+	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	b.custom_minimum_size = size
+	b.add_theme_font_size_override("font_size", 16 if size.y >= 46 else 14)
+	return b
 
 
 func _build_menu() -> void:
@@ -354,34 +389,85 @@ func _build_menu() -> void:
 	menu_root.set_anchors_preset(Control.PRESET_FULL_RECT)
 	menu_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(menu_root)
-	var shade := ColorRect.new()
-	shade.color = Color(0, 0, 0, 0.35)
-	shade.set_anchors_preset(Control.PRESET_FULL_RECT)
+	# Darkens the left side behind the menu and leaves the orbiting base visible.
+	var grad := Gradient.new()
+	grad.set_color(0, Color(0.02, 0.018, 0.015, 0.92))
+	grad.set_color(1, Color(0.02, 0.018, 0.015, 0.0))
+	grad.add_point(0.45, Color(0.02, 0.018, 0.015, 0.7))
+	var gt := GradientTexture2D.new()
+	gt.gradient = grad
+	gt.width = 256
+	gt.height = 4
+	var shade := TextureRect.new()
+	shade.texture = gt
+	shade.stretch_mode = TextureRect.STRETCH_SCALE
+	shade.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	shade.set_anchors_preset(Control.PRESET_LEFT_WIDE)
+	shade.offset_right = 900
 	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	menu_root.add_child(shade)
 	var vb := VBoxContainer.new()
 	vb.set_anchors_preset(Control.PRESET_CENTER_LEFT)
-	vb.position = Vector2(110, -220)
+	vb.position = Vector2(110, -270)
 	vb.add_theme_constant_override("separation", 10)
 	menu_root.add_child(vb)
-	var title := _label(vb, "LAST INDUSTRY", 76, Color(0.93, 0.88, 0.8))
-	title.add_theme_constant_override("outline_size", 10)
-	title.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.7))
+	var title := _heading(vb, "LAST INDUSTRY", 64, Color(0.93, 0.88, 0.8))
+	title.add_theme_constant_override("outline_size", 12)
+	title.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.75))
+	# Hazard stripe under the title.
+	var stripe := ColorRect.new()
+	stripe.custom_minimum_size = Vector2(560, 4)
+	stripe.color = UiTheme.ACCENT
+	vb.add_child(stripe)
 	_label(vb, "“Quando o mundo acabou, as máquinas continuaram trabalhando.”", 19, UiTheme.ACCENT)
-	_label(vb, "Extrair. Produzir. Defender. Sobreviver.", 15, UiTheme.DIM)
+	_heading(vb, "EXTRAIR · PRODUZIR · DEFENDER · SOBREVIVER", 12, UiTheme.DIM)
 	var spacer := Control.new()
-	spacer.custom_minimum_size.y = 30
+	spacer.custom_minimum_size.y = 26
 	vb.add_child(spacer)
-	for b in [_button(vb, "Nova partida", main.start_new_game)]:
-		b.custom_minimum_size = Vector2(300, 46)
-	menu_continue = _button(vb, "Continuar", main.load_game)
-	menu_continue.custom_minimum_size = Vector2(300, 46)
-	_button(vb, "Como jogar", func(): help_panel.visible = not help_panel.visible).custom_minimum_size = Vector2(300, 46)
-	_button(vb, "Opções", toggle_options).custom_minimum_size = Vector2(300, 46)
-	_button(vb, "Conquistas", toggle_achievements).custom_minimum_size = Vector2(300, 46)
-	_button(vb, "Sair", main.quit_game).custom_minimum_size = Vector2(300, 46)
+	var size := Vector2(340, 48)
+	_menu_button(vb, "Nova partida", main.start_new_game, "right", size)
+	menu_continue = _menu_button(vb, "Continuar", main.load_game, "import", size)
+	_menu_button(vb, "Como jogar", func(): help_panel.visible = not help_panel.visible, "question", size)
+	_menu_button(vb, "Opções", toggle_options, "gear", size)
+	_menu_button(vb, "Conquistas", toggle_achievements, "trophy", size)
+	_menu_button(vb, "Créditos", toggle_credits, "information", size)
+	_menu_button(vb, "Sair", main.quit_game, "exitRight", size)
 	var ver := _label(menu_root, "v%s — protótipo (MVP)  ·  Windows / Linux" % ProjectSettings.get_setting("application/config/version", "0.1.0"), 12, UiTheme.DIM)
 	_place(ver, Control.PRESET_BOTTOM_LEFT, Vector2(16, 12))
+	var art := _label(menu_root, "Modelos, interface, ícones e sons: Kenney · Músicas: OpenGameArt.org — veja Créditos", 12, UiTheme.DIM)
+	_place(art, Control.PRESET_BOTTOM_RIGHT, Vector2(16, 12))
+	_build_credits()
+
+
+## Attribution for every third-party pack (assets/sources.json, written by
+## scripts/import_assets.py). CC-BY tracks require this credit in-game.
+func _build_credits() -> void:
+	credits_panel = _center_panel(720)
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 8)
+	credits_panel.add_child(v)
+	_heading(v, "CRÉDITOS", 18)
+	var body := _rich(v)
+	body.custom_minimum_size.x = 700
+	body.mouse_filter = Control.MOUSE_FILTER_PASS
+	body.meta_clicked.connect(func(m): OS.shell_open(str(m)))
+	var t := "[b]Last Industry[/b] — design, código e áudio procedural do projeto.\n\n[b]Recursos de terceiros[/b] (OpenGameArt.org):\n"
+	var f := FileAccess.open("res://assets/sources.json", FileAccess.READ)
+	var src = JSON.parse_string(f.get_as_text()) if f != null else null
+	if src is Dictionary:
+		var keys: Array = src.keys()
+		keys.sort()
+		for k in keys:
+			var e: Dictionary = src[k]
+			t += "• %s — [color=#d8cfc2]%s[/color]  [color=#8f877c](%s)[/color]  [url=%s][color=#f29938]%s[/color][/url]\n" % [
+				e.title, e.author, e.license, e.page, str(e.page).trim_prefix("https://")]
+	t += "\nFonte Kenney Future (CC0). Kits 3D recoloridos para a paleta do jogo."
+	body.text = t
+	_button(v, "Fechar", toggle_credits, "cross")
+
+
+func toggle_credits() -> void:
+	credits_panel.visible = not credits_panel.visible
 
 
 # --- state switches -------------------------------------------------------------
@@ -401,6 +487,7 @@ func show_game() -> void:
 	pause_panel.visible = false
 	end_panel.visible = false
 	help_panel.visible = false
+	credits_panel.visible = false
 	_trans_shown = -1
 	_info_for = -1
 
@@ -435,21 +522,22 @@ func _build_options() -> void:
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 10)
 	options_panel.add_child(v)
-	_label(v, "OPÇÕES", 18, UiTheme.ACCENT)
+	_heading(v, "OPÇÕES", 18)
 	var grid := GridContainer.new()
 	grid.columns = 2
 	grid.add_theme_constant_override("h_separation", 16)
 	grid.add_theme_constant_override("v_separation", 10)
 	v.add_child(grid)
-	_label(grid, "Volume")
-	var vol := HSlider.new()
-	vol.min_value = 0.0
-	vol.max_value = 1.0
-	vol.step = 0.05
-	vol.value = float(Settings.get_value("volume"))
-	vol.custom_minimum_size.x = 260
-	vol.value_changed.connect(func(x): _set_option("volume", x))
-	grid.add_child(vol)
+	for opt in [["volume", "Volume geral"], ["music_volume", "Música"], ["sfx_volume", "Efeitos sonoros"]]:
+		_label(grid, opt[1])
+		var vol := HSlider.new()
+		vol.min_value = 0.0
+		vol.max_value = 1.0
+		vol.step = 0.05
+		vol.value = float(Settings.get_value(opt[0]))
+		vol.custom_minimum_size.x = 260
+		vol.value_changed.connect(func(x): _set_option(opt[0], x))
+		grid.add_child(vol)
 	_label(grid, "Escala da interface")
 	var sc := OptionButton.new()
 	var scales := [0.85, 1.0, 1.15, 1.3, 1.5]
@@ -490,7 +578,7 @@ func _build_controls() -> void:
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 8)
 	controls_panel.add_child(v)
-	_label(v, "CONTROLES", 18, UiTheme.ACCENT)
+	_heading(v, "CONTROLES", 18)
 	_label(v, "Clique numa ação e pressione a nova tecla (Esc cancela). Teclas em uso são trocadas entre as ações.", 13, UiTheme.DIM)
 	var grid := GridContainer.new()
 	grid.columns = 4
@@ -530,8 +618,8 @@ func _refresh_bindings() -> void:
 	var menu: Array = main.data.game.build_menu
 	for i in menu.size():
 		var b: Button = hot_buttons[menu[i]]
-		var k := Bindings.label("slot%d" % (i + 1)) if i < 12 else ""
-		b.text = "%s\n%s" % [k, main.data.buildings[menu[i]].name]
+		hot_keys[menu[i]].text = Bindings.label("slot%d" % (i + 1)) if i < 12 else ""
+		b.text = main.data.buildings[menu[i]].name
 
 
 func _input(event: InputEvent) -> void:
@@ -561,7 +649,7 @@ func _build_hint() -> void:
 	game_ui.add_child(hint_panel)
 	var v := VBoxContainer.new()
 	hint_panel.add_child(v)
-	_label(v, "DICA", 12, Color(0.55, 0.85, 1.0))
+	_heading(v, "DICA", 11, UiTheme.INFO)
 	hint_label = _label(v, "")
 	hint_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hint_label.custom_minimum_size.x = 330
@@ -726,10 +814,11 @@ func toggle_research() -> void:
 
 
 func close_overlays() -> bool:
-	var any := help_panel.visible or stats_panel.visible or research_panel.visible or options_panel.visible or controls_panel.visible or achievements_panel.visible
+	var any := credits_panel.visible or help_panel.visible or stats_panel.visible or research_panel.visible or options_panel.visible or controls_panel.visible or achievements_panel.visible
 	if _rebinding != "":
 		return true
 	controls_panel.visible = false
+	credits_panel.visible = false
 	options_panel.visible = false
 	achievements_panel.visible = false
 	help_panel.visible = false
@@ -745,7 +834,8 @@ func toggle_help() -> void:
 func achievement(d: Dictionary) -> void:
 	toast("★ Conquista desbloqueada: %s" % d.name)
 	_toast_t = 4.0
-	main.audio.click()
+	if not main.audio.play("achievement"):
+		main.audio.click()
 
 
 func _build_achievements() -> void:
@@ -753,7 +843,7 @@ func _build_achievements() -> void:
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 6)
 	achievements_panel.add_child(v)
-	_label(v, "CONQUISTAS", 18, UiTheme.ACCENT)
+	_heading(v, "CONQUISTAS", 18)
 	achievements_list = _rich(v)
 	achievements_list.custom_minimum_size.x = 600
 	_button(v, "Fechar", toggle_achievements)
@@ -882,6 +972,7 @@ func _update_alerts(w) -> void:
 		l.flat = true
 		l.focus_mode = Control.FOCUS_NONE
 		l.alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		l.add_theme_font_override("font", ThemeDB.fallback_font)
 		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		l.custom_minimum_size.x = 428
 		l.add_theme_constant_override("outline_size", 5)
