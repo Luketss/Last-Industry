@@ -123,7 +123,8 @@ static func build(type: String, def: Dictionary, rot: int) -> Dictionary:
 	var hazard := mat("hazard", HAZARD)
 	var warm := mat("warm", WARM, {"emit": WARM, "energy": 3.0})
 	var cyan := mat("cyan", CYAN, {"emit": CYAN, "energy": 3.0})
-	match def.get("kind", type):
+	var shape: String = type if type in ["turret_cannon", "turret_aa"] else str(def.get("kind", type))
+	match shape:
 		"core":
 			box(body, Vector3(2.9, 0.5, 2.9), Vector3(0, 0.25, 0), cdark)
 			box(body, Vector3(2.3, 0.8, 2.3), Vector3(0, 0.9, 0), concrete)
@@ -213,6 +214,48 @@ static func build(type: String, def: Dictionary, rot: int) -> Dictionary:
 			box(head, Vector3(0.2, 0.18, 0.66), Vector3(-0.42, 0.4, 0), hazard)
 			h.head = head
 			h.h = 1.3
+		"turret_cannon":
+			cyl(body, 0.95, 0.5, Vector3(0, 0.25, 0), concrete, 1.0, 8)
+			box(body, Vector3(1.9, 0.1, 0.25), Vector3(0, 0.05, -0.8), hazard)
+			var head := Node3D.new()
+			head.position = body.position + Vector3(0, 0.5, 0)
+			root.add_child(head)
+			box(head, Vector3(1.0, 0.55, 0.85), Vector3(-0.1, 0.35, 0), rust)
+			var barrel := cyl(head, 0.16, 1.3, Vector3(0.9, 0.45, 0), mdark, 0.2)
+			barrel.rotation.z = PI * 0.5
+			box(head, Vector3(0.3, 0.3, 0.9), Vector3(-0.6, 0.35, 0), mdark)
+			h.head = head
+			h.h = 1.4
+		"turret_aa":
+			cyl(body, 0.8, 0.35, Vector3(0, 0.175, 0), concrete, 0.9, 8)
+			var head := Node3D.new()
+			head.position = body.position + Vector3(0, 0.35, 0)
+			root.add_child(head)
+			cyl(head, 0.35, 0.4, Vector3(0, 0.2, 0), mdark)
+			for z in [-0.18, 0.18]:
+				var b2 := cyl(head, 0.05, 1.4, Vector3(0.45, 0.85, z), metal)
+				b2.rotation.z = deg_to_rad(-55)
+			box(head, Vector3(0.5, 0.35, 0.6), Vector3(-0.1, 0.55, 0), mat("aared", Color(0.45, 0.16, 0.12)))
+			h.head = head
+			h.h = 1.6
+		"lab":
+			box(body, Vector3(1.9, 0.5, 1.9), Vector3(0, 0.25, 0), cdark)
+			add(body, sphere_mesh(0.75, 0.9), Vector3(0, 0.55, 0), metal)
+			cyl(body, 0.04, 1.2, Vector3(0.6, 1.0, 0.6), mdark, -1.0, 5)
+			h.glow = add(body, sphere_mesh(0.18), Vector3(0, 1.05, 0), cyan)
+			var spin := Node3D.new()
+			spin.position = Vector3(0.6, 1.6, 0.6)
+			body.add_child(spin)
+			box(spin, Vector3(0.5, 0.04, 0.04), Vector3.ZERO, cyan)
+			h.spin = spin
+			h.h = 1.8
+		"solar":
+			box(body, Vector3(1.6, 0.3, 0.2), Vector3(0, 0.15, 0), mdark)
+			var panel := box(body, Vector3(1.85, 0.05, 1.7), Vector3(0, 0.55, 0), mat("solar", Color(0.08, 0.12, 0.22), {"metal": 0.7, "rough": 0.25}))
+			panel.rotation.x = deg_to_rad(18)
+			for x in [-0.45, 0.0, 0.45]:
+				box(body, Vector3(0.02, 0.06, 1.7), Vector3(x, 0.58, 0), metal, Vector3(deg_to_rad(18), 0, 0))
+			h.h = 1.0
 		"turret_tesla":
 			cyl(body, 0.8, 0.4, Vector3(0, 0.2, 0), concrete, 0.9, 8)
 			cyl(body, 0.32, 0.5, Vector3(0, 0.65, 0), mdark, 0.4)

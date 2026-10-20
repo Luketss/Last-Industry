@@ -11,10 +11,11 @@ precisa ser fabricada, cada torre consome energia, cada reparo custa materiais.
 
 ![Menu](docs/img/menu.png)
 ![Base em funcionamento](docs/img/base.png)
+![Árvore de pesquisa](docs/img/pesquisa.png)
 
 **Plataformas:** Windows e Linux (x86_64) · **Engine:** Godot 4.3 (GDScript) · **Modo:** solo, offline · **Destino:** Steam
 
-## Estado atual: MVP jogável (Fases 1 a 5, partes da 6 e 7)
+## Estado atual: MVP jogável + Fase 6 (pesquisa e progressão)
 
 | Item do MVP | Implementado |
 |---|---|
@@ -34,6 +35,11 @@ precisa ser fabricada, cada torre consome energia, cada reparo custa materiais.
 | Interface de produção e alertas | HUD, inspetor, estatísticas por minuto, diagnóstico de gargalos, alertas, luzes de estado |
 | Salvamento local | F5 / F9, determinístico |
 | Ciclo completo | Menu → partida → hordas → vitória/derrota → sobrevivência |
+
+**Fase 6:** Laboratório e árvore de 10 tecnologias (T) alimentada por Pacotes de Pesquisa e Militares;
+Torre de Canhão (dano em área), Torre Antiaérea, Painel Solar (fraco à noite); novos inimigos
+Sabotador (caça infraestrutura) e Planador (voa sobre muros); modificadores de mineração, máquinas,
+esteiras, dano e muros; hordas e patrulhas que reagem ao avanço da pesquisa.
 
 Também incluídos: objetivos guiados com recompensas, narrativa por transmissões e arquivos
 corrompidos, sobreposição de depuração (F3: rotas, redes elétricas, alvos), áudio procedural.
@@ -59,7 +65,7 @@ rode pelo editor:
 | Conta-gotas / copiar e colar configuração | Q / Ctrl+C, Ctrl+V |
 | Reconstruir ruínas | G |
 | Pausar / velocidade / chamar horda | Espaço / + − / N |
-| Estatísticas / ajuda / depuração | Tab / H / F3 |
+| Estatísticas / pesquisa / ajuda / depuração | Tab / T / H / F3 |
 | Salvar / carregar / menu | F5 / F9 / Esc |
 
 ### Primeiros passos
@@ -70,6 +76,8 @@ rode pelo editor:
 3. Alimente uma **Montadora** com placas e carvão para produzir **munição**.
 4. Passe a linha de munição **ao lado** das Torres Balísticas: elas puxam os pentes da esteira.
 5. Feche brechas com muros e mantenha uma Estação de Reparo abastecida. A primeira horda chega em 6 minutos.
+6. Construa um **Laboratório** e alimente-o com Pacotes de Pesquisa. Pesquise **Defesa Antiaérea**
+   antes da 6ª horda, quando chegam os Planadores.
 
 ## Desenvolvimento
 

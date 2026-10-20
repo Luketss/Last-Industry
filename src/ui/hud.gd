@@ -15,7 +15,7 @@ var obj_bar: ProgressBar
 var trans_title: Label
 var trans_label: Label
 var alerts_box: VBoxContainer
-var hotbar: HBoxContainer
+var hotbar: GridContainer
 var hot_buttons := {}
 var info_panel: PanelContainer
 var info_title: Label
@@ -31,6 +31,10 @@ var toast_label: Label
 var stats_panel: PanelContainer
 var stats_body: RichTextLabel
 var help_panel: PanelContainer
+var research_panel: PanelContainer
+var research_list: VBoxContainer
+var research_label: Label
+var _research_key := ""
 var pause_panel: PanelContainer
 var end_panel: PanelContainer
 var end_title: Label
@@ -160,6 +164,10 @@ func _build_left() -> void:
 	obj_bar.show_percentage = false
 	vb.add_child(obj_bar)
 	vb.add_child(HSeparator.new())
+	research_label = _label(vb, "", 13, Color(0.55, 0.85, 1.0))
+	research_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	research_label.custom_minimum_size.x = 340
+	vb.add_child(HSeparator.new())
 	trans_title = _label(vb, "", 12, Color(0.55, 0.85, 1.0))
 	trans_label = _label(vb, "", 14, Color(0.72, 0.85, 0.9))
 	trans_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -184,16 +192,18 @@ func _build_alerts() -> void:
 func _build_hotbar() -> void:
 	var p := _panel(game_ui)
 	_place(p, Control.PRESET_CENTER_BOTTOM, Vector2(0, 10))
-	hotbar = HBoxContainer.new()
-	hotbar.add_theme_constant_override("separation", 4)
-	p.add_child(hotbar)
 	var menu: Array = main.data.game.build_menu
+	hotbar = GridContainer.new()
+	hotbar.columns = ceili(menu.size() / 2.0)
+	hotbar.add_theme_constant_override("h_separation", 4)
+	hotbar.add_theme_constant_override("v_separation", 4)
+	p.add_child(hotbar)
 	var keys := ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "=", ""]
 	for i in menu.size():
 		var type: String = menu[i]
 		var def: Dictionary = main.data.buildings[type]
 		var b := _button(hotbar, "%s\n%s" % [keys[i] if i < keys.size() else "", def.name], main.controller.set_tool.bind(type))
-		b.custom_minimum_size = Vector2(88, 50)
+		b.custom_minimum_size = Vector2(104, 42)
 		b.add_theme_font_size_override("font_size", 12)
 		b.tooltip_text = _build_tooltip_text(def)
 		b.toggle_mode = true
@@ -221,7 +231,7 @@ func _cost_text(cost: Dictionary) -> String:
 
 func _build_info() -> void:
 	info_panel = _panel(game_ui)
-	_place(info_panel, Control.PRESET_BOTTOM_RIGHT, Vector2(12, 84))
+	_place(info_panel, Control.PRESET_BOTTOM_RIGHT, Vector2(12, 128))
 	var vb := VBoxContainer.new()
 	vb.custom_minimum_size.x = 320
 	info_panel.add_child(vb)
@@ -269,6 +279,16 @@ func _build_overlays() -> void:
 	_label(sv, "ESTATÍSTICAS E DIAGNÓSTICO  (Tab)", 16, UiTheme.ACCENT)
 	stats_body = _rich(sv)
 	stats_body.custom_minimum_size = Vector2(740, 0)
+
+	research_panel = _center_panel(860)
+	var rv := VBoxContainer.new()
+	rv.add_theme_constant_override("separation", 6)
+	research_panel.add_child(rv)
+	_label(rv, "ÁRVORE DE PESQUISA  (T)", 16, UiTheme.ACCENT)
+	_label(rv, "Laboratórios consomem pacotes recebidos por esteira. Fabrique-os na Montadora.", 13, UiTheme.DIM)
+	research_list = VBoxContainer.new()
+	research_list.add_theme_constant_override("separation", 4)
+	rv.add_child(research_list)
 
 	help_panel = _center_panel(820)
 	var hv := VBoxContainer.new()
@@ -383,6 +403,19 @@ func toggle_stats() -> void:
 	stats_panel.visible = not stats_panel.visible
 
 
+func toggle_research() -> void:
+	research_panel.visible = not research_panel.visible
+	_research_key = ""
+
+
+func close_overlays() -> bool:
+	var any := help_panel.visible or stats_panel.visible or research_panel.visible
+	help_panel.visible = false
+	stats_panel.visible = false
+	research_panel.visible = false
+	return any
+
+
 func toggle_help() -> void:
 	help_panel.visible = not help_panel.visible
 
@@ -424,6 +457,7 @@ func _process(delta: float) -> void:
 	_update_info(w)
 	if stats_panel.visible:
 		_update_stats(w)
+	_update_research(w)
 
 
 func _hex(c: Color) -> String:
@@ -503,15 +537,22 @@ func _update_alerts(w) -> void:
 		l.visible = age < 25.0
 		l.text = a.text
 		var c: Color = {"danger": UiTheme.BAD, "warn": UiTheme.WARN, "info": UiTheme.OK}.get(a.level, UiTheme.TEXT)
-		c.a = clampf(1.6 - age / 15.0, 0.25, 1.0)
 		l.add_theme_color_override("font_color", c)
+		l.modulate.a = clampf(1.6 - age / 15.0, 0.25, 1.0)
 
 
 func _update_hotbar(w) -> void:
 	for type in hot_buttons:
 		var b: Button = hot_buttons[type]
 		b.set_pressed_no_signal(main.controller.tool == type)
-		b.modulate = Color.WHITE if w.can_afford(w.data.buildings[type].get("cost", {})) else Color(1, 0.55, 0.5)
+		var def: Dictionary = w.data.buildings[type]
+		if not w.is_unlocked(type):
+			b.modulate = Color(0.45, 0.45, 0.5)
+			var tech = w.research.techs.get(w.research.unlocked_by.get(type, ""), {})
+			b.tooltip_text = _build_tooltip_text(def) + "\n\nBLOQUEADO — requer pesquisa: %s" % tech.get("name", "?")
+		else:
+			b.modulate = Color.WHITE if w.can_afford(def.get("cost", {})) else Color(1, 0.55, 0.5)
+			b.tooltip_text = _build_tooltip_text(def)
 
 
 func _update_tooltip() -> void:
@@ -568,11 +609,13 @@ func _update_info(w) -> void:
 			ch.queue_free()
 		if b.kind == "crafter":
 			for r in b.def.recipes:
+				if not w.is_unlocked(r):
+					continue
 				var btn := _button(info_recipes, w.data.recipes[r].name, _on_recipe.bind(r))
 				btn.toggle_mode = true
 				btn.add_theme_font_size_override("font_size", 12)
 		info_demolish.visible = b.kind != "core"
-		info_toggle.visible = b.kind not in ["core", "belt", "wall", "pole", "depot", "splitter"]
+		info_toggle.visible = b.kind not in ["core", "belt", "wall", "pole", "depot", "splitter", "solar"]
 	for ch in info_recipes.get_children():
 		if ch is Button:
 			ch.set_pressed_no_signal(ch.text == w.data.recipes.get(b.recipe, {}).get("name", ""))
@@ -616,6 +659,16 @@ func _update_info(w) -> void:
 			lines.append("Placas: %d  ·  raio %.0f" % [Items.count(b.inv, "iron_plate"), float(b.def.radius)])
 		"core":
 			lines.append("Recebe qualquer item por esteira. Estoque usado na construção.")
+		"lab":
+			var cur: String = w.research.current
+			if cur == "":
+				lines.append("[color=#ffc04a]Nenhuma pesquisa selecionada (T)[/color]")
+			else:
+				lines.append("Pesquisando: %s (%d%%)" % [w.research.techs[cur].name, int(w.research.fraction(cur) * 100)])
+				lines.append("Faltam: " + _cost_text(w.research.remaining_of(cur)))
+			lines.append("Pacotes: " + (_cost_text(b.inv) if not b.inv.is_empty() else "nenhum"))
+		"solar":
+			lines.append("Rendimento atual: %d kW (luz %d%%)" % [int(float(b.def.power_out) * w.daylight()), int(w.daylight() * 100)])
 		"belt":
 			lines.append("Itens: %d" % b.belt_items.size())
 	if not b.inv.is_empty() and b.kind not in ["turret_gun", "generator", "repair"]:
@@ -623,6 +676,56 @@ func _update_info(w) -> void:
 	if not b.out.is_empty():
 		lines.append("Saída: " + _cost_text(b.out))
 	info_body.text = "\n".join(lines)
+
+
+func _update_research(w) -> void:
+	var rs = w.research
+	if rs.current != "":
+		research_label.text = "PESQUISA: %s — %d%%   (T)" % [rs.techs[rs.current].name, int(rs.fraction(rs.current) * 100)]
+	elif w.list("lab").is_empty():
+		research_label.text = "PESQUISA: construa um Laboratório para desbloquear tecnologias (T)"
+	else:
+		research_label.text = "PESQUISA: nenhuma selecionada — pressione T"
+	if not research_panel.visible:
+		return
+	var key := "%d|%s|%d" % [rs.done.size(), rs.current, int(rs.fraction(rs.current) * 100) if rs.current != "" else 0]
+	if key == _research_key:
+		return
+	_research_key = key
+	for c in research_list.get_children():
+		c.queue_free()
+	for id in rs.order:
+		var t: Dictionary = rs.techs[id]
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 10)
+		research_list.add_child(row)
+		var state := ""
+		var col := UiTheme.DIM
+		if rs.done.has(id):
+			state = "CONCLUÍDA"
+			col = UiTheme.OK
+		elif rs.current == id:
+			state = "EM ANDAMENTO %d%%" % int(rs.fraction(id) * 100)
+			col = Color(0.55, 0.85, 1.0)
+		elif rs.is_available(id):
+			state = "DISPONÍVEL"
+			col = UiTheme.TEXT
+		else:
+			var req := []
+			for r in t.get("requires", []):
+				req.append(rs.techs[r].name)
+			state = "requer: " + ", ".join(req)
+		var btn := _button(row, t.name, _on_research.bind(id))
+		btn.custom_minimum_size = Vector2(210, 30)
+		btn.disabled = not rs.is_available(id) or rs.current == id
+		var info := _rich(row)
+		info.custom_minimum_size.x = 600
+		info.text = "[color=#%s][b]%s[/b][/color]  [color=#8f877c]%s[/color]\n%s" % [_hex(col), state, _cost_text(t.cost), t.desc]
+
+
+func _on_research(id: String) -> void:
+	main.world.research.select(main.world, id)
+	_research_key = ""
 
 
 func _on_recipe(r: String) -> void:
@@ -686,9 +789,10 @@ const HELP_TEXT := """[b]Objetivo:[/b] manter o Núcleo vivo. Se ele cair, a par
 
 [b]Câmera[/b]: WASD/setas movem · roda do mouse aproxima · botão do meio arrasta · Z/C giram a câmera.
 [b]Construção[/b]: teclas 1–0, -, = ou barra inferior escolhem a estrutura · clique esquerdo constrói (arraste para esteiras, muros e postes) · R gira (Shift+R inverte) · clique direito demole (arraste para várias) · Q copia o tipo sob o cursor · Ctrl+C / Ctrl+V copiam a configuração de uma máquina · G reconstrói tudo que foi destruído · Del demole a seleção.
+[b]Pesquisa[/b]: construa um Laboratório e leve Pacotes de Pesquisa (Montadora: placa + componente) por esteira. T abre a árvore. Pacotes Militares (munição + componente) liberam a linha de defesa avançada.
 [b]Jogo[/b]: Espaço pausa · +/− velocidade · N chama a próxima horda agora · Tab estatísticas · F3 depuração (rotas, redes, alvos) · F5 salvar · F9 carregar · Esc menu.
 
 [b]Fluxo de itens[/b]: mineradoras e máquinas enviam produtos pela saída (seta amarela). Esteiras levam o item para o que estiver à frente. Máquinas recebem de esteiras apontadas para elas. Torres, geradores e estações de reparo também [i]puxam[/i] o que precisam de qualquer esteira encostada nelas — passe uma linha de munição ao lado das torres. O Núcleo aceita tudo e seu estoque paga as construções.
 [b]Energia[/b]: o Núcleo e os Postes distribuem energia na área ao redor; postes próximos se conectam sozinhos. Grupos separados formam redes independentes. Se faltar energia, [color=#ff8060]defesas[/color] são atendidas antes da [color=#ffc04a]produção[/color]. Baterias guardam o excedente.
-[b]Inimigos[/b]: Rastejantes atacam o que estiver perto da rota · Corredores procuram brechas · Aríetes atravessam muros e causam dano em área. As hordas são anunciadas com direção e composição; patrulhas podem surgir sem aviso.
+[b]Inimigos[/b]: Rastejantes atacam o que estiver perto da rota · Corredores procuram brechas · Aríetes atravessam muros e causam dano em área · Sabotadores caçam geradores, postes e esteiras · Planadores voam sobre muros (só Antiaérea e Torre Elétrica os atingem). As hordas são anunciadas com direção e composição; patrulhas podem surgir sem aviso.
 [b]Luzes de estado[/b]: [color=#73f27f]verde[/color] funcionando · [color=#ffc04a]amarelo[/color] esperando (insumo, saída cheia) · [color=#ff5a3c]vermelho[/color] falha (sem energia, sem munição)."""

@@ -144,9 +144,8 @@ func _unhandled_input(event: InputEvent) -> void:
 func _global_key(e: InputEventKey) -> bool:
 	match e.keycode:
 		KEY_ESCAPE:
-			if hud.help_panel.visible or hud.stats_panel.visible:
-				hud.help_panel.visible = false
-				hud.stats_panel.visible = false
+			if hud.close_overlays():
+				pass
 			elif not controller.cancel():
 				set_menu_paused(not menu_paused)
 			return true
@@ -155,6 +154,9 @@ func _global_key(e: InputEventKey) -> bool:
 			return true
 		KEY_TAB:
 			hud.toggle_stats()
+			return true
+		KEY_T:
+			hud.toggle_research()
 			return true
 		KEY_H, KEY_F1:
 			hud.toggle_help()
@@ -240,6 +242,10 @@ func _smoke_step() -> void:
 		275:
 			_shot("04_stats")
 			hud.toggle_stats()
+			hud.toggle_research()
+		278:
+			_shot("04b_research")
+			hud.toggle_research()
 			view.debug = true
 			controller.set_tool("turret_tesla")
 		290:
@@ -301,6 +307,16 @@ func _demo_base() -> void:
 	W.place("repair", c + Vector2i(2, 5), 0)
 	W.place("depot", c + Vector2i(7, -1), 0)
 	W.place("pole", c + Vector2i(4, -1), 0)
+	W.research.complete(W, "military_1")
+	W.research.complete(W, "anti_air")
+	W.research.complete(W, "automation_1")
+	W.research.complete(W, "solar")
+	W.place("lab", c + Vector2i(-6, -4), 0)
+	W.place("solar", c + Vector2i(-9, -4), 0)
+	W.place("turret_aa", c + Vector2i(2, -6), 0)
+	W.research.complete(W, "artillery")
+	W.place("turret_cannon", c + Vector2i(-3, 5), 0)
+	W.research.select(W, "ballistics")
 	for i in range(-6, 9):
 		W.place("wall", c + Vector2i(9, i), 0)
 		W.place("wall", c + Vector2i(-12, i), 0)

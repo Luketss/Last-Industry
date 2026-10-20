@@ -156,6 +156,10 @@ func bind(p_world) -> void:
 		match type:
 			"runner":
 				mesh = Meshes.sphere_mesh(0.5, 0.7)
+			"glider":
+				mesh = Meshes.box_mesh(Vector3(0.7, 0.12, 1.6))
+			"saboteur":
+				mesh = Meshes.box_mesh(Vector3(0.9, 0.5, 0.6))
 			"brute":
 				mesh = Meshes.box_mesh(Vector3(1.0, 0.8, 0.85))
 			_:
@@ -284,7 +288,10 @@ func on_events(events: Array) -> void:
 				_remove_building(ev.id)
 				_burst(ev.pos, Color(1.0, 0.5, 0.15), 14, 1.6, 0.6)
 			"shot":
-				fx.append({"k": "line", "a": _v3(ev.from, 0.95), "b": _v3(ev.to, 0.35), "c": Color(1.0, 0.85, 0.4), "t": 0.0, "life": 0.06})
+				fx.append({"k": "line", "a": _v3(ev.from, 0.95), "b": _v3(ev.to, 1.9 if ev.get("air", false) else 0.35), "c": Color(1.0, 0.85, 0.4), "t": 0.0, "life": 0.06})
+			"shell":
+				fx.append({"k": "line", "a": _v3(ev.from, 1.0), "b": _v3(ev.to, 0.3), "c": Color(1.0, 0.6, 0.25), "t": 0.0, "life": 0.12})
+				_burst(ev.to, Color(1.0, 0.55, 0.2), 18, float(ev.r), 0.35)
 			"arc":
 				fx.append({"k": "arc", "pts": ev.points, "c": Color(0.5, 0.9, 1.0), "t": 0.0, "life": 0.18, "seed": randi()})
 			"repair":
@@ -352,11 +359,13 @@ func _update_buildings(delta: float) -> void:
 		if h.light != null and lvl != h.level:
 			h.level = lvl
 			h.light.material_override = Meshes.status_mat(lvl)
-		var working: bool = lvl == 0 and b.status != "" and b.status != "vigiando"
+		var working: bool = lvl == 0 and b.status != "" and b.status != "vigiando" and b.status != "pronta"
 		if h.glow != null:
 			match b.kind:
 				"battery":
 					h.glow.visible = b.energy > float(b.def.battery_capacity) * 0.05
+				"lab":
+					h.glow.visible = b.status == "pesquisando" or fmod(_t, 1.2) < 0.2
 				"turret_tesla":
 					h.glow.visible = b.energy >= float(b.def.shot_cost) * 0.99 or fmod(_t, 0.3) < 0.15 * b.energy / float(b.def.shot_cost)
 				"core":
@@ -416,7 +425,11 @@ func _update_enemies() -> void:
 			var s: float = float(def.size) * e.size_mult
 			var bob := absf(sin(_t * float(def.speed) * 5.0 + e.id)) * 0.08 * s
 			var basis := Basis(Vector3.UP, -e.facing).scaled(Vector3(s * 1.15, s, s))
-			mm.set_instance_transform(i, Transform3D(basis, Vector3(e.pos.x, s * 0.4 + bob, e.pos.y)))
+			var y := s * 0.4 + bob
+			if def.get("flying", false):
+				y = 1.9 + sin(_t * 2.0 + e.id) * 0.15
+				basis = basis * Basis(Vector3(1, 0, 0), sin(_t * 6.0 + e.id) * 0.25)
+			mm.set_instance_transform(i, Transform3D(basis, Vector3(e.pos.x, y, e.pos.y)))
 			var col := base
 			if e.elite:
 				col = base.lerp(Color(0.9, 0.15, 0.05), 0.5 + 0.2 * sin(_t * 6.0))
@@ -433,7 +446,8 @@ func _update_bars() -> void:
 	for e in world.enemies.values():
 		if e.hp < e.max_hp:
 			var s: float = float(e.def.size) * e.size_mult
-			entries.append([e.pos, e.hp / e.max_hp, s * 1.2 + 0.3, maxf(s * 1.4, 0.5)])
+			var hy := 2.4 if e.def.get("flying", false) else s * 1.2 + 0.3
+			entries.append([e.pos, e.hp / e.max_hp, hy, maxf(s * 1.4, 0.5)])
 	var mm := _ensure(bars_mm, entries.size())
 	for i in entries.size():
 		var en: Array = entries[i]
