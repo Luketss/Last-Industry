@@ -1,0 +1,88 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+    tags: ["v*"]
+  pull_request:
+
+env:
+  GODOT_VERSION: "4.3"
+
+jobs:
+  test:
+    name: Testes headless
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cache Godot
+        id: cache-godot
+        uses: actions/cache@v4
+        with:
+          path: ~/godot
+          key: godot-${{ env.GODOT_VERSION }}-editor
+      - name: Download Godot
+        if: steps.cache-godot.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ~/godot && cd ~/godot
+          curl -sSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q godot.zip && rm godot.zip
+          mv "Godot_v${GODOT_VERSION}-stable_linux.x86_64" godot
+      - name: Unit + integration tests
+        run: GODOT=~/godot/godot tests/run.sh
+      - name: Smoke test (full game loop, headless)
+        run: |
+          out="$(timeout 300 ~/godot/godot --headless --path . -- --smoke 2>&1)"
+          echo "$out" | tail -20
+          echo "$out" | grep -q "SMOKE OK"
+          ! echo "$out" | grep -qE "SCRIPT ERROR|Parse Error"
+
+  export:
+    name: Builds Windows e Linux
+    needs: test
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cache Godot + templates
+        id: cache-tpl
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/godot
+            ~/.local/share/godot/export_templates
+          key: godot-${{ env.GODOT_VERSION }}-templates
+      - name: Download Godot + export templates
+        if: steps.cache-tpl.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ~/godot && cd ~/godot
+          curl -sSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q godot.zip && rm godot.zip
+          mv "Godot_v${GODOT_VERSION}-stable_linux.x86_64" godot
+          curl -sSL -o tpl.tpz "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
+          unzip -q tpl.tpz -d tpl
+          dest=~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
+          mkdir -p "$dest"
+          cp tpl/templates/linux_release.x86_64 tpl/templates/linux_debug.x86_64 \
+             tpl/templates/windows_release_x86_64.exe tpl/templates/windows_debug_x86_64.exe \
+             tpl/templates/version.txt "$dest/"
+          rm -rf tpl tpl.tpz
+      - name: Export
+        run: |
+          mkdir -p build/windows build/linux
+          ~/godot/godot --headless --path . --import || true
+          ~/godot/godot --headless --path . --export-release "Linux" build/linux/LastIndustry.x86_64
+          ~/godot/godot --headless --path . --export-release "Windows Desktop" build/windows/LastIndustry.exe
+          test -s build/linux/LastIndustry.x86_64 && test -s build/windows/LastIndustry.exe
+      - name: Smoke test exported Linux build
+        run: |
+          out="$(timeout 300 ./build/linux/LastIndustry.x86_64 --headless -- --smoke 2>&1)"
+          echo "$out" | tail -5
+          echo "$out" | grep -q "SMOKE OK"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: LastIndustry-windows
+          path: build/windows/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: LastIndustry-linux
+          path: build/linux/
