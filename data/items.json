@@ -1,0 +1,7 @@
+{
+	"iron_ore": {"name": "Minério de Ferro", "color": "#8a4b2e"},
+	"coal": {"name": "Carvão", "color": "#1c1b1a"},
+	"iron_plate": {"name": "Placa de Ferro", "color": "#a3abb3"},
+	"gear": {"name": "Componente Mecânico", "color": "#c98f3c"},
+	"ammo": {"name": "Pente de Munição", "color": "#e3b341"}
+}

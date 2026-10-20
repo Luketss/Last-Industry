@@ -1,0 +1,5 @@
+{
+	"map": {"width": 72, "height": 72},
+	"start_storage": {"iron_plate": 160, "gear": 30},
+	"build_menu": ["belt", "miner", "smelter", "assembler", "generator", "pole", "turret_gun", "turret_tesla", "wall", "repair", "battery", "depot", "splitter"]
+}

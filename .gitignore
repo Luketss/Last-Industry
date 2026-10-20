@@ -1,0 +1,9 @@
+# Godot
+.godot/
+*.import
+export_presets.local.cfg
+/build/
+*.tmp
+# OS
+.DS_Store
+Thumbs.db

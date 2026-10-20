@@ -1,0 +1,15 @@
+[
+	{"trigger": "start", "title": "DIRETRIZ PRIMÁRIA", "text": "MANTER A PRODUÇÃO. PRESERVAR O NÚCLEO. SOBREVIVER."},
+	{"trigger": "start", "title": "SISTEMA CENTRAL", "text": "Reativação concluída após 31.207 dias de inatividade. Reatores danificados. Depósitos em 3%. Operador detectado. Identidade: desconhecida."},
+	{"trigger": "objective:mine", "title": "REGISTRO 0001", "text": "...a extração reiniciou. Os sensores sísmicos registram vibrações vindas das ruínas a oeste. Provavelmente acomodação do solo."},
+	{"trigger": "objective:power", "title": "REGISTRO 0002", "text": "Rede elétrica parcialmente restaurada. Atenção: a assinatura térmica da instalação agora é visível a mais de 40 km."},
+	{"trigger": "wave_warn:1", "title": "ALERTA", "text": "Movimento detectado nas bordas do perímetro. Eles vêm quando as máquinas despertam."},
+	{"trigger": "wave_cleared:1", "title": "ARQUIVO CORROMPIDO", "text": "...o Projeto G#n#sis não é uma fábrica. É uma semente. Se a produção for reiniciada, o processo n... [dados perdidos]"},
+	{"trigger": "wave_start:3", "title": "TRANSMISSÃO DESCONHECIDA", "text": "Frequência 7.3 MHz. Ruído. Uma voz repete números. Depois, silêncio. Depois, a mesma voz, mais perto."},
+	{"trigger": "wave_cleared:4", "title": "REGISTRO DA DRA. ALVES", "text": "Eles não atacam por acaso. Eles estão tentando impedir que alguma coisa seja fabricada aqui. Eu acho que sei o quê."},
+	{"trigger": "wave_start:5", "title": "ALERTA", "text": "Assinatura de grande massa se aproximando. Os muros não foram projetados para isso."},
+	{"trigger": "wave_cleared:6", "title": "PROTOCOLO DE CONTENÇÃO 12", "text": "A todas as instalações: NÃO PERMITIR QUE A PRODUÇÃO SEJA REINICIADA. Repito: não permitir que a produção seja reiniciada."},
+	{"trigger": "wave_cleared:8", "title": "ARQUIVO RECUPERADO", "text": "Genesis pode reconstruir ecossistemas inteiros. Ou pode reescrevê-los. Os relatórios finais não concordam sobre qual das duas coisas aconteceu da última vez."},
+	{"trigger": "wave_start:10", "title": "ALERTA MÁXIMO", "text": "Uma entidade de elite lidera a horda. O sistema central recomenda: manter a produção."},
+	{"trigger": "victory", "title": "SISTEMA CENTRAL", "text": "O núcleo sobreviveu. A instalação está estável. Novas coordenadas foram descriptografadas: há outras fábricas. Algumas ainda estão funcionando."}
+]

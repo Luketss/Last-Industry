@@ -1,0 +1,5 @@
+{
+	"smelt_iron": {"name": "Fundir Ferro", "time": 1.6, "inputs": {"iron_ore": 1}, "outputs": {"iron_plate": 1}},
+	"ammo": {"name": "Pente de Munição", "time": 2.0, "inputs": {"iron_plate": 1, "coal": 1}, "outputs": {"ammo": 2}},
+	"gear": {"name": "Componente Mecânico", "time": 1.5, "inputs": {"iron_plate": 2}, "outputs": {"gear": 1}}
+}
