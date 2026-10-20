@@ -85,3 +85,32 @@ func test_every_achievement_stat_is_known() -> void:
 	for d in data().achievements:
 		check(str(d.stat).split(":")[0] in known, "estatística conhecida: %s" % d.stat)
 		check(str(d.id) == str(d.id).to_upper(), "id no formato da Steam: %s" % d.id)
+
+
+func test_gamepad_cycles_unlocked_structures() -> void:
+	var Gamepad = load("res://src/ui/gamepad.gd")
+	# Minimal stand-in: the pad only needs data, world and controller.set_tool.
+	var pad = Gamepad.new(null)
+	pad.main = _FakeMain.new(data(), empty_world())
+	pad.cycle_tool(1)
+	eq(pad.main.controller.tool, data().game.build_menu[0], "RB escolhe a primeira estrutura")
+	pad.cycle_tool(-1)
+	var last: String = pad.main.controller.tool
+	check(pad.main.world.is_unlocked(last), "LB pula estruturas bloqueadas (%s)" % last)
+	pad.free()
+
+
+class _FakeController:
+	var tool := ""
+	func set_tool(t: String) -> void:
+		tool = t
+
+
+class _FakeMain:
+	var data
+	var world
+	var in_game := true
+	var controller := _FakeController.new()
+	func _init(d, w) -> void:
+		data = d
+		world = w

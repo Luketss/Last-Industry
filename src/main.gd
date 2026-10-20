@@ -16,6 +16,7 @@ const Bindings = preload("res://src/ui/bindings.gd")
 const Achievements = preload("res://src/platform/achievements.gd")
 const SteamService = preload("res://src/platform/steam_service.gd")
 const I18n = preload("res://src/ui/i18n.gd")
+const Gamepad = preload("res://src/ui/gamepad.gd")
 
 const MAX_STEPS_PER_FRAME := 12
 const SPEEDS := [1.0, 2.0, 3.0]
@@ -35,6 +36,7 @@ var _acc := 0.0
 var _end_shown := false
 var achievements
 var steam
+var gamepad
 var _ach_timer := 0.0
 var _smoke := -1
 var _shots_dir := ""
@@ -59,6 +61,8 @@ func _ready() -> void:
 	Bindings.reload()
 	hud = Hud.new(self)
 	add_child(hud)
+	gamepad = Gamepad.new(self)
+	add_child(gamepad)
 	Settings.apply(self)
 	to_main_menu()
 	for a in OS.get_cmdline_user_args():
