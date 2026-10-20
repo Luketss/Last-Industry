@@ -3,5 +3,8 @@
 	"coal": {"name": "Carvão", "color": "#1c1b1a", "short": "Carvão"},
 	"iron_plate": {"name": "Placa de Ferro", "color": "#a3abb3", "short": "Placas"},
 	"gear": {"name": "Componente Mecânico", "color": "#c98f3c", "short": "Componentes"},
-	"ammo": {"name": "Pente de Munição", "color": "#e3b341", "short": "Munição"}
+	"ammo": {"name": "Pente de Munição", "color": "#e3b341", "short": "Munição"},
+	"research_pack": {"name": "Pacote de Pesquisa", "short": "Pesquisa", "color": "#4fb3d9"},
+	"military_pack": {"name": "Pacote Militar", "short": "Militar", "color": "#c94a3a"},
+	"shell": {"name": "Projétil de Canhão", "short": "Projéteis", "color": "#8c7a5a"}
 }

@@ -87,7 +87,7 @@ func step(w, dt: float) -> void:
 	for b in w.buildings.values():
 		if b.power_net == -1:
 			b.power_sat = 0.0
-			if b.kind == "generator" or b.kind == "battery":
+			if b.kind in ["generator", "battery", "solar"]:
 				b.status = "sem conexão"
 	for net in networks:
 		var cap_free := 0.0
@@ -98,7 +98,10 @@ func step(w, dt: float) -> void:
 		for b in net.members:
 			if b.def.has("power_out"):
 				var po := float(b.def.power_out)
-				if str(b.def.get("fuel", "")) == "":
+				if b.kind == "solar":
+					cap_free += po * w.daylight()
+					b.status = "gerando" if w.daylight() > 0.5 else "energia baixa"
+				elif str(b.def.get("fuel", "")) == "":
 					cap_free += po
 				else:
 					if b.energy <= 0.0:

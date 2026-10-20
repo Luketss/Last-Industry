@@ -16,10 +16,13 @@ func step(w, dt: float) -> void:
 		var tb = w.buildings.get(e.target) if e.target != 0 else null
 		if tb == null:
 			e.target = 0
+		if def.get("flying", false):
+			_step_flyer(w, e, tb, dt)
+			continue
 		var aggro := float(def.get("aggro", 0.0))
 		if tb == null and aggro > 0.0 and e.think <= 0.0:
 			e.think = 0.5
-			tb = _nearest_building(w, e.pos, aggro)
+			tb = _nearest_building(w, e.pos, aggro, def.get("aggro_kinds", []))
 			if tb != null:
 				e.target = tb.id
 		if tb != null:
@@ -44,6 +47,36 @@ func step(w, dt: float) -> void:
 			e.target = nb.id
 			continue
 		_move_toward(e, Vector2(nxt) + Vector2(0.5, 0.5) + e.offset, _speed(e) * dt)
+
+
+## Flyers ignore terrain and walls: they head straight for infrastructure.
+func _step_flyer(w, e, tb, dt: float) -> void:
+	if tb == null and e.think <= 0.0:
+		e.think = 1.0
+		tb = _nearest_of_kinds(w, e.pos, e.def.get("target_kinds", []))
+		if tb == null:
+			tb = w.core()
+		if tb != null:
+			e.target = tb.id
+	if tb == null:
+		return
+	if tb.dist_to(e.pos) <= float(e.def.reach) * e.size_mult:
+		_attack(w, e, tb)
+	else:
+		_move_toward(e, tb.center() + e.offset, _speed(e) * dt)
+
+
+static func _nearest_of_kinds(w, p: Vector2, kinds: Array):
+	var best = null
+	var bd := INF
+	for b in w.buildings.values():
+		if not (b.kind in kinds):
+			continue
+		var d: float = b.center().distance_squared_to(p)
+		if d < bd:
+			bd = d
+			best = b
+	return best
 
 
 static func _speed(e) -> float:
@@ -85,7 +118,9 @@ func _attack(w, e, tb) -> void:
 	w.damage_building(tb, dmg)
 
 
-static func _nearest_building(w, p: Vector2, radius: float):
+## Nearest structure within `radius`; walls never qualify. When `kinds` is not
+## empty, only those structure kinds are considered (saboteurs).
+static func _nearest_building(w, p: Vector2, radius: float, kinds: Array = []):
 	var c := Vector2i(floori(p.x), floori(p.y))
 	var r := int(ceil(radius)) + 1
 	var best = null
@@ -93,7 +128,7 @@ static func _nearest_building(w, p: Vector2, radius: float):
 	for y in range(-r, r + 1):
 		for x in range(-r, r + 1):
 			var b = w.building_at(c + Vector2i(x, y))
-			if b == null or b.kind == "wall":
+			if b == null or b.kind == "wall" or (not kinds.is_empty() and not (b.kind in kinds)):
 				continue
 			var d: float = b.dist_to(p)
 			if d <= bd:

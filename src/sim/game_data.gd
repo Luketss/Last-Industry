@@ -10,6 +10,7 @@ var waves: Dictionary
 var game: Dictionary
 var objectives: Array
 var lore: Array
+var research: Array
 
 
 func _init(base_path: String = "res://data") -> void:
@@ -21,6 +22,7 @@ func _init(base_path: String = "res://data") -> void:
 	game = _load(base_path + "/game.json")
 	objectives = _load(base_path + "/objectives.json")
 	lore = _load(base_path + "/lore.json")
+	research = _load(base_path + "/research.json")
 
 
 func item_name(id: String) -> String:

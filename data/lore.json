@@ -11,5 +11,9 @@
 	{"trigger": "wave_cleared:6", "title": "PROTOCOLO DE CONTENÇÃO 12", "text": "A todas as instalações: NÃO PERMITIR QUE A PRODUÇÃO SEJA REINICIADA. Repito: não permitir que a produção seja reiniciada."},
 	{"trigger": "wave_cleared:8", "title": "ARQUIVO RECUPERADO", "text": "Genesis pode reconstruir ecossistemas inteiros. Ou pode reescrevê-los. Os relatórios finais não concordam sobre qual das duas coisas aconteceu da última vez."},
 	{"trigger": "wave_start:10", "title": "ALERTA MÁXIMO", "text": "Uma entidade de elite lidera a horda. O sistema central recomenda: manter a produção."},
+	{"trigger": "research:automation_1", "title": "REGISTRO 0003", "text": "Os laboratórios voltaram a operar. Os protocolos de pesquisa ainda carregam o selo: PROJETO GENESIS — ACESSO RESTRITO."},
+	{"trigger": "research_count:3", "title": "ANÁLISE DE COMPORTAMENTO", "text": "As hordas mudaram. Já não atacam ao acaso: procuram geradores, postes, esteiras. Como se soubessem o que mantém a fábrica viva."},
+	{"trigger": "research:anti_air", "title": "REGISTRO DE CAMPO", "text": "Formas aladas foram vistas sobre as ruínas ao norte. Elas não existiam quando a instalação foi selada."},
+	{"trigger": "research:genesis_1", "title": "GENESIS — ARQUIVO 01", "text": "Genesis não constrói. Genesis reescreve. Toda matéria orgânica num raio de 300 km foi... recompilada. Nós chamamos isso de restauração. Os sobreviventes chamaram de outra coisa."},
 	{"trigger": "victory", "title": "SISTEMA CENTRAL", "text": "O núcleo sobreviveu. A instalação está estável. Novas coordenadas foram descriptografadas: há outras fábricas. Algumas ainda estão funcionando."}
 ]

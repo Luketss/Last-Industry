@@ -1,0 +1,12 @@
+[
+	{"id": "automation_1", "name": "Automação Básica", "desc": "Máquinas de receita trabalham 25% mais rápido.", "cost": {"research_pack": 10}, "requires": [], "mods": {"crafter_speed": 0.25}},
+	{"id": "mining_1", "name": "Perfuração Profunda", "desc": "Mineradoras extraem 50% mais rápido.", "cost": {"research_pack": 15}, "requires": [], "mods": {"miner_rate": 0.5}},
+	{"id": "logistics_1", "name": "Esteiras Reforçadas", "desc": "Esteiras movem itens 50% mais rápido.", "cost": {"research_pack": 15}, "requires": ["automation_1"], "mods": {"belt_speed": 0.5}},
+	{"id": "solar", "name": "Energia Solar", "desc": "Desbloqueia o Painel Solar: energia sem combustível durante o dia.", "cost": {"research_pack": 20}, "requires": ["automation_1"], "unlocks": ["solar"]},
+	{"id": "military_1", "name": "Logística Militar", "desc": "Desbloqueia a receita de Pacote Militar (munição + componente).", "cost": {"research_pack": 15}, "requires": [], "unlocks_recipes": ["military_pack"]},
+	{"id": "anti_air", "name": "Defesa Antiaérea", "desc": "Desbloqueia a Torre Antiaérea contra criaturas voadoras.", "cost": {"research_pack": 10, "military_pack": 10}, "requires": ["military_1"], "unlocks": ["turret_aa"]},
+	{"id": "artillery", "name": "Artilharia", "desc": "Desbloqueia a Torre de Canhão e a receita de Projétil de Canhão.", "cost": {"research_pack": 10, "military_pack": 20}, "requires": ["military_1"], "unlocks": ["turret_cannon"], "unlocks_recipes": ["shell"]},
+	{"id": "ballistics", "name": "Balística Avançada", "desc": "Torres de munição causam 25% mais dano.", "cost": {"military_pack": 20}, "requires": ["military_1"], "mods": {"turret_damage": 0.25}},
+	{"id": "fortification", "name": "Fortificação", "desc": "Muros recebem 50% mais integridade (inclusive os já construídos).", "cost": {"research_pack": 15, "military_pack": 15}, "requires": ["ballistics"], "mods": {"wall_hp": 0.5}},
+	{"id": "genesis_1", "name": "Fragmento Genesis", "desc": "Decodifica os arquivos selados da instalação. Algo nas ruínas vai notar.", "cost": {"research_pack": 30, "military_pack": 30}, "requires": ["artillery", "anti_air"], "mods": {"crafter_speed": 0.25}}
+]

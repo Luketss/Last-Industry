@@ -11,7 +11,7 @@ const STATUS_LEVEL := {
 	"reparando": 0, "pronta": 0, "armazenando": 0, "ociosa": 1, "ocioso": 1,
 	"sem insumos": 1, "saída bloqueada": 1, "carregando": 1, "sem combustível": 2,
 	"sem materiais": 1, "sem energia": 2, "sem munição": 2, "esgotado": 2, "desligado": 2,
-	"energia baixa": 1, "sem conexão": 2,
+	"energia baixa": 1, "sem conexão": 2, "pesquisando": 0, "sem pesquisa": 1,
 }
 
 var id := 0

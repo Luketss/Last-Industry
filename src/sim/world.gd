@@ -17,6 +17,7 @@ const CombatSystem = preload("res://src/sim/systems/combat_system.gd")
 const WaveSystem = preload("res://src/sim/systems/wave_system.gd")
 const Stats = preload("res://src/sim/systems/stats.gd")
 const Objectives = preload("res://src/sim/systems/objectives.gd")
+const ResearchSystem = preload("res://src/sim/systems/research_system.gd")
 
 const SAVE_VERSION := 1
 
@@ -61,6 +62,7 @@ var combat: CombatSystem
 var waves: WaveSystem
 var stats: Stats
 var objectives: Objectives
+var research: ResearchSystem
 
 
 func _init(p_data, p_seed: int = 1, opts: Dictionary = {}) -> void:
@@ -85,6 +87,7 @@ func _init(p_data, p_seed: int = 1, opts: Dictionary = {}) -> void:
 	waves = WaveSystem.new(data.waves)
 	stats = Stats.new()
 	objectives = Objectives.new(data.objectives)
+	research = ResearchSystem.new(data.research)
 	if not opts.get("load", false):
 		storage = Items.from_json(opts.get("storage", data.game.get("start_storage", {})))
 		if opts.get("generate", true):
@@ -153,6 +156,11 @@ func core():
 
 # --- construction -----------------------------------------------------------
 
+func is_unlocked(id: String) -> bool:
+	var def = data.buildings.get(id, data.recipes.get(id))
+	return def != null and (not def.get("locked", false) or research.unlocked.has(id))
+
+
 func can_afford(cost: Dictionary) -> bool:
 	return Items.has_all(storage, cost)
 
@@ -162,6 +170,9 @@ func can_place(type: String, p: Vector2i, rot: int, check_cost: bool = true) -> 
 	var def = data.buildings.get(type)
 	if def == null:
 		return "Estrutura desconhecida"
+	if not is_unlocked(type):
+		var tech = research.techs.get(research.unlocked_by.get(type, ""))
+		return "Requer pesquisa: %s" % (tech.name if tech != null else "?")
 	var sz := Building.footprint(def, rot)
 	var on_ore := false
 	for y in sz.y:
@@ -199,9 +210,16 @@ func place(type: String, p: Vector2i, rot: int, free: bool = false, recipe: Stri
 	var b := Building.new()
 	b.setup(next_id, type, def, p, rot)
 	next_id += 1
-	if recipe != "" and recipe in def.get("recipes", []):
+	if b.kind == "crafter" and not is_unlocked(b.recipe):
+		b.recipe = ""
+		for r in def.recipes:
+			if is_unlocked(r):
+				b.recipe = r
+				break
+	if recipe != "" and recipe in def.get("recipes", []) and is_unlocked(recipe):
 		b.recipe = recipe
 	_register(b)
+	b.hp = b.max_hp
 	_clear_ghosts_overlapping(b)
 	stats.on_built(type)
 	events.append({"e": "built", "id": b.id})
@@ -209,6 +227,9 @@ func place(type: String, p: Vector2i, rot: int, free: bool = false, recipe: Stri
 
 
 func _register(b) -> void:
+	if b.kind == "wall":
+		b.max_hp = float(b.def.hp) * (1.0 + research.mod("wall_hp"))
+		b.hp = minf(b.hp, b.max_hp)
 	buildings[b.id] = b
 	for c in b.cells():
 		grid[idx(c)] = b.id
@@ -335,7 +356,7 @@ func rotate_building(b, r: int) -> void:
 
 
 func set_recipe(b, recipe: String) -> void:
-	if b == null or b.kind != "crafter" or recipe == b.recipe or not (recipe in b.def.get("recipes", [])):
+	if b == null or b.kind != "crafter" or recipe == b.recipe or not (recipe in b.def.get("recipes", [])) or not is_unlocked(recipe):
 		return
 	# Return buffered inputs to storage so nothing is silently lost.
 	for k in b.inv:
@@ -458,8 +479,10 @@ func step() -> void:
 		power.rebuild(self)
 	production.request(self)
 	combat.request(self)
+	research.request(self)
 	power.step(self, dt)
 	production.step(self, dt)
+	research.step(self, dt)
 	logistics.step(self, dt)
 	pathing.update(self, dt)
 	enemy_sys.step(self, dt)
@@ -470,6 +493,20 @@ func step() -> void:
 	waves.step(self, dt)
 	stats.step(self, dt)
 	objectives.step(self, dt)
+
+
+## Applies research effects to structures that already exist.
+func on_research_complete(_id: String) -> void:
+	var full := 1.0 + research.mod("wall_hp")
+	for b in list("wall"):
+		var ratio: float = b.hp / b.max_hp
+		b.max_hp = float(b.def.hp) * full
+		b.hp = b.max_hp * ratio
+
+
+## 1 at day, 0.1 at the darkest night (solar output).
+func daylight() -> float:
+	return 1.0 - 0.9 * waves.night
 
 
 func win() -> void:
@@ -519,6 +556,7 @@ func to_dict() -> Dictionary:
 		"storage": storage, "state": state, "survival": survival, "rng": str(rng.state),
 		"buildings": bl, "enemies": el, "ghosts": gl, "spawns": sp,
 		"waves": waves.to_dict(), "stats": stats.to_dict(), "objectives": objectives.to_dict(),
+		"research": research.to_dict(),
 		"transmissions": transmissions, "pathing_cd": pathing.cooldown,
 	}
 
@@ -536,6 +574,7 @@ static func from_dict(p_data, d: Dictionary):
 	w.state = str(d.state)
 	w.survival = bool(d.survival)
 	w.rng.state = int(str(d.rng))
+	w.research.load_dict(d.get("research", {}))
 	for bd in d.buildings:
 		var def = p_data.buildings.get(bd.type)
 		if def == null:

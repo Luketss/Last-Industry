@@ -88,7 +88,7 @@ func _move_belts(w, dt: float) -> void:
 		if items.is_empty():
 			b.status = ""
 			continue
-		var adv := float(b.def.get("speed", 2.0)) * dt
+		var adv: float = float(b.def.get("speed", 2.0)) * (1.0 + w.research.mod("belt_speed")) * dt
 		var limit := 1.0
 		var k := 0
 		var blocked := false

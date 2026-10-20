@@ -13,6 +13,8 @@ var lost := 0
 var burned := 0
 var loaded := 0
 var waves := 0
+var researched := 0
+var techs := {}
 var _ring_p := {}     ## item -> Array[int] (one slot per second)
 var _ring_c := {}
 var _slot := 0
@@ -85,12 +87,16 @@ func value(key: String) -> int:
 			return loaded
 		"waves":
 			return waves
+		"researched":
+			return researched
+		"tech":
+			return int(techs.get(parts[1], 0))
 	return 0
 
 
 func to_dict() -> Dictionary:
 	return {"p": produced, "c": consumed, "d": delivered, "b": built, "kills": kills, "shots": shots,
-		"lost": lost, "burned": burned, "loaded": loaded, "waves": waves, "rp": _ring_p, "rc": _ring_c, "slot": _slot}
+		"lost": lost, "burned": burned, "loaded": loaded, "waves": waves, "researched": researched, "techs": techs, "rp": _ring_p, "rc": _ring_c, "slot": _slot}
 
 
 func load_dict(d: Dictionary) -> void:
@@ -105,6 +111,8 @@ func load_dict(d: Dictionary) -> void:
 	burned = int(d.burned)
 	loaded = int(d.loaded)
 	waves = int(d.waves)
+	researched = int(d.get("researched", 0))
+	techs = Items.from_json(d.get("techs", {}))
 	_slot = int(d.slot)
 	_ring_p = _ring_from(d.rp)
 	_ring_c = _ring_from(d.rc)

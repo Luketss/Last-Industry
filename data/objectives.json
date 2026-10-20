@@ -5,7 +5,9 @@
 	{"id": "ammo", "text": "Automatize a produção: fabrique 20 Pentes de Munição", "stat": "produced:ammo", "n": 20, "reward": {"gear": 10}},
 	{"id": "turret", "text": "Abasteça uma Torre Balística com munição por esteira", "stat": "loaded", "n": 1, "reward": {"iron_plate": 30}},
 	{"id": "wave1", "text": "Sobreviva à primeira horda", "stat": "waves", "n": 1, "reward": {"iron_plate": 40, "gear": 10}},
+	{"id": "research", "text": "Construa um Laboratório, alimente-o com Pacotes de Pesquisa e conclua uma tecnologia (T)", "stat": "researched", "n": 1, "reward": {"gear": 15}},
 	{"id": "gears", "text": "Produza 30 Componentes Mecânicos para expandir", "stat": "produced:gear", "n": 30},
+	{"id": "anti_air", "text": "Pesquise Defesa Antiaérea: criaturas voadoras chegam na sexta horda", "stat": "tech:anti_air", "n": 1, "reward": {"iron_plate": 40}},
 	{"id": "wave5", "text": "Sobreviva à quinta horda", "stat": "waves", "n": 5, "reward": {"gear": 20}},
 	{"id": "final", "text": "Resista até o fim da décima horda", "stat": "waves", "n": 10}
 ]

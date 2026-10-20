@@ -51,7 +51,7 @@ func _step_miner(w, b, dt: float) -> void:
 		b.status = "sem energia"
 		return
 	b.status = "minerando" if b.power_sat > 0.9 else "energia baixa"
-	b.progress += float(b.def.rate) * b.power_sat * dt
+	b.progress += float(b.def.rate) * (1.0 + w.research.mod("miner_rate")) * b.power_sat * dt
 	if b.progress >= 1.0:
 		b.progress -= 1.0
 		for k in b.ore_cells.size():
@@ -91,7 +91,7 @@ func _step_crafter(w, b, dt: float) -> void:
 		b.status = "sem energia"
 		return
 	b.status = "trabalhando" if b.power_sat > 0.9 else "energia baixa"
-	b.progress += dt * b.power_sat / float(r.time)
+	b.progress += dt * b.power_sat * (1.0 + w.research.mod("crafter_speed")) / float(r.time)
 	if b.progress >= 1.0:
 		b.progress = 0.0
 		b.crafting = false
