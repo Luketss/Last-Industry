@@ -90,3 +90,33 @@ func test_simulation_performance_budget() -> void:
 	var ms := (Time.get_ticks_usec() - t0) / 1000.0 / 100.0
 	print("     desempenho: %.2f ms/tick (%d estruturas, %d inimigos)" % [ms, w.buildings.size(), w.enemies.size()])
 	check(ms < 25.0, "tick abaixo de 25 ms (%.2f)" % ms)
+
+
+## Large saturated base: guards the flow-field rebuild (was 30 s before the
+## float64 fix) and the per-tick cost of thousands of belts.
+func test_large_base_performance() -> void:
+	var w = World.new(data(), 3)
+	var c: Vector2i = w.core().pos
+	w.storage = {"iron_plate": 1000000, "gear": 1000000}
+	for y in range(-30, 30):
+		for x in range(-30, 30):
+			if absi(x) < 4 and absi(y) < 4:
+				continue
+			var t := "belt" if (x + y) % 5 != 0 else "wall"
+			if x % 7 == 0 and y % 7 == 0:
+				t = "turret_gun"
+			var id: int = w.place(t, c + Vector2i(x, y), posmod(x / 10, 4))
+			if id and w.buildings[id].kind == "belt":
+				w.buildings[id].belt_items = [["iron_plate", 0.9], ["iron_plate", 0.6], ["iron_plate", 0.3]]
+	for i in 300:
+		w.spawn_enemy(["crawler", "runner", "glider", "saboteur"][i % 4], Vector2(w.spawn_points[i % 4]) + Vector2(0.5, 0.5))
+	var t0 := Time.get_ticks_usec()
+	w.pathing.rebuild(w)
+	var rebuild_ms := (Time.get_ticks_usec() - t0) / 1000.0
+	run_ticks(w, 20)
+	t0 = Time.get_ticks_usec()
+	run_ticks(w, 40)
+	var tick_ms := (Time.get_ticks_usec() - t0) / 1000.0 / 40.0
+	print("     base grande: %d estruturas, %d inimigos — rotas %.0f ms, %.2f ms/tick" % [w.buildings.size(), w.enemies.size(), rebuild_ms, tick_ms])
+	check(rebuild_ms < 1500.0, "recálculo de rotas rápido (%.0f ms)" % rebuild_ms)
+	check(tick_ms < 30.0, "tick dentro do orçamento (%.2f ms)" % tick_ms)

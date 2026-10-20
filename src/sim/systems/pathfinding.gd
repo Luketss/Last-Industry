@@ -13,7 +13,7 @@ var cooldown := 0.0
 var version := 0
 var weights: Array = []          ## per profile
 var _profile_of := {}            ## enemy type -> profile index
-var dist: Array = []             ## per profile PackedFloat32Array
+var dist: Array = []             ## per profile PackedFloat64Array
 var enter: Array = []            ## per profile PackedFloat32Array
 var _w := 0
 var _h := 0
@@ -70,79 +70,87 @@ func rebuild(w) -> void:
 		dist.append(_dijkstra(en, goals, n))
 
 
-func _dijkstra(en: PackedFloat32Array, goals: Array, n: int) -> PackedFloat32Array:
-	var d := PackedFloat32Array()
+## Dijkstra over the grid with an inline binary heap. Distances and heap keys are
+## float64: with float32 storage, rounding made settled cells look improvable and
+## large bases re-expanded cells in cascades (seconds per rebuild).
+func _dijkstra(en: PackedFloat32Array, goals: Array, n: int) -> PackedFloat64Array:
+	var d := PackedFloat64Array()
 	d.resize(n)
 	d.fill(Defs.INF)
-	var hk := PackedFloat32Array()   # heap keys
-	var hv := PackedInt32Array()     # heap values
+	var cap := n * 4 + 16
+	var hk := PackedFloat64Array()
+	var hv := PackedInt32Array()
+	hk.resize(cap)
+	hv.resize(cap)
+	var size := 0
 	for g in goals:
 		d[g] = 0.0
-		_push(hk, hv, 0.0, g)
-	while hv.size() > 0:
+		hk[size] = 0.0
+		hv[size] = g
+		size += 1
+	var w := _w
+	var h := _h
+	while size > 0:
 		var du := hk[0]
 		var u := hv[0]
-		_pop(hk, hv)
+		# pop
+		size -= 1
+		var lk := hk[size]
+		var lv := hv[size]
+		var i := 0
+		while true:
+			var l := i * 2 + 1
+			if l >= size:
+				break
+			var r := l + 1
+			var m := l
+			if r < size and hk[r] < hk[l]:
+				m = r
+			if hk[m] >= lk:
+				break
+			hk[i] = hk[m]
+			hv[i] = hv[m]
+			i = m
+		if size > 0:
+			hk[i] = lk
+			hv[i] = lv
 		if du > d[u]:
 			continue
 		var nd := du + en[u]
-		var ux := u % _w
-		var uy := u / _w
+		var ux := u % w
+		var uy := u / w
 		for k in 4:
-			var vx := ux + (1 if k == 0 else (-1 if k == 1 else 0))
-			var vy := uy + (1 if k == 2 else (-1 if k == 3 else 0))
-			if vx < 0 or vy < 0 or vx >= _w or vy >= _h:
+			var vx := ux
+			var vy := uy
+			match k:
+				0: vx += 1
+				1: vx -= 1
+				2: vy += 1
+				_: vy -= 1
+			if vx < 0 or vy < 0 or vx >= w or vy >= h:
 				continue
-			var v := vy * _w + vx
-			if en[v] >= Defs.INF or en[v] == 0.0:
+			var v := vy * w + vx
+			var ev := en[v]
+			if ev >= Defs.INF or ev == 0.0 or nd >= d[v]:
 				continue
-			if nd < d[v]:
-				d[v] = nd
-				_push(hk, hv, nd, v)
+			d[v] = nd
+			# push
+			if size >= cap:
+				cap *= 2
+				hk.resize(cap)
+				hv.resize(cap)
+			var j := size
+			size += 1
+			while j > 0:
+				var p := (j - 1) >> 1
+				if hk[p] <= nd:
+					break
+				hk[j] = hk[p]
+				hv[j] = hv[p]
+				j = p
+			hk[j] = nd
+			hv[j] = v
 	return d
-
-
-static func _push(hk: PackedFloat32Array, hv: PackedInt32Array, k: float, v: int) -> void:
-	hk.append(k)
-	hv.append(v)
-	var i := hk.size() - 1
-	while i > 0:
-		var p := (i - 1) >> 1
-		if hk[p] <= hk[i]:
-			break
-		var tk := hk[p]
-		hk[p] = hk[i]
-		hk[i] = tk
-		var tv := hv[p]
-		hv[p] = hv[i]
-		hv[i] = tv
-		i = p
-
-
-static func _pop(hk: PackedFloat32Array, hv: PackedInt32Array) -> void:
-	var last := hk.size() - 1
-	hk[0] = hk[last]
-	hv[0] = hv[last]
-	hk.resize(last)
-	hv.resize(last)
-	var i := 0
-	while true:
-		var l := i * 2 + 1
-		var r := l + 1
-		var m := i
-		if l < last and hk[l] < hk[m]:
-			m = l
-		if r < last and hk[r] < hk[m]:
-			m = r
-		if m == i:
-			break
-		var tk := hk[m]
-		hk[m] = hk[i]
-		hk[i] = tk
-		var tv := hv[m]
-		hv[m] = hv[i]
-		hv[i] = tv
-		i = m
 
 
 ## Next cell an enemy of `profile` standing on `c` should step into.
@@ -150,7 +158,7 @@ static func _pop(hk: PackedFloat32Array, hv: PackedInt32Array) -> void:
 func next_cell(profile: int, c: Vector2i) -> Vector2i:
 	if dist.is_empty() or c.x < 0 or c.y < 0 or c.x >= _w or c.y >= _h:
 		return Vector2i(-1, -1)
-	var d: PackedFloat32Array = dist[profile]
+	var d: PackedFloat64Array = dist[profile]
 	var en: PackedFloat32Array = enter[profile]
 	var best := Defs.INF
 	var bc := Vector2i(-1, -1)

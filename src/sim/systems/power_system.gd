@@ -15,6 +15,7 @@ var dirty := true
 var version := 0
 var networks: Array = []
 var links: Array = []      ## [[node_id_a, node_id_b]]
+var unconnected: Array = []  ## power users outside every network
 var totals := {}
 
 
@@ -23,6 +24,7 @@ func rebuild(w) -> void:
 	version += 1
 	networks.clear()
 	links.clear()
+	unconnected.clear()
 	var nodes := []
 	for b in w.buildings.values():
 		b.power_net = -1
@@ -60,6 +62,8 @@ func rebuild(w) -> void:
 				b.power_net = n.power_net
 				networks[b.power_net].members.append(b)
 				break
+		if b.power_net == -1:
+			unconnected.append(b)
 
 
 static func uses_power(b) -> bool:
@@ -84,11 +88,10 @@ static func _find(parent: Array, i: int) -> int:
 
 func step(w, dt: float) -> void:
 	var t := {"cap": 0.0, "demand": 0.0, "used": 0.0, "stored": 0.0, "capacity": 0.0, "sat": 1.0, "nets": networks.size()}
-	for b in w.buildings.values():
-		if b.power_net == -1:
-			b.power_sat = 0.0
-			if b.kind in ["generator", "battery", "solar"]:
-				b.status = "sem conexão"
+	for b in unconnected:
+		b.power_sat = 0.0
+		if b.kind in ["generator", "battery", "solar"]:
+			b.status = "sem conexão"
 	for net in networks:
 		var cap_free := 0.0
 		var cap_gen := 0.0

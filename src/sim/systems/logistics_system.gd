@@ -82,29 +82,44 @@ static func belt_accept(belt, item: String) -> bool:
 	return false
 
 
+## A belt whose front item is blocked and whose items cannot advance sleeps for
+## SLEEP seconds (stored in `cooldown`) instead of retrying every tick. This keeps
+## large saturated bases cheap; a freed destination is picked up within SLEEP.
+const SLEEP := 0.2
+
+
 func _move_belts(w, dt: float) -> void:
+	var speed_mult: float = 1.0 + w.research.mod("belt_speed")
 	for b in w.list("belt"):
 		var items: Array = b.belt_items
 		if items.is_empty():
 			b.status = ""
 			continue
-		var adv: float = float(b.def.get("speed", 2.0)) * (1.0 + w.research.mod("belt_speed")) * dt
+		if b.cooldown > 0.0:
+			b.cooldown -= dt
+			continue
+		var adv: float = float(b.def.get("speed", 2.0)) * speed_mult * dt
 		var limit := 1.0
 		var k := 0
 		var blocked := false
+		var moved := false
 		while k < items.size():
 			var it: Array = items[k]
 			var np := minf(float(it[1]) + adv, limit)
 			if k == 0 and np >= 1.0:
 				if _transfer(w, b, it[0]):
 					items.remove_at(0)
+					moved = true
 					continue
 				np = 1.0
 				blocked = true
 			if np > float(it[1]):
 				it[1] = np
+				moved = true
 			limit = float(it[1]) - Defs.BELT_SPACING
 			k += 1
+		if blocked and not moved:
+			b.cooldown = SLEEP
 		b.status = "saída bloqueada" if blocked and items.size() >= 4 else ""
 
 
