@@ -8,5 +8,8 @@
 	{"id": "artillery", "name": "Artilharia", "desc": "Desbloqueia a Torre de Canhão e a receita de Projétil de Canhão.", "cost": {"research_pack": 10, "military_pack": 20}, "requires": ["military_1"], "unlocks": ["turret_cannon"], "unlocks_recipes": ["shell"]},
 	{"id": "ballistics", "name": "Balística Avançada", "desc": "Torres de munição causam 25% mais dano.", "cost": {"military_pack": 20}, "requires": ["military_1"], "mods": {"turret_damage": 0.25}},
 	{"id": "fortification", "name": "Fortificação", "desc": "Muros recebem 50% mais integridade (inclusive os já construídos).", "cost": {"research_pack": 15, "military_pack": 15}, "requires": ["ballistics"], "mods": {"wall_hp": 0.5}},
-	{"id": "genesis_1", "name": "Fragmento Genesis", "desc": "Decodifica os arquivos selados da instalação. Algo nas ruínas vai notar.", "cost": {"research_pack": 30, "military_pack": 30}, "requires": ["artillery", "anti_air"], "mods": {"crafter_speed": 0.25}}
+	{"id": "genesis_1", "name": "Fragmento Genesis", "desc": "Decodifica os arquivos selados da instalação. Algo nas ruínas vai notar.", "cost": {"research_pack": 30, "military_pack": 30}, "requires": ["artillery", "anti_air"], "mods": {"crafter_speed": 0.25}},
+	{"id": "genesis_2", "name": "Protocolo Genesis", "desc": "Desbloqueia a Estrutura Genesis, que encerra a campanha.", "cost": {"research_pack": 40, "military_pack": 40}, "requires": ["genesis_1"], "unlocks": ["genesis"]},
+	{"id": "drones", "name": "Drones de Reparo", "desc": "Desbloqueia o Hub de Drones: reparos automáticos à distância com placas do Núcleo.", "cost": {"research_pack": 25, "military_pack": 10}, "requires": ["automation_1", "military_1"], "unlocks": ["drone_hub"]},
+	{"id": "drones_2", "name": "Logística por Drones", "desc": "Desbloqueia o Hub de Abastecimento: drones levam munição e insumos do Núcleo às defesas.", "cost": {"research_pack": 30, "military_pack": 15}, "requires": ["drones"], "unlocks": ["supply_hub"]}
 ]

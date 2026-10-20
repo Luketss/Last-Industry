@@ -57,6 +57,35 @@ func test_machine_reports_missing_input() -> void:
 	eq(w.buildings[s].status, "sem insumos", "status de gargalo")
 
 
+func test_splitter_filters_route_items() -> void:
+	var w = empty_world()
+	var feed: int = w.place("belt", Vector2i(5, 5), 0)
+	var sp: int = w.place("splitter", Vector2i(6, 5), 0)
+	var up: int = w.place("belt", Vector2i(6, 4), 3)
+	var fw: int = w.place("belt", Vector2i(7, 5), 0)
+	var dn: int = w.place("belt", Vector2i(6, 6), 1)
+	# Left (north for an east-facing splitter) takes only coal; the rest share front and right.
+	w.set_filter(w.buildings[sp], 0, "coal")
+	w.set_filter(w.buildings[sp], 1, "nao_existe")
+	eq(w.buildings[sp].filter[1], "", "filtro com item inválido é ignorado")
+	var seen := {up: {}, fw: {}, dn: {}}
+	for i in 24:
+		w.buildings[feed].belt_items = [["coal" if i % 2 == 0 else "iron_plate", 0.95]]
+		run_ticks(w, 6)
+		for id in seen:
+			for it in w.buildings[id].belt_items:
+				seen[id][it[0]] = true
+	check(seen[up].has("coal") and not seen[up].has("iron_plate"), "saída filtrada recebe só carvão %s" % str(seen[up]))
+	check(not seen[fw].has("coal") and not seen[dn].has("coal"), "carvão não vaza para as outras saídas")
+	check(seen[fw].has("iron_plate") or seen[dn].has("iron_plate"), "placas seguem pelas saídas livres")
+	# Filters survive save/load and blueprints.
+	var w2 = World.from_dict(data(), w.to_dict())
+	eq(w2.buildings[sp].filter, ["coal", "", ""], "filtro salvo")
+	var Blueprint = load("res://src/sim/blueprint.gd")
+	var bp: Dictionary = Blueprint.capture(w, [sp])
+	eq(bp.entries[0].filter, ["coal", "", ""], "planta guarda o filtro")
+
+
 func test_splitter_distributes() -> void:
 	var w = empty_world()
 	var feed: int = w.place("belt", Vector2i(5, 5), 0)

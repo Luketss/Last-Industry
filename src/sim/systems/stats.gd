@@ -20,6 +20,9 @@ var peak_power := 0
 var structures := 0
 var lost_at_wave_start := 0
 var techs := {}
+var endings := {}
+var terminals := 0
+var nests := 0
 var _ring_p := {}     ## item -> Array[int] (one slot per second)
 var _ring_c := {}
 var _slot := 0
@@ -106,13 +109,19 @@ func value(key: String) -> int:
 			return structures
 		"tech":
 			return int(techs.get(parts[1], 0))
+		"ending":
+			return int(endings.get(parts[1], 0))
+		"terminals":
+			return terminals
+		"nests":
+			return nests
 	return 0
 
 
 func to_dict() -> Dictionary:
 	return {"p": produced, "c": consumed, "d": delivered, "b": built, "kills": kills, "shots": shots,
 		"lost": lost, "burned": burned, "loaded": loaded, "waves": waves, "researched": researched, "techs": techs,
-		"elite": elite_kills, "flawless": flawless, "peak_power": peak_power, "lost_ws": lost_at_wave_start, "rp": _ring_p, "rc": _ring_c, "slot": _slot}
+		"elite": elite_kills, "endings": endings, "terminals": terminals, "nests": nests, "flawless": flawless, "peak_power": peak_power, "lost_ws": lost_at_wave_start, "rp": _ring_p, "rc": _ring_c, "slot": _slot}
 
 
 func load_dict(d: Dictionary) -> void:
@@ -129,6 +138,9 @@ func load_dict(d: Dictionary) -> void:
 	waves = int(d.waves)
 	researched = int(d.get("researched", 0))
 	elite_kills = int(d.get("elite", 0))
+	endings = d.get("endings", {})
+	terminals = int(d.get("terminals", 0))
+	nests = int(d.get("nests", 0))
 	flawless = int(d.get("flawless", 0))
 	peak_power = int(d.get("peak_power", 0))
 	lost_at_wave_start = int(d.get("lost_ws", 0))

@@ -52,12 +52,28 @@ func _push_outputs(w) -> void:
 			targets = b.output_cells()
 		var keys := src.keys()
 		var item: String = keys[w.tick % keys.size()]
+		var allowed: Array = splitter_outputs(b, item) if b.kind == "splitter" else []
 		for attempt in targets.size():
 			var ti: int = (b.rr + attempt) % targets.size()
+			if b.kind == "splitter" and not (ti in allowed):
+				continue
 			if deliver(w, b, targets[ti], item):
 				Items.take(src, item, 1)
 				b.rr = ti + 1
 				break
+
+
+## Output slots (0 left, 1 front, 2 right) a splitter may send `item` to: the
+## slots filtered for it, else the unfiltered ones.
+static func splitter_outputs(b, item: String) -> Array:
+	var matched := []
+	var free := []
+	for i in 3:
+		if b.filter[i] == item:
+			matched.append(i)
+		elif b.filter[i] == "":
+			free.append(i)
+	return matched if not matched.is_empty() else free
 
 
 ## Deliver one item from `src` (a building) into the cell `c`.

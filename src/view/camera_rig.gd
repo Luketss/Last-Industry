@@ -16,6 +16,7 @@ var input_enabled := true
 var orbit := false            ## slow automatic rotation used behind the main menu
 var edge_pan := false         ## move when the mouse touches the screen border
 var speed := 1.0
+var pad_move := Vector2.ZERO  ## left stick of a gamepad (see gamepad.gd)
 var bounds := Rect2(0, 0, 64, 64)
 var _yaw := 45.0
 var _zoom := 28.0
@@ -68,6 +69,8 @@ func _process(delta: float) -> void:
 		if v != Vector2.ZERO:
 			var fast := 2.0 if Input.is_key_pressed(KEY_SHIFT) else 1.0
 			target += _plane_dir(v.normalized()) * delta * _zoom * 0.9 * fast * speed
+		if pad_move != Vector2.ZERO:
+			target += _plane_dir(pad_move) * delta * _zoom * 1.1 * speed
 	target.x = clampf(target.x, bounds.position.x, bounds.end.x)
 	target.z = clampf(target.z, bounds.position.y, bounds.end.y)
 	var k := minf(delta * 10.0, 1.0)

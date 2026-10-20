@@ -5,8 +5,10 @@ extends Node3D
 const Defs = preload("res://src/sim/defs.gd")
 const Meshes = preload("res://src/view/meshes.gd")
 const GroundShader = preload("res://src/view/ground.gdshader")
+const FogShader = preload("res://src/view/fog.gdshader")
 const Logistics = preload("res://src/sim/systems/logistics_system.gd")
 const Kit = preload("res://src/view/kit.gd")
+const Fx = preload("res://src/view/fx.gd")
 const RUIN_MODELS := ["city/building-a", "city/building-e", "city/building-f", "city/building-g", "city/building-l",
 	"city/building-n", "city/building-p", "city/building-q", "city/building-r", "city/water-tower",
 	"city/chimney-large", "city/detail-tank-large", "city/windmill-low", "factory/machine-bed", "factory/crane"]
@@ -19,6 +21,10 @@ var show_grid := false
 var env: Environment
 var sun: DirectionalLight3D
 var ground_mat: ShaderMaterial
+var fog_mat: ShaderMaterial
+var _fog_img: Image
+var _fog_tex: ImageTexture
+var _fog_ver := -1
 var terrain_root: Node3D
 var buildings_root: Node3D
 var ghosts_root: Node3D
@@ -31,6 +37,11 @@ var fx_mesh := ImmediateMesh.new()
 var wires_mesh := ImmediateMesh.new()
 var debug_mesh := ImmediateMesh.new()
 var fx: Array = []
+var particles: Node3D       ## fx.gd: pooled one-shot particle effects
+var terminal_nodes := {}    ## cell index -> {root, lamp, light}
+var nest_nodes: Array = []  ## parallel to world.spawn_points
+var objective_target = null ## Vector2 map position of the active objective (set by the HUD)
+var _marker: Node3D
 var ash: GPUParticles3D
 var _ghosts_ver := -1
 var _power_ver := -1
@@ -50,6 +61,10 @@ func _ready() -> void:
 	add_child(buildings_root)
 	ghosts_root = Node3D.new()
 	add_child(ghosts_root)
+	particles = Fx.new()
+	add_child(particles)
+	_marker = _make_marker()
+	add_child(_marker)
 	items_mm = _make_mm(Meshes.box_mesh(Vector3(0.22, 0.16, 0.22)), Meshes.mat("items", Color.WHITE, {"vcol": true, "rough": 0.6}))
 	bars_mm = _make_mm(Meshes.box_mesh(Vector3(1, 0.05, 0.1)), Meshes.mat("bars", Color.WHITE, {"vcol": true, "unshaded": true}))
 	bars_mm.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -124,6 +139,21 @@ func _build_environment() -> void:
 	add_child(ash)
 
 
+## Bouncing arrow and ground ring over the active objective's location.
+func _make_marker() -> Node3D:
+	var n := Node3D.new()
+	var m := Meshes.mat("marker", Color(1.0, 0.75, 0.25), {"emit": Color(1.0, 0.7, 0.2), "energy": 2.5, "unshaded": true})
+	var arrow := Meshes.add(n, Meshes.cyl_mesh(0.45, 0.0, 0.8, 4), Vector3(0, 2.6, 0), m)
+	arrow.name = "Arrow"
+	Meshes.add(n, Meshes.cyl_mesh(0.14, 0.14, 0.7, 6), Vector3(0, 3.35, 0), m).name = "Shaft"
+	var ring := Meshes.add(n, Meshes.cyl_mesh(1.1, 1.1, 0.03, 24), Vector3(0, 0.03, 0), Meshes.mat("markerring", Color(1.0, 0.75, 0.25, 0.25), {"alpha": true, "unshaded": true}))
+	ring.name = "Ring"
+	for c in n.get_children():
+		c.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	n.visible = false
+	return n
+
+
 func _make_mm(mesh: Mesh, m: Material) -> MultiMeshInstance3D:
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
@@ -141,6 +171,7 @@ func _make_mm(mesh: Mesh, m: Material) -> MultiMeshInstance3D:
 
 func bind(p_world) -> void:
 	world = p_world
+	objective_target = null
 	for c in terrain_root.get_children():
 		c.queue_free()
 	for c in buildings_root.get_children():
@@ -174,7 +205,12 @@ func bind(p_world) -> void:
 				mesh = Meshes.box_mesh(Vector3(1.0, 0.8, 0.85))
 			_:
 				mesh = Meshes.sphere_mesh(0.5, 0.65)
-		enemy_mm[type] = _make_mm(mesh, Meshes.mat("enemy", Color.WHITE, {"vcol": true, "rough": 0.5, "metal": 0.3}))
+		var model := Kit.enemy_mesh(type)
+		if model != null:
+			enemy_mm[type] = _make_mm(model, null)
+			enemy_mm[type].set_meta("model", true)
+		else:
+			enemy_mm[type] = _make_mm(mesh, Meshes.mat("enemy", Color.WHITE, {"vcol": true, "rough": 0.5, "metal": 0.3}))
 
 
 func _build_terrain() -> void:
@@ -241,13 +277,35 @@ func _build_terrain() -> void:
 	rmi.multimesh = mm
 	rmi.material_override = Meshes.mat("ruins", Color.WHITE, {"vcol": true, "rough": 0.95})
 	terrain_root.add_child(rmi)
+	# Fog of war curtain (fog.gdshader), fed by world.revealed.
+	var fp := PlaneMesh.new()
+	fp.size = Vector2(w + 80, h + 80)
+	fog_mat = ShaderMaterial.new()
+	fog_mat.shader = FogShader
+	fog_mat.set_shader_parameter("map_size", Vector2(w, h))
+	_fog_img = Image.create(w, h, false, Image.FORMAT_L8)
+	_fog_tex = ImageTexture.create_from_image(_fog_img)
+	fog_mat.set_shader_parameter("fog_tex", _fog_tex)
+	var fg := MeshInstance3D.new()
+	fg.mesh = fp
+	fg.material_override = fog_mat
+	fg.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	fg.position = Vector3(w * 0.5, 3.4, h * 0.5)
+	terrain_root.add_child(fg)
+	_fog_ver = -1
+	_update_fog()
+	terminal_nodes.clear()
+	for key in world.terminals:
+		_add_terminal(key)
 	ore_mm = MultiMeshInstance3D.new()
 	ore_mm.material_override = Meshes.mat("ore", Color.WHITE, {"vcol": true, "rough": 0.7, "metal": 0.3})
 	terrain_root.add_child(ore_mm)
 	_rebuild_ore()
 	# Nests
+	nest_nodes.clear()
 	for sp in world.spawn_points:
 		var n := Node3D.new()
+		nest_nodes.append(n)
 		n.position = Vector3(sp.x + 0.5, 0, sp.y + 0.5)
 		var red := Meshes.mat("nest", Color(0.25, 0.04, 0.03), {"emit": Color(0.9, 0.12, 0.05), "energy": 1.6})
 		Meshes.cyl(n, 1.9, 0.08, Vector3(0, 0.04, 0), red, 2.1, 16)
@@ -263,6 +321,49 @@ func _build_terrain() -> void:
 		l.position = Vector3(0, 1.2, 0)
 		n.add_child(l)
 		terrain_root.add_child(n)
+
+
+## Data terminal: an old console on a slab with a beacon that goes dark once read.
+func _add_terminal(key: int) -> void:
+	var c := Vector2i(key % world.width, key / world.width)
+	var n := Node3D.new()
+	n.position = Vector3(c.x + 0.5, 0, c.y + 0.5)
+	terrain_root.add_child(n)
+	Meshes.box(n, Vector3(0.95, 0.08, 0.95), Vector3(0, 0.04, 0), Meshes.mat("cdark", Meshes.CONCRETE_DARK))
+	Kit.place(n, "factory/scanner-high", Vector3(0, 0.08, 0), Vector3(0.9, 1.1, 0.9))
+	var lamp := Meshes.add(n, Meshes.sphere_mesh(0.12), Vector3(0, 1.35, 0), Meshes.mat("cyan", Meshes.CYAN, {"emit": Meshes.CYAN, "energy": 3.0}))
+	var l := OmniLight3D.new()
+	l.light_color = Meshes.CYAN
+	l.light_energy = 1.2
+	l.omni_range = 4.0
+	l.position = Vector3(0, 1.4, 0)
+	n.add_child(l)
+	terminal_nodes[key] = {"root": n, "lamp": lamp, "light": l}
+	_update_terminal(key)
+
+
+func _update_terminal(key: int) -> void:
+	var t = world.terminals.get(key)
+	var h = terminal_nodes.get(key)
+	if t == null or h == null:
+		return
+	h.root.visible = world.revealed[key] != 0
+	h.light.visible = not t.read
+	h.lamp.material_override = Meshes.status_mat(0) if t.read else Meshes.mat("cyan", Meshes.CYAN, {"emit": Meshes.CYAN, "energy": 3.0})
+
+
+func _update_fog() -> void:
+	if world.fog_version == _fog_ver:
+		return
+	_fog_ver = world.fog_version
+	var bytes := PackedByteArray()
+	bytes.resize(world.revealed.size())
+	for i in bytes.size():
+		bytes[i] = 255 if world.revealed[i] != 0 else 0
+	_fog_img.set_data(world.width, world.height, false, Image.FORMAT_L8, bytes)
+	_fog_tex.update(_fog_img)
+	for key in terminal_nodes:
+		_update_terminal(key)
 
 
 func _rebuild_ore() -> void:
@@ -283,12 +384,16 @@ func _rebuild_ore() -> void:
 		var i: int = cells[k]
 		var c := Vector2(i % w, i / w)
 		var iron: bool = world.terrain[i] == Defs.T_IRON
+		var crystal: bool = world.terrain[i] == Defs.T_CRYSTAL
 		for j in 3:
 			var s := rng.randf_range(0.6, 1.4)
-			var basis := Basis.from_euler(Vector3(rng.randf_range(-0.4, 0.4), rng.randf() * TAU, rng.randf_range(-0.4, 0.4))).scaled(Vector3(s, s, s))
-			var p := Vector3(c.x + rng.randf_range(0.2, 0.8), 0.06 * s, c.y + rng.randf_range(0.2, 0.8))
+			var tall := Vector3(0.7, 2.2, 0.7) if crystal else Vector3.ONE
+			var basis := Basis.from_euler(Vector3(rng.randf_range(-0.4, 0.4), rng.randf() * TAU, rng.randf_range(-0.4, 0.4))).scaled(tall * s)
+			var p := Vector3(c.x + rng.randf_range(0.2, 0.8), 0.06 * s * tall.y, c.y + rng.randf_range(0.2, 0.8))
 			mm.set_instance_transform(k * 3 + j, Transform3D(basis, p))
 			var col := Color(0.55, 0.26, 0.12) if iron else Color(0.07, 0.065, 0.06)
+			if crystal:
+				col = Color(0.5, 1.6, 1.4)   # > 1: glows through the HDR glow pass
 			mm.set_instance_color(k * 3 + j, col * rng.randf_range(0.75, 1.15))
 	ore_mm.multimesh = mm
 
@@ -298,6 +403,8 @@ func _add_building(b) -> void:
 	h.root.position = Vector3(b.pos.x, 0, b.pos.y)
 	h["level"] = -1
 	buildings_root.add_child(h.root)
+	if h.has("smoke_at"):
+		h["smoke"] = particles.make_smoke(h.body, h.smoke_at)
 	nodes[b.id] = h
 
 
@@ -323,20 +430,58 @@ func on_events(events: Array) -> void:
 			"destroyed":
 				_remove_building(ev.id)
 				_burst(ev.pos, Color(1.0, 0.5, 0.15), 14, 1.6, 0.6)
+				particles.play("fire", _v3(ev.pos, 0.4), 1.4)
+				particles.play("smoke", _v3(ev.pos, 0.8), 1.5)
 			"shot":
-				fx.append({"k": "line", "a": _v3(ev.from, 0.95), "b": _v3(ev.to, 1.9 if ev.get("air", false) else 0.35), "c": Color(1.0, 0.85, 0.4), "t": 0.0, "life": 0.06})
+				var to := _v3(ev.to, 1.9 if ev.get("air", false) else 0.35)
+				var muzzle := _v3(ev.from, 0.95)
+				muzzle += (to - muzzle).normalized() * 0.75
+				fx.append({"k": "line", "a": muzzle, "b": to, "c": Color(1.0, 0.85, 0.4), "t": 0.0, "life": 0.06})
+				particles.play("flash", muzzle, 0.8)
+				particles.play("sparks", to, 0.7)
 			"shell":
 				fx.append({"k": "line", "a": _v3(ev.from, 1.0), "b": _v3(ev.to, 0.3), "c": Color(1.0, 0.6, 0.25), "t": 0.0, "life": 0.12})
 				_burst(ev.to, Color(1.0, 0.55, 0.2), 18, float(ev.r), 0.35)
+				particles.play("flash", _v3(ev.from, 1.0), 1.4)
+				particles.play("fire", _v3(ev.to, 0.3), clampf(float(ev.r), 0.6, 1.6))
+				particles.play("dust", _v3(ev.to, 0.1), clampf(float(ev.r), 0.8, 2.0))
 			"arc":
 				fx.append({"k": "arc", "pts": ev.points, "c": Color(0.5, 0.9, 1.0), "t": 0.0, "life": 0.18, "seed": randi()})
+				for i in range(1, ev.points.size()):
+					particles.play("sparks", _v3(ev.points[i], 0.4), 0.6)
+			"drone":
+				fx.append({"k": "drone", "a": _v3(ev.from, 1.0), "b": _v3(ev.to, 0.8), "c": Color(1.0, 0.7, 0.25) if ev.get("supply", false) else Color(0.4, 1.0, 0.5), "t": 0.0, "life": 0.9})
 			"repair":
 				fx.append({"k": "line", "a": _v3(ev.from, 1.0), "b": _v3(ev.to, 0.6), "c": Color(0.3, 1.0, 0.45), "t": 0.0, "life": 0.35})
 			"enemy_died":
 				_burst(ev.pos, Color(0.85, 0.2, 0.1) if not ev.elite else Color(1, 0.4, 0.1), 8 if not ev.elite else 24, 0.7 if not ev.elite else 2.5, 0.3)
+				particles.play("gore", _v3(ev.pos, 0.3), 1.0 if not ev.elite else 1.8)
+				if ev.elite:
+					particles.play("fire", _v3(ev.pos, 0.3), 1.2)
+			"terminal":
+				_update_terminal(ev.key)
+			"nest_destroyed":
+				for i in nest_nodes.size():
+					var nn: Node3D = nest_nodes[i]
+					if Vector2(nn.position.x, nn.position.z).distance_to(ev.pos) < 0.1:
+						nn.queue_free()
+						nest_nodes.remove_at(i)
+						break
+				for k in 3:
+					particles.play("fire", _v3(ev.pos, 0.4 + k * 0.5), 2.0)
+				particles.play("smoke", _v3(ev.pos, 1.5), 2.5)
+				particles.play("gore", _v3(ev.pos, 0.5), 2.5)
+			"genesis_ready":
+				var gb = world.buildings.get(ev.id)
+				if gb != null:
+					particles.play("flash", _v3(gb.center(), 3.4), 4.0)
+			"spit":
+				fx.append({"k": "line", "a": _v3(ev.from, 0.5), "b": _v3(ev.to, 0.4), "c": Color(0.6, 1.0, 0.2), "t": 0.0, "life": 0.25})
+				particles.play("acid", _v3(ev.to, 0.3), clampf(float(ev.r), 0.8, 1.6))
 			"bite":
 				if ev.splash:
 					_burst(ev.pos, Color(0.8, 0.6, 0.3), 10, 1.2, 0.25)
+					particles.play("dust", _v3(ev.pos, 0.1), 1.4)
 			"wave_start":
 				_alarm = 4.0
 
@@ -383,6 +528,7 @@ func _process(delta: float) -> void:
 		_rebuild_ore()
 	if world.structures_version != _belt_ver:
 		_update_belt_shapes()
+	_update_fog()
 	_update_buildings(delta)
 	_update_items()
 	_update_enemies()
@@ -391,6 +537,13 @@ func _process(delta: float) -> void:
 	_update_debug()
 	ground_mat.set_shader_parameter("grid_alpha", 1.0 if show_grid else 0.0)
 	ash.position = Vector3(camera_focus.x, 14, camera_focus.z)
+	_marker.visible = objective_target != null
+	if _marker.visible:
+		_marker.position = Vector3(objective_target.x, 0.0, objective_target.y)
+		var bob := absf(sin(_t * 3.0)) * 0.5
+		for part in ["Arrow", "Shaft"]:
+			_marker.get_node(part).position.y = (2.6 if part == "Arrow" else 3.35) + bob
+		_marker.get_node("Ring").scale = Vector3.ONE * (0.8 + 0.25 * sin(_t * 3.0))
 
 
 func _update_lighting(delta: float) -> void:
@@ -448,12 +601,14 @@ func _update_buildings(delta: float) -> void:
 					h.glow.visible = b.status == "pesquisando" or fmod(_t, 1.2) < 0.2
 				"turret_tesla":
 					h.glow.visible = b.energy >= float(b.def.shot_cost) * 0.99 or fmod(_t, 0.3) < 0.15 * b.energy / float(b.def.shot_cost)
-				"core":
+				"core", "genesis":
 					h.glow.visible = true
 				_:
 					h.glow.visible = working
+		if h.has("smoke"):
+			h.smoke.emitting = working
 		if h.spin != null and working:
-			h.spin.rotation.y += delta * (6.0 if b.kind == "miner" else 2.5)
+			h.spin.rotation.y += delta * (6.0 if b.kind == "miner" else (1.0 + 6.0 * b.progress if b.kind == "genesis" else 2.5))
 		if h.head != null:
 			h.head.rotation.y = lerp_angle(h.head.rotation.y, -b.aim, minf(delta * 12.0, 1.0))
 		# Damage flicker
@@ -503,13 +658,20 @@ func _update_enemies() -> void:
 		var list: Array = by_type[t]
 		var mm := _ensure(enemy_mm[t], list.size())
 		var def: Dictionary = world.data.enemies[t]
-		var base := Color.html(def.color)
+		var model: bool = enemy_mm[t].has_meta("model")
+		# Creature models carry their own colours; the type colour only tints them.
+		var base := Color.WHITE.lerp(Color.html(def.color), 0.3) if model else Color.html(def.color)
 		for i in list.size():
 			var e = list[i]
 			var s: float = float(def.size) * e.size_mult
 			var bob := absf(sin(_t * float(def.speed) * 5.0 + e.id)) * 0.08 * s
 			var basis := Basis(Vector3.UP, -e.facing).scaled(Vector3(s * 1.15, s, s))
 			var y := s * 0.4 + bob
+			if model:
+				# Waddle: a little roll from side to side in step with the bob.
+				basis = Basis(Vector3.UP, -e.facing) * Basis(Vector3(1, 0, 0), sin(_t * float(def.speed) * 5.0 + e.id) * 0.12)
+				basis = basis.scaled(Vector3.ONE * (s * 1.5 + 0.25))
+				y = bob
 			if def.get("flying", false):
 				y = 1.9 + sin(_t * 2.0 + e.id) * 0.15
 				basis = basis * Basis(Vector3(1, 0, 0), sin(_t * 6.0 + e.id) * 0.25)
@@ -527,6 +689,9 @@ func _update_bars() -> void:
 	for b in world.buildings.values():
 		if b.hp < b.max_hp:
 			entries.append([b.center(), b.hp / b.max_hp, float(nodes.get(b.id, {"h": 1.0}).h) + 0.35, float(b.size.x) * 0.8])
+	for i in world.spawn_points.size():
+		if i < world.nests.hp.size() and world.nests.hp[i] < world.nests.max_hp:
+			entries.append([Vector2(world.spawn_points[i]) + Vector2(0.5, 0.5), world.nests.hp[i] / world.nests.max_hp, 2.2, 3.0])
 	for e in world.enemies.values():
 		if e.hp < e.max_hp:
 			var s: float = float(e.def.size) * e.size_mult
@@ -579,6 +744,19 @@ func _update_fx(delta: float) -> void:
 						fx_mesh.surface_add_vertex(prev)
 						fx_mesh.surface_add_vertex(q)
 						prev = q
+			"drone":
+				# A small drone flies an arc from the hub to the repair target.
+				var s: float = f.t / f.life
+				var p: Vector3 = f.a.lerp(f.b, s) + Vector3(0, sin(s * PI) * 2.2, 0)
+				var q: Vector3 = f.a.lerp(f.b, maxf(s - 0.12, 0.0)) + Vector3(0, sin(maxf(s - 0.12, 0.0) * PI) * 2.2, 0)
+				var dc: Color = f.c * 1.6
+				fx_mesh.surface_set_color(Color(dc, 0.5))
+				fx_mesh.surface_add_vertex(q)
+				fx_mesh.surface_add_vertex(p)
+				fx_mesh.surface_set_color(dc)
+				for d in [Vector3(0.2, 0, 0.2), Vector3(0.2, 0, -0.2)]:
+					fx_mesh.surface_add_vertex(p - d)
+					fx_mesh.surface_add_vertex(p + d)
 			"burst":
 				var rng := RandomNumberGenerator.new()
 				rng.seed = f.seed

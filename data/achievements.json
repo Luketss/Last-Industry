@@ -10,5 +10,11 @@
 	{"id": "GENESIS", "name": "Fragmento Genesis", "desc": "Decodifique os arquivos selados da instalação.", "stat": "tech:genesis_1", "n": 1},
 	{"id": "POWER_1000", "name": "Rede Industrial", "desc": "Alcance 1000 kW de capacidade de geração.", "stat": "peak_power", "n": 1000},
 	{"id": "FACTORY_500", "name": "A Última Indústria", "desc": "Mantenha 500 estruturas ao mesmo tempo.", "stat": "structures", "n": 500},
-	{"id": "SURVIVAL_20", "name": "Fortaleza Eterna", "desc": "Sobreviva a 20 hordas.", "stat": "waves", "n": 20}
+	{"id": "SURVIVAL_20", "name": "Fortaleza Eterna", "desc": "Sobreviva a 20 hordas.", "stat": "waves", "n": 20},
+	{"id": "ENDING_RESTORE", "name": "Semente", "desc": "Escolha restaurar o mundo com Genesis.", "stat": "ending:restore", "n": 1},
+	{"id": "ENDING_DESTROY", "name": "Cinzas", "desc": "Escolha destruir a tecnologia Genesis.", "stat": "ending:destroy", "n": 1},
+	{"id": "ENDING_FORTRESS", "name": "Fortaleza Sem Fim", "desc": "Escolha manter a fábrica funcionando para sempre.", "stat": "ending:fortress", "n": 1},
+	{"id": "ARCHIVIST", "name": "Arquivista", "desc": "Decodifique os quatro terminais de dados.", "stat": "terminals", "n": 4},
+	{"id": "NEST_1", "name": "Exterminador", "desc": "Destrua um ninho.", "stat": "nests", "n": 1},
+	{"id": "NEST_ALL", "name": "Terra Limpa", "desc": "Destrua os quatro ninhos de um mapa.", "stat": "nests", "n": 4}
 ]

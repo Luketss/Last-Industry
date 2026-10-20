@@ -54,3 +54,48 @@ func test_core_destroyed_is_defeat() -> void:
 	var w = empty_world()
 	w.damage_building(w.core(), 1.0e6)
 	eq(w.state, "lost", "derrota")
+
+
+func test_fog_of_war_blocks_building_until_revealed() -> void:
+	var w = World.new(data(), 42)
+	var c: Vector2i = w.core().pos
+	check(w.is_revealed(c + Vector2i(5, 5)), "área do Núcleo revelada")
+	var far := c + Vector2i(24, 0)
+	var found := false
+	for dy in range(-6, 7):
+		var p := far + Vector2i(0, dy)
+		if w.in_bounds(p) and w.terrain_at(p) == Defs.T_GROUND and not w.is_revealed(p):
+			far = p
+			found = true
+			break
+	check(found, "há chão inexplorado longe do Núcleo")
+	check(w.can_place("wall", far, 0).begins_with("Área inexplorada"), "não constrói na névoa")
+	w.reveal(Vector2(far) + Vector2(0.5, 0.5), 2.0)
+	eq(w.can_place("wall", far, 0), "", "constrói depois de revelar")
+	var w2 = World.from_dict(data(), w.to_dict())
+	check(w2.is_revealed(far), "névoa salva")
+
+
+func test_rare_crystal_deposits_far_from_core() -> void:
+	for s in [5, 99]:
+		var w = World.new(data(), s)
+		var center := Vector2(w.width * 0.5, w.height * 0.5)
+		var n := 0
+		var nearest := INF
+		for i in w.terrain.size():
+			if w.terrain[i] == Defs.T_CRYSTAL:
+				n += 1
+				nearest = minf(nearest, Vector2(i % w.width, i / w.width).distance_to(center))
+		check(n >= 6, "seed %d: jazidas de cristal (%d)" % [s, n])
+		check(nearest > 20.0, "seed %d: longe do Núcleo (%.1f)" % [s, nearest])
+	var w2 = empty_world()
+	for y in [15, 16]:
+		for x in [8, 9]:
+			w2.set_terrain(Vector2i(x, y), Defs.T_CRYSTAL, 50)
+	var m: int = w2.place("miner", Vector2i(8, 15), 0)
+	check(m != 0, "mineradora sobre cristal")
+	w2.place("pole", Vector2i(10, 17), 0)
+	for x in range(10, 15):
+		w2.place("belt", Vector2i(x, 15), 0)
+	run_seconds(w2, 20.0)
+	check(int(w2.storage.get("crystal", 0)) > 0, "cristal chega ao Núcleo")

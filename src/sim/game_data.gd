@@ -12,6 +12,9 @@ var objectives: Array
 var lore: Array
 var research: Array
 var achievements: Array
+var _texts: Array = []      ## [dict, field, original Portuguese text] for localize()
+
+const TEXT_FIELDS := ["name", "short", "desc", "text", "title"]
 
 
 func _init(base_path: String = "res://data") -> void:
@@ -25,6 +28,27 @@ func _init(base_path: String = "res://data") -> void:
 	lore = _load(base_path + "/lore.json")
 	research = _load(base_path + "/research.json")
 	achievements = _load(base_path + "/achievements.json")
+	for coll in [items.values(), buildings.values(), recipes.values(), enemies.values(), objectives, lore, research, achievements]:
+		for d in coll:
+			for f in TEXT_FIELDS:
+				if d is Dictionary and d.has(f) and d[f] is String:
+					_texts.append([d, f, d[f]])
+	localize()
+
+
+## Rewrites every name/description in place for the current locale. The dicts
+## themselves are kept, so structures and research that reference them update too.
+func localize() -> void:
+	for e in _texts:
+		e[0][e[1]] = TranslationServer.translate(e[2])
+
+
+## Every source text in the data files (for the translation extractor and tests).
+func source_texts() -> Array:
+	var out := []
+	for e in _texts:
+		out.append(e[2])
+	return out
 
 
 func item_name(id: String) -> String:

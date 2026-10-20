@@ -128,7 +128,9 @@ static func build(type: String, def: Dictionary, rot: int) -> Dictionary:
 	var hazard := mat("hazard", HAZARD)
 	var warm := mat("warm", WARM, {"emit": WARM, "energy": 3.0})
 	var cyan := mat("cyan", CYAN, {"emit": CYAN, "energy": 3.0})
-	var shape: String = type if type in ["turret_cannon", "turret_aa"] else str(def.get("kind", type))
+	var shape: String = type if type in ["turret_cannon", "turret_aa", "drone_hub"] else str(def.get("kind", type))
+	if shape == "supply_hub":
+		shape = "drone_hub"
 	if not _kit_body(shape, type, root, body, h):
 		match shape:
 			"core":
@@ -317,8 +319,8 @@ static func build(type: String, def: Dictionary, rot: int) -> Dictionary:
 			var arrow := Node3D.new()
 			arrow.position = Vector3(w * 0.5 + 0.28, 0.02, -d * 0.5 + 0.5 + i)
 			body.add_child(arrow)
-			box(arrow, Vector3(0.26, 0.025, 0.07), Vector3(0.0, 0, -0.07), am, Vector3(0, deg_to_rad(38), 0))
-			box(arrow, Vector3(0.26, 0.025, 0.07), Vector3(0.0, 0, 0.07), am, Vector3(0, deg_to_rad(-38), 0))
+			box(arrow, Vector3(0.26, 0.025, 0.07), Vector3(0.0, 0, -0.07), am, Vector3(0, deg_to_rad(-38), 0))
+			box(arrow, Vector3(0.26, 0.025, 0.07), Vector3(0.0, 0, 0.07), am, Vector3(0, deg_to_rad(38), 0))
 	if def.get("kind", type) not in ["belt", "wall", "pole"]:
 		# Status lamp on a short post at the footprint corner.
 		cyl(root, 0.025, 0.7, Vector3(0.14, 0.35, 0.14), mdark, -1.0, 5)
@@ -375,6 +377,7 @@ static func _kit_body(shape: String, type: String, root: Node3D, body: Node3D, h
 			if type == "smelter":
 				Kit.place(body, "factory/machine-fortified", Vector3(0.1, 0.12, 0.2), Vector3(1.5, 1.4, 1.5), Q)
 				Kit.place(body, "city/chimney-large", Vector3(-0.55, 0.12, -0.55), Vector3(0.75, 1.9, 0.75))
+				h["smoke_at"] = Vector3(-0.55, 2.0, -0.55)
 				h.glow = box(body, Vector3(0.06, 0.3, 0.8), Vector3(0.9, 0.42, 0.2), warm)
 				h.h = 2.1
 			else:
@@ -386,6 +389,7 @@ static func _kit_body(shape: String, type: String, root: Node3D, body: Node3D, h
 			box(body, Vector3(1.9, 0.2, 1.9), Vector3(0, 0.1, 0), cdark)
 			Kit.place(body, "city/detail-tank-large", Vector3(-0.2, 0.2, 0.1), Vector3(1.5, 1.2, 1.6), Q)
 			Kit.place(body, "city/chimney-medium", Vector3(0.6, 0.2, -0.65), Vector3(0.45, 1.7, 0.45))
+			h["smoke_at"] = Vector3(0.6, 1.9, -0.65)
 			h.glow = box(body, Vector3(0.5, 0.22, 0.06), Vector3(0.45, 0.4, 0.93), warm)
 			h.h = 1.9
 		"battery":
@@ -424,6 +428,49 @@ static func _kit_body(shape: String, type: String, root: Node3D, body: Node3D, h
 			box(spin, Vector3(0.6, 0.04, 0.04), Vector3.ZERO, cyan)
 			h.spin = spin
 			h.h = 1.7
+		"drone_hub":
+			box(body, Vector3(1.9, 0.2, 1.9), Vector3(0, 0.1, 0), cdark)
+			Kit.place(body, "factory/hopper-round", Vector3(-0.35, 0.2, -0.35), Vector3(0.9, 0.8, 0.9))
+			box(body, Vector3(0.9, 0.05, 0.9), Vector3(0.4, 0.23, 0.4), hazard)
+			var gm := mat("greenl", GREEN, {"emit": GREEN, "energy": 2.5}) if type == "drone_hub" else mat("supplyl", WARM, {"emit": WARM, "energy": 2.5})
+			if type == "supply_hub":
+				Kit.place(body, "factory/box-small", Vector3(-0.45, 0.2, 0.5), Vector3(0.6, 0.5, 0.5))
+			h.glow = box(body, Vector3(0.5, 0.06, 0.1), Vector3(0.4, 0.27, 0.4), gm)
+			var spin := Node3D.new()
+			spin.position = Vector3(0.4, 0.75, 0.4)
+			body.add_child(spin)
+			add(spin, sphere_mesh(0.14, 0.12), Vector3.ZERO, mdark)
+			for a in 4:
+				box(spin, Vector3(0.5, 0.025, 0.05), Vector3.ZERO, mat("metal", METAL, {"metal": 0.6, "rough": 0.55}), Vector3(0, a * PI * 0.25, 0))
+			h.spin = spin
+			h.h = 1.3
+		"sensor":
+			box(body, Vector3(1.9, 0.15, 1.9), Vector3(0, 0.075, 0), cdark)
+			Kit.place(body, "factory/scanner-low", Vector3(-0.4, 0.15, 0.2), Vector3(0.9, 1.0, 1.4), Q)
+			cyl(body, 0.08, 1.6, Vector3(0.45, 0.95, -0.45), mdark)
+			var spin := Node3D.new()
+			spin.position = Vector3(0.45, 1.75, -0.45)
+			body.add_child(spin)
+			var dish := cyl(spin, 0.55, 0.08, Vector3(0.12, 0, 0), mat("metal", METAL, {"metal": 0.6, "rough": 0.55}), 0.2, 14)
+			dish.rotation.z = deg_to_rad(-60)
+			h.glow = add(spin, sphere_mesh(0.08), Vector3(0.4, 0.15, 0), cyan)
+			h.spin = spin
+			h.h = 2.2
+		"genesis":
+			box(body, Vector3(2.95, 0.3, 2.95), Vector3(0, 0.15, 0), cdark)
+			Kit.place(body, "td/tower-round-crystals", Vector3(0, 0.3, 0), Vector3(2.6, 0, 2.6))
+			for c in [Vector2(-1, -1), Vector2(1, -1), Vector2(-1, 1), Vector2(1, 1)]:
+				Kit.place(body, "factory/piston-round", Vector3(c.x * 1.15, 0.3, c.y * 1.15), Vector3(0.5, 1.2, 0.5))
+			cyl(body, 0.3, 2.2, Vector3(0, 2.0, 0), mdark, 0.45)
+			var gm := mat("genesis", GREEN, {"emit": Color(0.4, 1.0, 0.5), "energy": 3.5})
+			h.glow = add(body, sphere_mesh(0.55), Vector3(0, 3.4, 0), gm)
+			var spin := Node3D.new()
+			spin.position = Vector3(0, 2.6, 0)
+			body.add_child(spin)
+			for a in 3:
+				box(spin, Vector3(1.6, 0.06, 0.08), Vector3.ZERO, gm, Vector3(0, a * PI / 3.0, 0))
+			h.spin = spin
+			h.h = 4.0
 		"solar":
 			Kit.place(body, "city/solar-panel-landscape-group", Vector3.ZERO, Vector3(1.95, 0, 1.95), PI)
 			h.h = 0.8

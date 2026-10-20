@@ -15,6 +15,7 @@ const SOUNDS := {
 	"explosion": [-6.0, 0.1], "explosion2": [-6.0, 0.1], "wave": [-6.0, 1.0], "build": [-10.0, 0.05],
 	"demolish": [-10.0, 0.05], "click": [-12.0, 0.03], "hover": [-20.0, 0.03], "error": [-10.0, 0.2],
 	"objective": [-6.0, 0.5], "achievement": [-4.0, 0.5], "research": [-6.0, 0.5],
+	"transmission": [-8.0, 1.0], "bite": [-12.0, 0.15], "die": [-12.0, 0.08],
 }
 
 var main
@@ -134,13 +135,32 @@ func on_events(events: Array) -> void:
 				play("objective")
 			"research":
 				play("research")
+			"transmission":
+				play("transmission")
+			"bite":
+				play("bite", ev.pos)
+			"spit":
+				play("bite", ev.to, 2.0)
+			"enemy_died":
+				play("die", ev.pos, 3.0 if ev.elite else 0.0)
+			"alert":
+				# The core being hit gets the siren even between hordes.
+				if ev.get("key", "") == "core_hit":
+					_alarm = maxf(_alarm, 1.4)
 
 
 func _desired_track() -> String:
 	if not main.in_game or main.world == null:
 		return "menu"
-	if main.world.waves.active:
-		return "combat"
+	var w = main.world
+	for g in w.list("genesis"):
+		if g.progress > 0.0 and g.progress < 1.0:
+			return "boss"
+	if w.waves.active:
+		# Boss hordes and the final hordes of the campaign get the heavier theme.
+		var wd: Dictionary = w.waves.wave_def(maxi(w.waves.index - 1, 0))
+		var final: bool = not w.survival and w.waves.index >= w.waves.campaign_length() - 1
+		return "boss" if wd.get("boss", false) or final else "combat"
 	return _track if _track in CALM else _calm_order[0]
 
 
@@ -151,7 +171,7 @@ func _switch(track: String) -> void:
 		return
 	var stream: AudioStream = load(path)
 	if stream is AudioStreamOggVorbis:
-		stream.loop = track in ["menu", "combat"]
+		stream.loop = track in ["menu", "combat", "boss"]
 	_music_cur = 1 - _music_cur
 	var p: AudioStreamPlayer = _music[_music_cur]
 	p.stream = stream

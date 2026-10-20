@@ -18,6 +18,9 @@ const WaveSystem = preload("res://src/sim/systems/wave_system.gd")
 const Stats = preload("res://src/sim/systems/stats.gd")
 const Objectives = preload("res://src/sim/systems/objectives.gd")
 const ResearchSystem = preload("res://src/sim/systems/research_system.gd")
+const GenesisSystem = preload("res://src/sim/systems/genesis_system.gd")
+const NestSystem = preload("res://src/sim/systems/nest_system.gd")
+const I18n = preload("res://src/ui/i18n.gd")
 
 const SAVE_VERSION := 1
 
@@ -28,6 +31,8 @@ var map_seed := 1
 var terrain := PackedByteArray()
 var ore := PackedInt32Array()
 var grid := PackedInt32Array()
+var revealed := PackedByteArray()  ## fog of war: 1 = explored (structures reveal around them)
+var fog_version := 0
 var buildings := {}
 var enemies := {}
 var ghosts := {}            ## origin cell index -> {type, rot, recipe, x, y}
@@ -38,7 +43,7 @@ var next_id := 1
 var tick := 0
 var time := 0.0
 var rng := RandomNumberGenerator.new()
-var state := "playing"      ## playing | won | lost
+var state := "playing"      ## playing | genesis (waiting for the ending choice) | won | lost
 var survival := false
 
 var events: Array = []      ## transient, consumed by view/UI each frame
@@ -63,6 +68,10 @@ var waves: WaveSystem
 var stats: Stats
 var objectives: Objectives
 var research: ResearchSystem
+var genesis: GenesisSystem
+var nests: NestSystem
+var terminals := {}          ## cell index -> {n, read}: data terminals near the ruins
+var ending := ""             ## restore | destroy | fortress once Genesis is decided
 
 
 func _init(p_data, p_seed: int = 1, opts: Dictionary = {}) -> void:
@@ -78,6 +87,9 @@ func _init(p_data, p_seed: int = 1, opts: Dictionary = {}) -> void:
 	ore.fill(0)
 	grid.resize(width * height)
 	grid.fill(0)
+	revealed.resize(width * height)
+	# Generated maps start in fog; test and loaded worlds start explored.
+	revealed.fill(0 if opts.get("generate", true) and not opts.get("load", false) and opts.get("fog", true) else 1)
 	power = PowerSystem.new()
 	logistics = LogisticsSystem.new()
 	production = ProductionSystem.new()
@@ -88,18 +100,25 @@ func _init(p_data, p_seed: int = 1, opts: Dictionary = {}) -> void:
 	stats = Stats.new()
 	objectives = Objectives.new(data.objectives)
 	research = ResearchSystem.new(data.research)
+	genesis = GenesisSystem.new()
+	nests = NestSystem.new()
 	if not opts.get("load", false):
 		storage = Items.from_json(opts.get("storage", data.game.get("start_storage", {})))
 		if opts.get("generate", true):
 			MapGenerator.generate(self, p_seed)
+			MapGenerator.place_terminals(self, p_seed)
+			for sp in spawn_points:
+				reveal(Vector2(sp) + Vector2(0.5, 0.5), 3.5)
 		if opts.get("core", true):
 			var c := Vector2i(width / 2 - 1, height / 2 - 1)
+			reveal(Vector2(c) + Vector2(1.5, 1.5), float(data.buildings.core.get("reveal", 6.0)))
 			core_id = place("core", c, 0, true)
 		if opts.has("spawns"):
 			spawn_points = opts.spawns.duplicate()
 		if opts.has("waves"):
 			waves = WaveSystem.new(opts.waves)
 		waves.setup(self)
+		nests.setup(self)
 		trigger_lore("start")
 
 
@@ -124,6 +143,25 @@ func building_at(c: Vector2i):
 
 func terrain_at(c: Vector2i) -> int:
 	return terrain[idx(c)] if in_bounds(c) else Defs.T_ROCK
+
+
+## Fog of war: marks every cell within `r` of `p` as explored.
+func reveal(p: Vector2, r: float) -> void:
+	var changed := false
+	var ri := int(ceil(r))
+	var c0 := Vector2i(floori(p.x), floori(p.y))
+	for y in range(-ri, ri + 1):
+		for x in range(-ri, ri + 1):
+			var c := c0 + Vector2i(x, y)
+			if in_bounds(c) and revealed[idx(c)] == 0 and (Vector2(c) + Vector2(0.5, 0.5)).distance_to(p) <= r:
+				revealed[idx(c)] = 1
+				changed = true
+	if changed:
+		fog_version += 1
+
+
+func is_revealed(c: Vector2i) -> bool:
+	return in_bounds(c) and revealed[idx(c)] != 0
 
 
 func set_terrain(c: Vector2i, t: int, amount: int = 0) -> void:
@@ -169,33 +207,37 @@ func can_afford(cost: Dictionary) -> bool:
 func can_place(type: String, p: Vector2i, rot: int, check_cost: bool = true) -> String:
 	var def = data.buildings.get(type)
 	if def == null:
-		return "Estrutura desconhecida"
+		return I18n.t("Estrutura desconhecida")
 	if not is_unlocked(type):
 		var tech = research.techs.get(research.unlocked_by.get(type, ""))
-		return "Requer pesquisa: %s" % (tech.name if tech != null else "?")
+		return I18n.t("Requer pesquisa: %s") % (tech.name if tech != null else "?")
 	var sz := Building.footprint(def, rot)
 	var on_ore := false
 	for y in sz.y:
 		for x in sz.x:
 			var c := p + Vector2i(x, y)
 			if not in_bounds(c):
-				return "Fora do mapa"
+				return I18n.t("Fora do mapa")
 			var i := idx(c)
 			if grid[i] != 0:
-				return "Espaço ocupado"
+				return I18n.t("Espaço ocupado")
+			if terminals.has(i):
+				return I18n.t("Terminal de dados no caminho")
+			if revealed[i] == 0:
+				return I18n.t("Área inexplorada: construa mais perto para revelar")
 			var t := terrain[i]
 			if t == Defs.T_ROCK:
-				return "Terreno bloqueado"
+				return I18n.t("Terreno bloqueado")
 			if Defs.ORE_ITEM.has(t) and ore[i] > 0:
 				on_ore = true
 	if def.get("kind", "") == "miner" and not on_ore:
-		return "Requer depósito de minério"
+		return I18n.t("Requer depósito de minério")
 	var center := Vector2(p) + Vector2(sz) * 0.5
 	for sp in spawn_points:
 		if (Vector2(sp) + Vector2(0.5, 0.5)).distance_to(center) < 5.0:
-			return "Muito perto de um ninho"
+			return I18n.t("Muito perto de um ninho")
 	if check_cost and not can_afford(def.get("cost", {})):
-		return "Recursos insuficientes"
+		return I18n.t("Recursos insuficientes")
 	return ""
 
 
@@ -233,6 +275,7 @@ func _register(b) -> void:
 	buildings[b.id] = b
 	for c in b.cells():
 		grid[idx(c)] = b.id
+	reveal(b.center(), float(b.def.get("reveal", 6.0)))
 	if b.kind == "miner":
 		b.ore_cells = []
 		for c in b.cells():
@@ -281,9 +324,9 @@ func damage_building(b, amount: float) -> void:
 	b.hp -= amount
 	b.last_damaged = time
 	if b.kind == "core":
-		add_alert("core_hit", "O NÚCLEO ESTÁ SOB ATAQUE!", "danger", b.center(), 6.0)
+		add_alert("core_hit", I18n.t("O NÚCLEO ESTÁ SOB ATAQUE!"), "danger", b.center(), 6.0)
 	else:
-		add_alert("attack", "%s sob ataque" % b.def.name, "warn", b.center(), 6.0)
+		add_alert("attack", I18n.t("%s sob ataque") % b.def.name, "warn", b.center(), 6.0)
 	if b.hp <= 0.0:
 		destroy(b)
 
@@ -297,9 +340,9 @@ func destroy(b) -> void:
 		state = "lost"
 		events.append({"e": "lost"})
 		return
-	ghosts[idx(b.pos)] = {"type": b.type, "rot": b.rot, "recipe": b.recipe, "x": b.pos.x, "y": b.pos.y}
+	ghosts[idx(b.pos)] = {"type": b.type, "rot": b.rot, "recipe": b.recipe, "x": b.pos.x, "y": b.pos.y, "filter": b.filter.duplicate()}
 	ghosts_version += 1
-	add_alert("destroyed", "%s destruída! (G para reconstruir)" % b.def.name, "danger", b.center(), 3.0)
+	add_alert("destroyed", I18n.t("%s destruída! (G para reconstruir)") % b.def.name, "danger", b.center(), 3.0)
 
 
 func _clear_ghosts_overlapping(b) -> void:
@@ -319,7 +362,10 @@ func rebuild_ghost(key: int) -> bool:
 	var g = ghosts.get(key)
 	if g == null:
 		return false
-	return place(g.type, Vector2i(int(g.x), int(g.y)), int(g.rot), false, str(g.recipe)) != 0
+	var id := place(g.type, Vector2i(int(g.x), int(g.y)), int(g.rot), false, str(g.recipe))
+	if id != 0 and g.has("filter"):
+		set_filters(buildings[id], g.filter)
+	return id != 0
 
 
 func rebuild_all_ghosts() -> int:
@@ -365,6 +411,22 @@ func set_recipe(b, recipe: String) -> void:
 	b.recipe = recipe
 	b.crafting = false
 	b.progress = 0.0
+
+
+## Splitter routing: `slot` 0 left, 1 front, 2 right relative to its rotation;
+## "" lets any item through. Items with a matching filter go only there; other
+## items use the unfiltered outputs.
+func set_filter(b, slot: int, item: String) -> void:
+	if b == null or b.kind != "splitter" or slot < 0 or slot > 2:
+		return
+	if item != "" and not data.items.has(item):
+		return
+	b.filter[slot] = item
+
+
+func set_filters(b, f: Array) -> void:
+	for i in mini(f.size(), 3):
+		set_filter(b, i, str(f[i]))
 
 
 # --- items --------------------------------------------------------------------
@@ -457,7 +519,7 @@ func add_alert(key: String, text: String, level: String = "warn", p = null, cool
 	alerts.push_front({"text": text, "level": level, "time": time, "pos": p})
 	if alerts.size() > 7:
 		alerts.resize(7)
-	events.append({"e": "alert", "level": level, "text": text})
+	events.append({"e": "alert", "key": key, "level": level, "text": text})
 
 
 func trigger_lore(trigger: String) -> void:
@@ -482,13 +544,18 @@ func step() -> void:
 	production.request(self)
 	combat.request(self)
 	research.request(self)
+	genesis.request(self)
 	power.step(self, dt)
 	production.step(self, dt)
 	research.step(self, dt)
+	genesis.step(self, dt)
+	if state != "playing":
+		return
 	logistics.step(self, dt)
 	pathing.update(self, dt)
 	enemy_sys.step(self, dt)
 	combat.step(self, dt)
+	nests.step(self, dt)
 	flush_dead()
 	if state != "playing":
 		return
@@ -516,6 +583,22 @@ func win() -> void:
 		state = "won"
 		events.append({"e": "won"})
 		trigger_lore("victory")
+
+
+## Genesis is charged: the player's choice ends the campaign. "fortress" keeps
+## the factory running (survival continues from the end screen).
+func choose_ending(id: String) -> void:
+	if state != "genesis" or not (id in GenesisSystem.ENDINGS):
+		return
+	ending = id
+	stats.endings[id] = 1
+	state = "won"
+	events.append({"e": "won", "ending": id})
+	trigger_lore("ending:" + id)
+
+
+func read_terminal(c: Vector2i) -> String:
+	return genesis.read_terminal(self, c)
 
 
 func continue_survival() -> void:
@@ -560,7 +643,16 @@ func to_dict() -> Dictionary:
 		"waves": waves.to_dict(), "stats": stats.to_dict(), "objectives": objectives.to_dict(),
 		"research": research.to_dict(),
 		"transmissions": transmissions, "pathing_cd": pathing.cooldown,
+		"terminals": _terminals_list(), "ending": ending,
+		"revealed": Marshalls.raw_to_base64(revealed), "nests": nests.to_dict(),
 	}
+
+
+func _terminals_list() -> Array:
+	var out := []
+	for k in terminals:
+		out.append([k, terminals[k].n, terminals[k].read])
+	return out
 
 
 static func from_dict(p_data, d: Dictionary):
@@ -575,6 +667,11 @@ static func from_dict(p_data, d: Dictionary):
 	w.storage = Items.from_json(d.storage)
 	w.state = str(d.state)
 	w.survival = bool(d.survival)
+	w.ending = str(d.get("ending", ""))
+	if d.has("revealed"):
+		w.revealed = Marshalls.base64_to_raw(d.revealed)
+	for t in d.get("terminals", []):
+		w.terminals[int(t[0])] = {"n": int(t[1]), "read": bool(t[2])}
 	w.rng.state = int(str(d.rng))
 	w.research.load_dict(d.get("research", {}))
 	for bd in d.buildings:
@@ -603,12 +700,14 @@ static func from_dict(p_data, d: Dictionary):
 		w.enemies[e.id] = e
 	w.next_id = int(d.next_id)
 	for g in d.ghosts:
-		var gd := {"type": str(g.type), "rot": int(g.rot), "recipe": str(g.recipe), "x": int(g.x), "y": int(g.y)}
+		var gd := {"type": str(g.type), "rot": int(g.rot), "recipe": str(g.recipe), "x": int(g.x), "y": int(g.y),
+			"filter": Array(g.get("filter", ["", "", ""]))}
 		w.ghosts[w.idx(Vector2i(gd.x, gd.y))] = gd
 	w.spawn_points = []
 	for s in d.spawns:
 		w.spawn_points.append(Vector2i(int(s[0]), int(s[1])))
 	w.waves.load_dict(d.waves)
+	w.nests.load_dict(w, d.get("nests", {}))
 	w.stats.load_dict(d.stats)
 	w.objectives.load_dict(d.objectives)
 	w.transmissions = d.get("transmissions", [])

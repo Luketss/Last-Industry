@@ -1,4 +1,5 @@
 extends "res://tests/test_base.gd"
+const Items = preload("res://src/sim/items.gd")
 
 
 func test_gun_kills_enemy_with_ammo() -> void:
@@ -78,3 +79,62 @@ func test_repair_station_heals_with_plates() -> void:
 	run_seconds(w, 4.0)
 	check(w.buildings[wall].hp > 150.0, "muro reparado: %.0f" % w.buildings[wall].hp)
 	check(w.stats.consumed.get("iron_plate", 0) >= 1, "placas consumidas")
+
+
+func test_spitter_attacks_over_walls_from_range() -> void:
+	var w = empty_world()
+	# A wall line between the spitter and a turret: it must hit the turret from afar.
+	for y in range(12, 20):
+		w.place("wall", Vector2i(8, y), 0)
+	var t: int = w.place("turret_gun", Vector2i(10, 15), 0)
+	var e: int = w.spawn_enemy("spitter", Vector2(6.5, 16.0))
+	var hp0: float = w.buildings[t].hp
+	var spits := 0
+	for i in int(6.0 / Defs.DT):
+		w.step()
+		for ev in w.events:
+			if ev.e == "spit":
+				spits += 1
+		w.events = []
+	check(spits > 0, "cuspiu ácido")
+	check(w.buildings[t].hp < hp0, "atingiu a torre atrás do muro")
+	check(w.enemies[e].pos.x < 8.0, "ficou do lado de fora do muro")
+
+
+func test_drone_hub_repairs_far_with_core_plates() -> void:
+	var w = empty_world({"width": 40, "height": 40})
+	w.research.complete(w, "automation_1")
+	w.research.complete(w, "military_1")
+	w.research.complete(w, "drones")
+	var c: Vector2i = w.core().pos
+	var hub: int = w.place("drone_hub", c + Vector2i(-4, 0), 0)
+	check(hub != 0, "hub construído (%s)" % w.can_place("drone_hub", c + Vector2i(-4, 0), 0))
+	var wall: int = w.place("wall", c + Vector2i(-14, 0), 0)
+	w.buildings[wall].hp = 50.0
+	var plates: int = int(w.storage.iron_plate)
+	var drones := 0
+	for i in int(6.0 / Defs.DT):
+		w.step()
+		for ev in w.events:
+			if ev.e == "drone":
+				drones += 1
+		w.events = []
+	check(w.buildings[wall].hp > 50.0, "muro distante reparado")
+	check(int(w.storage.iron_plate) < plates, "placas saem do estoque do Núcleo")
+	check(drones > 0, "drones voando")
+
+
+func test_supply_hub_feeds_turrets_from_core() -> void:
+	var w = empty_world({"width": 40, "height": 40})
+	for t in ["automation_1", "military_1", "drones", "drones_2"]:
+		w.research.complete(w, t)
+	var c: Vector2i = w.core().pos
+	var hub: int = w.place("supply_hub", c + Vector2i(-4, 0), 0)
+	check(hub != 0, "hub construído (%s)" % w.can_place("supply_hub", c + Vector2i(-4, 0), 0))
+	var gun: int = w.place("turret_gun", c + Vector2i(-12, 0), 0)
+	var far: int = w.place("turret_gun", c + Vector2i(6, 14), 0)
+	w.storage["ammo"] = 50
+	run_seconds(w, 8.0)
+	check(Items.count(w.buildings[gun].inv, "ammo") > 0, "torre no alcance recebe munição sem esteira")
+	check(int(w.storage.ammo) < 50, "munição sai do estoque do Núcleo")
+	eq(Items.count(w.buildings[far].inv, "ammo"), 0, "torre fora do alcance não recebe")

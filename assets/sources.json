@@ -1,4 +1,11 @@
 {
+ "apoc_icons": {
+  "title": "Free Set of 10 Post-apocalypse Icons",
+  "page": "https://opengameart.org/content/free-set-of-10-post-apocalypse-icons",
+  "file": "Post-apocalypse Game-Free-icons-pack1.zip",
+  "author": "CraftPix.net",
+  "license": "OGA-BY 3.0"
+ },
  "city": {
   "title": "City Kit (Industrial)",
   "page": "https://opengameart.org/content/city-kit-industrial",
@@ -18,6 +25,13 @@
   "page": "https://opengameart.org/content/game-icons",
   "file": "Kenney_gameIcons.zip",
   "author": "Kenney",
+  "license": "CC0"
+ },
+ "m_boss": {
+  "title": "Boss Battle #9 [Metal]",
+  "page": "https://opengameart.org/content/boss-battle-9-metal",
+  "file": "boss_battle_9_metal_loop.wav",
+  "author": "nene",
   "license": "CC0"
  },
  "m_empty": {
@@ -61,6 +75,20 @@
   "file": "lone_scavenger_4.mp3",
   "author": "vitalezzz",
   "license": "CC0"
+ },
+ "monsters": {
+  "title": "50+ Monsters Pack 3D",
+  "page": "https://opengameart.org/content/50-monsters-pack-3d",
+  "file": "50_monsters_pack_3d_version_1.0.zip",
+  "author": "isaiah658",
+  "license": "CC0"
+ },
+ "scifi_items": {
+  "title": "Different Sci-Fi Item Icons",
+  "page": "https://opengameart.org/content/different-sci-fi-item-icons",
+  "file": "Different-Sci-Fi-Item-Icons.zip",
+  "author": "CraftPix.net",
+  "license": "OGA-BY 3.0"
  },
  "scifi_sfx": {
   "title": "Sci-Fi Sounds",

@@ -70,7 +70,9 @@ Banco de Baterias, Torre Balística, Torre Elétrica, Muro, Estação de Reparo.
 | Sabotador | Infraestrutura | Caça geradores, painéis, baterias, postes, esteiras e laboratórios num raio de 4,5 |
 | Planador | Voador | Ignora muros e terreno, voa até a infraestrutura. Só Antiaérea e Torre Elétrica o atingem |
 
-Planejados: criaturas de dano contínuo (ácido) e mais mudanças de comportamento ligadas à pesquisa.
+| Cuspidor | À distância | Cospe ácido a até 4 tiles por cima dos muros, com dano em área; prefere torres e máquinas |
+
+Planejados: mais mudanças de comportamento ligadas à pesquisa.
 
 ## Narrativa: o Projeto Genesis
 
@@ -83,6 +85,13 @@ anunciadas, iniciadas e repelidas (`data/lore.json`). Arco planejado:
    protocolo de contenção: *não permitir que a produção seja reiniciada*.
 4. **Decidir:** ativar Genesis. Três finais: restaurar o mundo, destruir a tecnologia, ou continuar
    produzindo para sempre como fortaleza autossuficiente.
+
+**Implementado:** a pesquisa *Protocolo Genesis* libera a Estrutura Genesis (3×3, 150 kW). Ela
+precisa de energia contínua por 4 minutos; durante a carga, surtos de criaturas saem de todos os
+ninhos a cada 22 s, crescendo com o progresso. Com a carga completa, a simulação para e o jogador
+escolhe RESTAURAR, DESTRUIR ou MANTER (este segue no modo Sobrevivência). Quatro **terminais de
+dados** perto das ruínas contam a história de Genesis: decodificar exige uma estrutura a até 7
+tiles e rende sucata. Conquistas para cada final e para ler os quatro terminais.
 
 Conforme a pesquisa avança, as hordas passam a priorizar setores específicos e novas criaturas
 aparecem perto de estruturas avançadas. A ameaça reage ao que você fabrica.
@@ -99,6 +108,6 @@ Artilharia, Balística Avançada, Fortificação, Fragmento Genesis.
 
 - **Pesquisa adicional:** torre de longo alcance, ácido, munições especiais, robôs de
   construção/reparo, turbinas e sensores de emergência.
-- **Exploração:** névoa de guerra, regiões com jazidas raras, terminais com arquivos de Genesis,
-  ninhos que podem ser destruídos.
+- **Exploração:** regiões com jazidas raras e ninhos que podem ser destruídos. *(Névoa de guerra,
+  Sensor de Horda e terminais com arquivos de Genesis já implementados.)*
 - **Estrutura final:** construção que encerra a campanha (ativação de Genesis).

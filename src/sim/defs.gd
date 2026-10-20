@@ -12,7 +12,8 @@ const T_GROUND := 0
 const T_IRON := 1
 const T_COAL := 2
 const T_ROCK := 3
-const ORE_ITEM := {1: "iron_ore", 2: "coal"}
+const T_CRYSTAL := 4   ## rare deposits far from the core (Genesis material)
+const ORE_ITEM := {1: "iron_ore", 2: "coal", 4: "crystal"}
 
 const BELT_SPACING := 0.25
 const INF := 1.0e20

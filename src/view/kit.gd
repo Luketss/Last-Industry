@@ -102,3 +102,37 @@ static func _append(st: SurfaceTool, n: Node, xf: Transform3D, mat: Material) ->
 	for c in n.get_children():
 		mat = _append(st, c, t, mat)
 	return mat
+
+
+## Enemy creature (assets/models/enemies/<type>.obj + palette .png from the 50+
+## Monsters Pack) baked for MultiMesh: base on the origin, longest side 1, facing
+## +X. The material multiplies the palette by the instance colour so the view can
+## tint per type, elite and hit flash. Null when the model is missing.
+static func enemy_mesh(type: String) -> Mesh:
+	var key := "enemy/" + type
+	if _merged.has(key):
+		return _merged[key]
+	var path := "res://assets/models/enemies/%s.obj" % type
+	if not ResourceLoader.exists(path):
+		return null
+	var src: Mesh = load(path)
+	var box := src.get_aabb()
+	var s := 1.0 / maxf(maxf(box.size.x, box.size.z), 0.001)
+	# The pack's creatures face +Z; turn them to the game's +X.
+	var xf := Transform3D(Basis(Vector3.UP, PI * 0.5).scaled(Vector3.ONE * s), Vector3.ZERO) \
+		* Transform3D(Basis.IDENTITY, -Vector3(box.get_center().x, box.position.y, box.get_center().z))
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for i in src.get_surface_count():
+		st.append_from(src, i, xf)
+	var m := StandardMaterial3D.new()
+	var tex_path := "res://assets/models/enemies/%s.png" % type
+	if ResourceLoader.exists(tex_path):
+		m.albedo_texture = load(tex_path)
+		m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+	m.vertex_color_use_as_albedo = true
+	m.roughness = 0.75
+	st.set_material(m)
+	var mesh := st.commit()
+	_merged[key] = mesh
+	return mesh

@@ -11,7 +11,7 @@ const STATUS_LEVEL := {
 	"reparando": 0, "pronta": 0, "armazenando": 0, "ociosa": 1, "ocioso": 1,
 	"sem insumos": 1, "saída bloqueada": 1, "carregando": 1, "sem combustível": 2,
 	"sem materiais": 1, "sem energia": 2, "sem munição": 2, "esgotado": 2, "desligado": 2,
-	"energia baixa": 1, "sem conexão": 2, "pesquisando": 0, "sem pesquisa": 1,
+	"energia baixa": 1, "sem conexão": 2, "pesquisando": 0, "sem pesquisa": 1, "ativando": 0, "abastecendo": 0,
 }
 
 var id := 0
@@ -29,6 +29,7 @@ var status := ""
 var inv := {}          ## input / storage buffer
 var out := {}          ## output buffer
 var recipe := ""
+var filter := ["", "", ""]   ## splitter: item routed to left/front/right ("" = any)
 var progress := 0.0
 var crafting := false
 
@@ -157,6 +158,8 @@ func to_dict() -> Dictionary:
 	}
 	if kind == "belt":
 		d["belt"] = belt_items
+	if kind == "splitter":
+		d["filter"] = filter.duplicate()
 	return d
 
 
@@ -177,6 +180,8 @@ func load_dict(d: Dictionary) -> void:
 	rr = int(d.get("rr", 0))
 	status = str(d.get("status", ""))
 	last_damaged = float(d.get("dmg", -100.0))
+	var f: Array = d.get("filter", ["", "", ""])
+	filter = [str(f[0]), str(f[1]), str(f[2])]
 	belt_items = []
 	for it in d.get("belt", []):
 		belt_items.append([str(it[0]), float(it[1])])

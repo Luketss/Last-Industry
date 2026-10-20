@@ -24,6 +24,11 @@
 		"splitter",
 		"solar",
 		"turret_cannon",
-		"turret_aa"
-	]
+		"turret_aa",
+		"drone_hub",
+		"supply_hub",
+		"sensor",
+		"genesis"
+	],
+	"nest_hp": 6000
 }

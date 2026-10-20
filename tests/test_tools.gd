@@ -65,3 +65,13 @@ func test_blueprint_rotation() -> void:
 	var s = w.building_at(Vector2i(20, 3))
 	check(s != null and s.type == "smelter" and Vector2i(21, 5) in s.output_cells(), "fundição girada entrega na esteira")
 	eq(w.building_at(Vector2i(21, 5)).type, "belt", "esteira na saída girada")
+
+
+func test_objective_marker_points_at_nearest_ore() -> void:
+	var w = empty_world()
+	var c: Vector2i = w.core().pos
+	w.set_terrain(c + Vector2i(-9, 0), Defs.T_IRON, 100)
+	w.set_terrain(c + Vector2i(5, 0), Defs.T_IRON, 100)
+	var t = w.objectives.target(w)
+	check(t != null, "objetivo inicial aponta para o minério")
+	check(t.distance_to(Vector2(c + Vector2i(5, 0)) + Vector2(0.5, 0.5)) < 0.01, "jazida mais próxima do Núcleo (%s)" % str(t))

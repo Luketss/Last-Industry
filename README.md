@@ -14,8 +14,10 @@ precisa ser fabricada, cada torre consome energia, cada reparo custa materiais.
 ![Árvore de pesquisa](docs/img/pesquisa.png)
 ![Seleção, planta, rastreamento de fluxo, dica e minimapa](docs/img/ferramentas.png)
 ![Esteiras com curvas e saídas das máquinas](docs/img/esteiras.png)
+![Combate com criaturas e efeitos](docs/img/combate.png)
+![Estrutura Genesis: a escolha final](docs/img/genesis.png)
 
-**Plataformas:** Windows e Linux (x86_64) · **Engine:** Godot 4.3 (GDScript) · **Modo:** solo, offline · **Destino:** Steam
+**Plataformas:** Windows e Linux (x86_64) · **Engine:** Godot 4.3 (GDScript) · **Modo:** solo, offline · **Idiomas:** português, inglês, espanhol · **Destino:** Steam
 
 ## Estado atual: Fases 1 a 8 (MVP, pesquisa, ferramentas, desempenho e preparação para a Steam)
 
@@ -50,6 +52,13 @@ milhares de estruturas.
 
 **Fase 8:** pipeline de release (pacotes versionados, GitHub Release por tag, upload Steam pelo CI),
 integração Steam opcional via GodotSteam, 12 conquistas, Rich Presence e remapeamento de teclas.
+
+**Depois da Fase 8:** modelos 3D, interface, ícones, música e sons de pacotes do OpenGameArt; criaturas
+com modelos próprios e o novo Cuspidor (ácido à distância); partículas de combate e fumaça nas
+chaminés; filtros por saída no Divisor; a **Estrutura Genesis** com três finais e quatro terminais de
+dados nas ruínas; névoa de guerra com Sensor de Horda; jazidas raras de Cristal Genesis; ninhos destrutíveis; drones de
+reparo e de abastecimento; marcador do
+objetivo no mapa; opções gráficas; suporte a controle/Steam Deck; inglês e espanhol.
 
 Também incluídos: objetivos guiados com recompensas, narrativa por transmissões e arquivos
 corrompidos, sobreposição de depuração (F3: rotas, redes elétricas, alvos), trilha sonora dinâmica (menu, ambiente, hordas) e efeitos sonoros com camada procedural de vento e maquinário.
@@ -138,6 +147,13 @@ xvfb-run -a godot --path . --rendering-driver opengl3 -s res://scripts/render_ic
 ```
 
 Se um recurso faltar, o jogo volta aos modelos e sons procedurais.
+
+### Idiomas
+
+Português (Brasil), inglês e espanhol, escolhidos em **Opções › Idioma** (o padrão segue o idioma do
+sistema). Os textos-fonte em português são as chaves de `locale/strings.csv`; depois de mudar
+textos no código ou em `data/*.json`, rode `python3 scripts/i18n_extract.py` e preencha as
+colunas `en`/`es` das linhas novas. Os testes falham se faltar alguma tradução.
 
 ### Ajustar o conteúdo
 

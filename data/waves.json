@@ -98,6 +98,10 @@
 				{
 					"type": "glider",
 					"count": 6
+				},
+				{
+					"type": "spitter",
+					"count": 3
 				}
 			]
 		},
@@ -119,6 +123,11 @@
 				{
 					"type": "glider",
 					"count": 8,
+					"spawn": "other"
+				},
+				{
+					"type": "spitter",
+					"count": 5,
 					"spawn": "other"
 				}
 			]
@@ -145,6 +154,10 @@
 				{
 					"type": "glider",
 					"count": 10
+				},
+				{
+					"type": "spitter",
+					"count": 6
 				}
 			]
 		},
@@ -179,6 +192,11 @@
 				},
 				{
 					"type": "saboteur",
+					"count": 8,
+					"spawn": "other"
+				},
+				{
+					"type": "spitter",
 					"count": 8,
 					"spawn": "other"
 				}

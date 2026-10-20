@@ -10,6 +10,7 @@ extends RefCounted
 ## - Generators burn fuel proportionally to the load they actually serve.
 
 const Items = preload("res://src/sim/items.gd")
+const I18n = preload("res://src/ui/i18n.gd")
 
 var dirty := true
 var version := 0
@@ -177,7 +178,7 @@ func step(w, dt: float) -> void:
 		t.sat = minf(t.sat, net.sat)
 	totals = t
 	if t.sat < 0.98 and t.demand > 0.0:
-		w.add_alert("power_low", "Energia insuficiente: %d%% da demanda atendida" % int(t.sat * 100.0), "warn", null, 15.0)
+		w.add_alert("power_low", I18n.t("Energia insuficiente: %d%% da demanda atendida") % int(t.sat * 100.0), "warn", null, 15.0)
 
 
 func _refuel(w, b) -> void:

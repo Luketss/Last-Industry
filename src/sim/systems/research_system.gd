@@ -6,6 +6,7 @@ extends RefCounted
 ## its modifiers, unlocks buildings/recipes and may trigger narrative events.
 
 const Items = preload("res://src/sim/items.gd")
+const I18n = preload("res://src/ui/i18n.gd")
 
 var techs := {}            ## id -> definition
 var order: Array = []      ## ids in data order
@@ -135,7 +136,7 @@ func complete(w, id: String) -> void:
 	w.stats.techs[id] = 1
 	w.on_research_complete(id)
 	w.events.append({"e": "research", "id": id})
-	w.add_alert("research", "Pesquisa concluída: %s" % techs[id].name, "info", null, 0.0)
+	w.add_alert("research", I18n.t("Pesquisa concluída: %s") % techs[id].name, "info", null, 0.0)
 	w.trigger_lore("research:%s" % id)
 	w.trigger_lore("research_count:%d" % done.size())
 

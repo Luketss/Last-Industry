@@ -37,19 +37,24 @@ SOURCES = {
     "icons": ("https://opengameart.org/content/game-icons", "Kenney_gameIcons.zip", "Kenney", "CC0"),
     "scifi_sfx": ("https://opengameart.org/content/sci-fi-sounds", "sci-fi_sounds.zip", "Kenney", "CC0"),
     "ui_sfx": ("https://opengameart.org/content/interface-sounds", "kenney_interfaceSounds.zip", "Kenney", "CC0"),
+    "scifi_items": ("https://opengameart.org/content/different-sci-fi-item-icons", "Different-Sci-Fi-Item-Icons.zip", "CraftPix.net", "OGA-BY 3.0"),
+    "apoc_icons": ("https://opengameart.org/content/free-set-of-10-post-apocalypse-icons", "Post-apocalypse%20Game-Free-icons-pack1.zip", "CraftPix.net", "OGA-BY 3.0"),
+    "monsters": ("https://opengameart.org/content/50-monsters-pack-3d", "50_monsters_pack_3d_version_1.0.zip", "isaiah658", "CC0"),
     "m_menu": ("https://opengameart.org/content/tragic-ambient-main-menu", "ambientmain_0.ogg", "HaelDB", "CC0"),
     "m_empty": ("https://opengameart.org/content/emptycity-background-music", "EmptyCity_0.ogg", "yd", "CC0"),
     "m_factory": ("https://opengameart.org/content/factory-ambiance", "Factory_0.ogg", "yd", "CC0"),
     "m_scavenger": ("https://opengameart.org/content/lone-scavenger", "lone_scavenger_4.mp3", "vitalezzz", "CC0"),
     "m_iron": ("https://opengameart.org/content/iron-wasteland", "Iron%20wasteland.ogg", "Alexandr Zhelanov", "CC-BY 4.0"),
+    "m_boss": ("https://opengameart.org/content/boss-battle-9-metal", "boss_battle_9_metal_loop.wav", "nene", "CC0"),
     "m_fight": ("https://opengameart.org/content/cyborg-factory-fight-theme", "Cyborg_Factory_Fight_0.ogg", "GTDStudio (Palrom)", "OGA-BY 3.0"),
 }
 
 TITLES = {
     "factory": "Factory Kit", "td": "Tower Defense Kit", "city": "City Kit (Industrial)", "ui": "UI Pack - Sci-Fi",
-    "icons": "Game Icons", "scifi_sfx": "Sci-Fi Sounds", "ui_sfx": "Interface Sounds",
+    "icons": "Game Icons", "monsters": "50+ Monsters Pack 3D",
+    "scifi_items": "Different Sci-Fi Item Icons", "apoc_icons": "Free Set of 10 Post-apocalypse Icons", "scifi_sfx": "Sci-Fi Sounds", "ui_sfx": "Interface Sounds",
     "m_menu": "Tragic ambient main menu", "m_empty": "EmptyCity: Background Music", "m_factory": "Factory ambiance",
-    "m_scavenger": "Lone Scavenger", "m_iron": "Iron wasteland", "m_fight": "Cyborg Factory Fight Theme",
+    "m_scavenger": "Lone Scavenger", "m_iron": "Iron wasteland", "m_fight": "Cyborg Factory Fight Theme", "m_boss": "Boss Battle #9 [Metal]",
 }
 
 MODELS = {
@@ -69,6 +74,17 @@ MODELS = {
 # Kenney's sci-fi frames are light grey with four tones (depth 116, outline 150,
 # fill 218, highlight 255). Each style maps those tones to the game's palette:
 # name -> (source, {tone: RGBA}).
+# enemy type -> monster number in the 50+ Monsters Pack (static OBJ + palette).
+ENEMIES = {"crawler": 53, "runner": 42, "brute": 43, "saboteur": 31, "glider": 14, "spitter": 12}
+
+# item -> (pack, file, darken): painted item icons shown in the HUD.
+ITEM_ICONS = {
+    "iron_ore": ("scifi_items", "18.png", False), "coal": ("scifi_items", "16.png", True),
+    "iron_plate": ("scifi_items", "1.png", False), "gear": ("scifi_items", "5.png", False),
+    "ammo": ("apoc_icons", "18.png", False), "research_pack": ("scifi_items", "13.png", False),
+    "military_pack": ("scifi_items", "4.png", False), "crystal": ("scifi_items", "17.png", False), "shell": ("scifi_items", "12.png", False),
+}
+
 UI_STYLES = {
     "panel": ("panel_glass_notches.png", {116: (8, 7, 6, 230), 150: (8, 7, 6, 235), 218: (14, 13, 11, 228), 255: (217, 128, 41, 170)}),
     "panel_info": ("panel_glass_notches.png", {116: (8, 7, 6, 230), 150: (8, 7, 6, 235), 218: (12, 15, 17, 232), 255: (89, 204, 255, 180)}),
@@ -94,6 +110,9 @@ SFX = {
     "explosion": ("scifi_sfx", "explosionCrunch_000"),
     "explosion2": ("scifi_sfx", "explosionCrunch_002"),
     "wave": ("scifi_sfx", "computerNoise_001"),
+    "transmission": ("scifi_sfx", "computerNoise_002"),
+    "bite": ("scifi_sfx", "slime_000"),
+    "die": ("scifi_sfx", "slime_001"),
     "build": ("ui_sfx", "drop_002"),
     "demolish": ("ui_sfx", "scratch_002"),
     "click": ("ui_sfx", "click_002"),
@@ -111,6 +130,7 @@ MUSIC = {
     "calm_3": "m_scavenger",
     "calm_4": "m_iron",
     "combat": "m_fight",
+    "boss": "m_boss",
 }
 
 
@@ -168,6 +188,21 @@ def recolor(src: Path, dst: Path) -> None:
     im.save(dst)
 
 
+def grime(src: Path, dst: Path) -> None:
+    """Monster palettes are bright; mute them so creatures fit the ash world
+    (the game still tints them per type, elite and hit flash)."""
+    im = Image.open(src).convert("RGBA")
+    px = im.load()
+    for y in range(im.height):
+        for x in range(im.width):
+            r, g, b, a = px[x, y]
+            h, s, v = colorsys.rgb_to_hsv(r / 255, g / 255, b / 255)
+            r2, g2, b2 = colorsys.hsv_to_rgb(h, s * 0.6, v * 0.8)
+            px[x, y] = (int(r2 * 255), int(g2 * 255), int(b2 * 255), a)
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    im.save(dst)
+
+
 def restyle(src: Path, dst: Path, tones: dict) -> None:
     """Remaps the grey tones of a Kenney UI frame (piecewise by luminance)."""
     im = Image.open(src).convert("RGBA")
@@ -202,7 +237,7 @@ def main() -> None:
     args = ap.parse_args()
     cache = Path(args.cache)
     cache.mkdir(parents=True, exist_ok=True)
-    for sub in ["models", "ui", "icons/ui", "fonts", "sfx", "music"]:  # icons/buildings: render_icons.gd
+    for sub in ["models", "ui", "icons/ui", "icons/items", "fonts", "sfx", "music"]:  # icons/buildings: render_icons.gd
         shutil.rmtree(OUT / sub, ignore_errors=True)
 
     for kit, names in MODELS.items():
@@ -227,10 +262,28 @@ def main() -> None:
 
     for name, (pack, stem) in SFX.items():
         ffmpeg(find(fetch(cache, pack), stem + ".ogg"), OUT / "sfx" / (name + ".ogg"), 4, -16)
+    for item, (pack, f, dark) in ITEM_ICONS.items():
+        im = Image.open(find(fetch(cache, pack), f)).convert("RGBA")
+        im.thumbnail((64, 64), Image.LANCZOS)
+        if dark:  # white rock -> lump of coal
+            px = im.load()
+            for y in range(im.height):
+                for x in range(im.width):
+                    r, g, b, a = px[x, y]
+                    v = (r + g + b) // 3
+                    px[x, y] = (v * 30 // 100, v * 28 // 100, v * 26 // 100, a)
+        (OUT / "icons" / "items").mkdir(parents=True, exist_ok=True)
+        im.save(OUT / "icons" / "items" / (item + ".png"))
+    monsters = fetch(cache, "monsters")
+    for kind, n in ENEMIES.items():
+        dst = OUT / "models" / "enemies"
+        dst.mkdir(parents=True, exist_ok=True)
+        shutil.copy(find(monsters, "Monster #%d.obj" % n), dst / (kind + ".obj"))
+        grime(find(monsters / "50+ Monsters Pack 3D" / "UV Textures" / "Normal Colors", "Monster #%d Normal Color Palette.png" % n), dst / (kind + ".png"))
     for name, key in MUSIC.items():
         ffmpeg(fetch(cache, key), OUT / "music" / (name + ".ogg"), 2, -20)
 
-    used = sorted(set(MODELS) | {"ui", "icons"} | {p for p, _ in SFX.values()} | set(MUSIC.values()))
+    used = sorted(set(MODELS) | {"ui", "icons", "monsters"} | {p for p, _, _ in ITEM_ICONS.values()} | {p for p, _ in SFX.values()} | set(MUSIC.values()))
     manifest = {k: {"title": TITLES[k], "page": SOURCES[k][0], "file": SOURCES[k][1].replace("%20", " "), "author": SOURCES[k][2],
                     "license": SOURCES[k][3]} for k in used}
     (OUT / "sources.json").write_text(json.dumps(manifest, indent=1, ensure_ascii=False) + "\n")

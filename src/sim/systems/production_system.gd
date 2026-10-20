@@ -3,6 +3,7 @@ extends RefCounted
 
 const Defs = preload("res://src/sim/defs.gd")
 const Items = preload("res://src/sim/items.gd")
+const I18n = preload("res://src/ui/i18n.gd")
 
 
 func request(w) -> void:
@@ -42,7 +43,7 @@ func _step_miner(w, b, dt: float) -> void:
 		return
 	if _remaining(w, b) <= 0:
 		b.status = "esgotado"
-		w.add_alert("depleted%d" % b.id, "Depósito esgotado sob uma Mineradora", "warn", b.center(), 60.0)
+		w.add_alert("depleted%d" % b.id, I18n.t("Depósito esgotado sob uma Mineradora"), "warn", b.center(), 60.0)
 		return
 	if Items.total(b.out) >= int(b.def.get("buffer", 4)):
 		b.status = "saída bloqueada"
