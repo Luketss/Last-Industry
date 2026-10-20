@@ -54,3 +54,23 @@ func test_core_destroyed_is_defeat() -> void:
 	var w = empty_world()
 	w.damage_building(w.core(), 1.0e6)
 	eq(w.state, "lost", "derrota")
+
+
+func test_fog_of_war_blocks_building_until_revealed() -> void:
+	var w = World.new(data(), 42)
+	var c: Vector2i = w.core().pos
+	check(w.is_revealed(c + Vector2i(5, 5)), "área do Núcleo revelada")
+	var far := c + Vector2i(24, 0)
+	var found := false
+	for dy in range(-6, 7):
+		var p := far + Vector2i(0, dy)
+		if w.in_bounds(p) and w.terrain_at(p) == Defs.T_GROUND and not w.is_revealed(p):
+			far = p
+			found = true
+			break
+	check(found, "há chão inexplorado longe do Núcleo")
+	check(w.can_place("wall", far, 0).begins_with("Área inexplorada"), "não constrói na névoa")
+	w.reveal(Vector2(far) + Vector2(0.5, 0.5), 2.0)
+	eq(w.can_place("wall", far, 0), "", "constrói depois de revelar")
+	var w2 = World.from_dict(data(), w.to_dict())
+	check(w2.is_revealed(far), "névoa salva")

@@ -52,7 +52,7 @@ verificáveis e testes automatizados.
   esteiras, canhão em área, voador × antiaérea, sabotador, solar, salvamento da pesquisa).
 
 ### Pendências para fases futuras
-Drones de reparo/abastecimento, sensor de horda e névoa de guerra.
+Drones de reparo/abastecimento.
 
 ### Fase 7 — Otimização, interface e experiência
 - **Desempenho:** campo de fluxo em float64 (o arredondamento em float32 causava reexpansões em

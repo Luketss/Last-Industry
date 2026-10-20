@@ -106,7 +106,7 @@ func to_main_menu() -> void:
 	in_game = false
 	paused = false
 	menu_paused = false
-	_bind(World.new(data, 1337))
+	_bind(World.new(data, 1337, {"fog": false}))
 	camera.orbit = true
 	camera.zoom = 34.0
 	hud.show_main_menu(SaveSystem.has_save())

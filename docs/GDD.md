@@ -108,6 +108,6 @@ Artilharia, Balística Avançada, Fortificação, Fragmento Genesis.
 
 - **Pesquisa adicional:** torre de longo alcance, ácido, munições especiais, robôs de
   construção/reparo, turbinas e sensores de emergência.
-- **Exploração:** névoa de guerra, regiões com jazidas raras, terminais com arquivos de Genesis,
-  ninhos que podem ser destruídos.
+- **Exploração:** regiões com jazidas raras e ninhos que podem ser destruídos. *(Névoa de guerra,
+  Sensor de Horda e terminais com arquivos de Genesis já implementados.)*
 - **Estrutura final:** construção que encerra a campanha (ativação de Genesis).

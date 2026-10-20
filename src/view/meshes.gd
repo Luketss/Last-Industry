@@ -426,6 +426,18 @@ static func _kit_body(shape: String, type: String, root: Node3D, body: Node3D, h
 			box(spin, Vector3(0.6, 0.04, 0.04), Vector3.ZERO, cyan)
 			h.spin = spin
 			h.h = 1.7
+		"sensor":
+			box(body, Vector3(1.9, 0.15, 1.9), Vector3(0, 0.075, 0), cdark)
+			Kit.place(body, "factory/scanner-low", Vector3(-0.4, 0.15, 0.2), Vector3(0.9, 1.0, 1.4), Q)
+			cyl(body, 0.08, 1.6, Vector3(0.45, 0.95, -0.45), mdark)
+			var spin := Node3D.new()
+			spin.position = Vector3(0.45, 1.75, -0.45)
+			body.add_child(spin)
+			var dish := cyl(spin, 0.55, 0.08, Vector3(0.12, 0, 0), mat("metal", METAL, {"metal": 0.6, "rough": 0.55}), 0.2, 14)
+			dish.rotation.z = deg_to_rad(-60)
+			h.glow = add(spin, sphere_mesh(0.08), Vector3(0.4, 0.15, 0), cyan)
+			h.spin = spin
+			h.h = 2.2
 		"genesis":
 			box(body, Vector3(2.95, 0.3, 2.95), Vector3(0, 0.15, 0), cdark)
 			Kit.place(body, "td/tower-round-crystals", Vector3(0, 0.3, 0), Vector3(2.6, 0, 2.6))

@@ -73,7 +73,7 @@ func read_terminal(w, c: Vector2i) -> String:
 		return I18n.t("Nenhum terminal aqui")
 	if t.read:
 		return I18n.t("Terminal já decodificado")
-	if not near_structure(w, c):
+	if not w.is_revealed(c) or not near_structure(w, c):
 		return I18n.t("Fora de alcance: construa algo a até 7 tiles do terminal")
 	t.read = true
 	for k in TERMINAL_REWARD:

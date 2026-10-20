@@ -5,6 +5,7 @@ extends Node3D
 const Defs = preload("res://src/sim/defs.gd")
 const Meshes = preload("res://src/view/meshes.gd")
 const GroundShader = preload("res://src/view/ground.gdshader")
+const FogShader = preload("res://src/view/fog.gdshader")
 const Logistics = preload("res://src/sim/systems/logistics_system.gd")
 const Kit = preload("res://src/view/kit.gd")
 const Fx = preload("res://src/view/fx.gd")
@@ -20,6 +21,10 @@ var show_grid := false
 var env: Environment
 var sun: DirectionalLight3D
 var ground_mat: ShaderMaterial
+var fog_mat: ShaderMaterial
+var _fog_img: Image
+var _fog_tex: ImageTexture
+var _fog_ver := -1
 var terrain_root: Node3D
 var buildings_root: Node3D
 var ghosts_root: Node3D
@@ -271,6 +276,23 @@ func _build_terrain() -> void:
 	rmi.multimesh = mm
 	rmi.material_override = Meshes.mat("ruins", Color.WHITE, {"vcol": true, "rough": 0.95})
 	terrain_root.add_child(rmi)
+	# Fog of war curtain (fog.gdshader), fed by world.revealed.
+	var fp := PlaneMesh.new()
+	fp.size = Vector2(w + 80, h + 80)
+	fog_mat = ShaderMaterial.new()
+	fog_mat.shader = FogShader
+	fog_mat.set_shader_parameter("map_size", Vector2(w, h))
+	_fog_img = Image.create(w, h, false, Image.FORMAT_L8)
+	_fog_tex = ImageTexture.create_from_image(_fog_img)
+	fog_mat.set_shader_parameter("fog_tex", _fog_tex)
+	var fg := MeshInstance3D.new()
+	fg.mesh = fp
+	fg.material_override = fog_mat
+	fg.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	fg.position = Vector3(w * 0.5, 3.4, h * 0.5)
+	terrain_root.add_child(fg)
+	_fog_ver = -1
+	_update_fog()
 	terminal_nodes.clear()
 	for key in world.terminals:
 		_add_terminal(key)
@@ -322,8 +344,23 @@ func _update_terminal(key: int) -> void:
 	var h = terminal_nodes.get(key)
 	if t == null or h == null:
 		return
+	h.root.visible = world.revealed[key] != 0
 	h.light.visible = not t.read
 	h.lamp.material_override = Meshes.status_mat(0) if t.read else Meshes.mat("cyan", Meshes.CYAN, {"emit": Meshes.CYAN, "energy": 3.0})
+
+
+func _update_fog() -> void:
+	if world.fog_version == _fog_ver:
+		return
+	_fog_ver = world.fog_version
+	var bytes := PackedByteArray()
+	bytes.resize(world.revealed.size())
+	for i in bytes.size():
+		bytes[i] = 255 if world.revealed[i] != 0 else 0
+	_fog_img.set_data(world.width, world.height, false, Image.FORMAT_L8, bytes)
+	_fog_tex.update(_fog_img)
+	for key in terminal_nodes:
+		_update_terminal(key)
 
 
 func _rebuild_ore() -> void:
@@ -471,6 +508,7 @@ func _process(delta: float) -> void:
 		_rebuild_ore()
 	if world.structures_version != _belt_ver:
 		_update_belt_shapes()
+	_update_fog()
 	_update_buildings(delta)
 	_update_items()
 	_update_enemies()

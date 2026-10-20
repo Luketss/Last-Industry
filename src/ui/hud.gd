@@ -70,6 +70,7 @@ var _mini_base: Image
 var _mini_img: Image
 var _mini_tex: ImageTexture
 var _mini_timer := 0.0
+var _mini_fog := -1
 var _refresh := 0.0
 var _toast_t := 0.0
 var _trans_shown := -1
@@ -842,11 +843,15 @@ func _build_minimap() -> void:
 
 ## Builds the static terrain layer of the minimap for a new world.
 func bind_world(w) -> void:
+	_mini_fog = w.fog_version
 	_mini_base = Image.create(w.width, w.height, false, Image.FORMAT_RGBA8)
 	for y in w.height:
 		for x in w.width:
 			var t: int = w.terrain[y * w.width + x]
 			var c := Color(0.13, 0.12, 0.11)
+			if w.revealed[y * w.width + x] == 0:
+				_mini_base.set_pixel(x, y, Color(0.03, 0.028, 0.025))
+				continue
 			match t:
 				Defs.T_ROCK:
 					c = Color(0.3, 0.29, 0.27)
@@ -885,11 +890,16 @@ func _update_minimap(w, delta: float) -> void:
 	for key in w.ghosts:
 		var g: Dictionary = w.ghosts[key]
 		_mini_img.set_pixel(int(g.x), int(g.y), Color(0.6, 0.1, 0.1))
+	if w.fog_version != _mini_fog:
+		bind_world(w)
+		return
 	for key in w.terminals:
+		if w.revealed[key] == 0:
+			continue
 		_mini_img.set_pixel(key % w.width, key / w.width, Color(0.3, 0.6, 0.7) if w.terminals[key].read else Color(0.4, 0.95, 1.0))
 	for e in w.enemies.values():
 		var q := Vector2i(floori(e.pos.x), floori(e.pos.y))
-		if w.in_bounds(q):
+		if w.in_bounds(q) and w.revealed[w.idx(q)] != 0:
 			_mini_img.set_pixel(q.x, q.y, Color(1.0, 0.1, 0.1) if not e.def.get("flying", false) else Color(1.0, 0.4, 0.9))
 	# Camera focus marker.
 	var cp := Vector2i(floori(main.camera.position.x), floori(main.camera.position.z))
@@ -1156,7 +1166,9 @@ func _update_tooltip() -> void:
 		else:
 			var g: int = w.ghost_at(c.hover)
 			var term = w.terminals.get(w.idx(c.hover)) if w.in_bounds(c.hover) else null
-			if term != null:
+			if w.in_bounds(c.hover) and not w.is_revealed(c.hover):
+				txt = I18n.t("[color=#8f877c]Área inexplorada — construa perto dela ou use um Sensor de Horda[/color]")
+			elif term != null:
 				if term.read:
 					txt = I18n.t("[color=#50d8ff]Terminal de dados[/color]\nJá decodificado")
 				elif Genesis.near_structure(w, c.hover):
@@ -1477,6 +1489,7 @@ const HELP_TEXT := """[b]Objetivo:[/b] manter o Núcleo vivo. Se ele cair, a par
 [b]Jogo[/b]: Espaço pausa · ponto/vírgula (ou +/− do teclado numérico) mudam a velocidade · N chama a próxima horda agora · Tab estatísticas · F3 depuração (rotas, redes, alvos) · F5 salvar · F9 carregar · Esc menu.
 
 [b]Fluxo de itens[/b]: mineradoras e máquinas enviam produtos pelo [color=#ffc04a]lado com a faixa amarela[/color] (setas no chão) — qualquer esteira encostada nesse lado recebe os itens. As setas animadas das esteiras mostram o sentido; desenhe em L para fazer curvas (a esquina vira curva sozinha) e use R para girar. Um [color=#ff6a50]fim vermelho[/color] indica esteira sem destino; setas vermelhas indicam esteira travada. Esteiras levam o item para o que estiver à frente. O Divisor alterna entre esquerda, frente e direita; selecione-o para filtrar que item vai por cada saída. Máquinas recebem de esteiras apontadas para elas. Torres, geradores e estações de reparo também [i]puxam[/i] o que precisam de qualquer esteira encostada nelas — passe uma linha de munição ao lado das torres. O Núcleo aceita tudo e seu estoque paga as construções.
+[b]Névoa[/b]: só se constrói em área explorada; cada estrutura revela o entorno e o Sensor de Horda revela uma área grande. Terminais de dados nas ruínas guardam arquivos e sucata.
 [b]Energia[/b]: o Núcleo e os Postes distribuem energia na área ao redor; postes próximos se conectam sozinhos. Grupos separados formam redes independentes. Se faltar energia, [color=#ff8060]defesas[/color] são atendidas antes da [color=#ffc04a]produção[/color]. Baterias guardam o excedente.
 [b]Inimigos[/b]: Rastejantes atacam o que estiver perto da rota · Corredores procuram brechas · Aríetes atravessam muros e causam dano em área · Sabotadores caçam geradores, postes e esteiras · Planadores voam sobre muros (só Antiaérea e Torre Elétrica os atingem) · Cuspidores cospem ácido de longe, por cima dos muros. As hordas são anunciadas com direção e composição; patrulhas podem surgir sem aviso.
 [b]Luzes de estado[/b]: [color=#73f27f]verde[/color] funcionando · [color=#ffc04a]amarelo[/color] esperando (insumo, saída cheia) · [color=#ff5a3c]vermelho[/color] falha (sem energia, sem munição)."""

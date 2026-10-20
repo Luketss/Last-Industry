@@ -30,6 +30,8 @@ var map_seed := 1
 var terrain := PackedByteArray()
 var ore := PackedInt32Array()
 var grid := PackedInt32Array()
+var revealed := PackedByteArray()  ## fog of war: 1 = explored (structures reveal around them)
+var fog_version := 0
 var buildings := {}
 var enemies := {}
 var ghosts := {}            ## origin cell index -> {type, rot, recipe, x, y}
@@ -83,6 +85,9 @@ func _init(p_data, p_seed: int = 1, opts: Dictionary = {}) -> void:
 	ore.fill(0)
 	grid.resize(width * height)
 	grid.fill(0)
+	revealed.resize(width * height)
+	# Generated maps start in fog; test and loaded worlds start explored.
+	revealed.fill(0 if opts.get("generate", true) and not opts.get("load", false) and opts.get("fog", true) else 1)
 	power = PowerSystem.new()
 	logistics = LogisticsSystem.new()
 	production = ProductionSystem.new()
@@ -99,8 +104,11 @@ func _init(p_data, p_seed: int = 1, opts: Dictionary = {}) -> void:
 		if opts.get("generate", true):
 			MapGenerator.generate(self, p_seed)
 			MapGenerator.place_terminals(self, p_seed)
+			for sp in spawn_points:
+				reveal(Vector2(sp) + Vector2(0.5, 0.5), 3.5)
 		if opts.get("core", true):
 			var c := Vector2i(width / 2 - 1, height / 2 - 1)
+			reveal(Vector2(c) + Vector2(1.5, 1.5), float(data.buildings.core.get("reveal", 6.0)))
 			core_id = place("core", c, 0, true)
 		if opts.has("spawns"):
 			spawn_points = opts.spawns.duplicate()
@@ -131,6 +139,25 @@ func building_at(c: Vector2i):
 
 func terrain_at(c: Vector2i) -> int:
 	return terrain[idx(c)] if in_bounds(c) else Defs.T_ROCK
+
+
+## Fog of war: marks every cell within `r` of `p` as explored.
+func reveal(p: Vector2, r: float) -> void:
+	var changed := false
+	var ri := int(ceil(r))
+	var c0 := Vector2i(floori(p.x), floori(p.y))
+	for y in range(-ri, ri + 1):
+		for x in range(-ri, ri + 1):
+			var c := c0 + Vector2i(x, y)
+			if in_bounds(c) and revealed[idx(c)] == 0 and (Vector2(c) + Vector2(0.5, 0.5)).distance_to(p) <= r:
+				revealed[idx(c)] = 1
+				changed = true
+	if changed:
+		fog_version += 1
+
+
+func is_revealed(c: Vector2i) -> bool:
+	return in_bounds(c) and revealed[idx(c)] != 0
 
 
 func set_terrain(c: Vector2i, t: int, amount: int = 0) -> void:
@@ -192,6 +219,8 @@ func can_place(type: String, p: Vector2i, rot: int, check_cost: bool = true) -> 
 				return I18n.t("Espaço ocupado")
 			if terminals.has(i):
 				return I18n.t("Terminal de dados no caminho")
+			if revealed[i] == 0:
+				return I18n.t("Área inexplorada: construa mais perto para revelar")
 			var t := terrain[i]
 			if t == Defs.T_ROCK:
 				return I18n.t("Terreno bloqueado")
@@ -242,6 +271,7 @@ func _register(b) -> void:
 	buildings[b.id] = b
 	for c in b.cells():
 		grid[idx(c)] = b.id
+	reveal(b.center(), float(b.def.get("reveal", 6.0)))
 	if b.kind == "miner":
 		b.ore_cells = []
 		for c in b.cells():
@@ -609,6 +639,7 @@ func to_dict() -> Dictionary:
 		"research": research.to_dict(),
 		"transmissions": transmissions, "pathing_cd": pathing.cooldown,
 		"terminals": _terminals_list(), "ending": ending,
+		"revealed": Marshalls.raw_to_base64(revealed),
 	}
 
 
@@ -632,6 +663,8 @@ static func from_dict(p_data, d: Dictionary):
 	w.state = str(d.state)
 	w.survival = bool(d.survival)
 	w.ending = str(d.get("ending", ""))
+	if d.has("revealed"):
+		w.revealed = Marshalls.base64_to_raw(d.revealed)
 	for t in d.get("terminals", []):
 		w.terminals[int(t[0])] = {"n": int(t[1]), "read": bool(t[2])}
 	w.rng.state = int(str(d.rng))
