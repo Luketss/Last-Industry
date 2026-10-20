@@ -40,6 +40,16 @@ func test_kit_models_fit_their_footprint() -> void:
 	parent.free()
 
 
+func test_every_enemy_has_a_creature_model() -> void:
+	for type in data().enemies:
+		var m := Kit.enemy_mesh(type)
+		check(m != null, "inimigo %s tem modelo" % type)
+		if m != null:
+			var box := m.get_aabb()
+			check(absf(box.position.y) < 0.01, "%s apoiado no chão" % type)
+			check(maxf(box.size.x, box.size.z) <= 1.001, "%s normalizado" % type)
+
+
 func test_ruin_models_exist() -> void:
 	for name in WorldView.RUIN_MODELS:
 		check(Kit.has(name), "ruína %s" % name)

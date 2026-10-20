@@ -174,7 +174,12 @@ func bind(p_world) -> void:
 				mesh = Meshes.box_mesh(Vector3(1.0, 0.8, 0.85))
 			_:
 				mesh = Meshes.sphere_mesh(0.5, 0.65)
-		enemy_mm[type] = _make_mm(mesh, Meshes.mat("enemy", Color.WHITE, {"vcol": true, "rough": 0.5, "metal": 0.3}))
+		var model := Kit.enemy_mesh(type)
+		if model != null:
+			enemy_mm[type] = _make_mm(model, null)
+			enemy_mm[type].set_meta("model", true)
+		else:
+			enemy_mm[type] = _make_mm(mesh, Meshes.mat("enemy", Color.WHITE, {"vcol": true, "rough": 0.5, "metal": 0.3}))
 
 
 func _build_terrain() -> void:
@@ -503,13 +508,20 @@ func _update_enemies() -> void:
 		var list: Array = by_type[t]
 		var mm := _ensure(enemy_mm[t], list.size())
 		var def: Dictionary = world.data.enemies[t]
-		var base := Color.html(def.color)
+		var model: bool = enemy_mm[t].has_meta("model")
+		# Creature models carry their own colours; the type colour only tints them.
+		var base := Color.WHITE.lerp(Color.html(def.color), 0.3) if model else Color.html(def.color)
 		for i in list.size():
 			var e = list[i]
 			var s: float = float(def.size) * e.size_mult
 			var bob := absf(sin(_t * float(def.speed) * 5.0 + e.id)) * 0.08 * s
 			var basis := Basis(Vector3.UP, -e.facing).scaled(Vector3(s * 1.15, s, s))
 			var y := s * 0.4 + bob
+			if model:
+				# Waddle: a little roll from side to side in step with the bob.
+				basis = Basis(Vector3.UP, -e.facing) * Basis(Vector3(1, 0, 0), sin(_t * float(def.speed) * 5.0 + e.id) * 0.12)
+				basis = basis.scaled(Vector3.ONE * (s * 1.5 + 0.25))
+				y = bob
 			if def.get("flying", false):
 				y = 1.9 + sin(_t * 2.0 + e.id) * 0.15
 				basis = basis * Basis(Vector3(1, 0, 0), sin(_t * 6.0 + e.id) * 0.25)

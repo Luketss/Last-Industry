@@ -10,6 +10,7 @@ por máquina fica em [`sources.json`](sources.json); o jogo a exibe em **Menu �
 | Torres e bases das torres | [Tower Defense Kit](https://opengameart.org/content/tower-defense-kit) | Kenney | CC0 |
 | Núcleo, gerador, painel solar, ruínas do mapa | [City Kit (Industrial)](https://opengameart.org/content/city-kit-industrial) | Kenney | CC0 |
 | Molduras de painéis e botões, fonte Kenney Future | [UI Pack - Sci-Fi](https://opengameart.org/content/ui-pack-sci-fi) | Kenney | CC0 |
+| Inimigos (Rastejante, Corredor, Aríete, Sabotador, Planador) | [50+ Monsters Pack 3D](https://opengameart.org/content/50-monsters-pack-3d) | isaiah658 | CC0 |
 | Ícones dos menus | [Game Icons](https://opengameart.org/content/game-icons) | Kenney | CC0 |
 | Tiros, explosões, descarga elétrica, alerta | [Sci-Fi Sounds](https://opengameart.org/content/sci-fi-sounds) | Kenney | CC0 |
 | Cliques, construção, objetivos, conquistas | [Interface Sounds](https://opengameart.org/content/interface-sounds) | Kenney | CC0 |
@@ -28,6 +29,7 @@ distribuição comercial na Steam.
 
 - Os modelos 3D usam um atlas de cores recolorido (`models/*/Textures/colormap.png`) para a paleta
   enferrujada e dessaturada do jogo.
+- As paletas dos monstros foram dessaturadas e escurecidas (`models/enemies/*.png`).
 - As molduras de interface foram remapeadas para as cores do tema (`ui/*.png`).
 - Músicas e sons foram normalizados em volume (EBU R128) e convertidos para Ogg Vorbis.
 - Os ícones da barra de construção (`icons/buildings/`) são renderizados a partir dos próprios
