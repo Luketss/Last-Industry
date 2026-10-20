@@ -1,0 +1,93 @@
+{
+ "city": {
+  "title": "City Kit (Industrial)",
+  "page": "https://opengameart.org/content/city-kit-industrial",
+  "file": "kenney_city-kit-industrial_2.0.zip",
+  "author": "Kenney",
+  "license": "CC0"
+ },
+ "factory": {
+  "title": "Factory Kit",
+  "page": "https://opengameart.org/content/factory-kit",
+  "file": "kenney_factory-kit_3.0.zip",
+  "author": "Kenney",
+  "license": "CC0"
+ },
+ "icons": {
+  "title": "Game Icons",
+  "page": "https://opengameart.org/content/game-icons",
+  "file": "Kenney_gameIcons.zip",
+  "author": "Kenney",
+  "license": "CC0"
+ },
+ "m_empty": {
+  "title": "EmptyCity: Background Music",
+  "page": "https://opengameart.org/content/emptycity-background-music",
+  "file": "EmptyCity_0.ogg",
+  "author": "yd",
+  "license": "CC0"
+ },
+ "m_factory": {
+  "title": "Factory ambiance",
+  "page": "https://opengameart.org/content/factory-ambiance",
+  "file": "Factory_0.ogg",
+  "author": "yd",
+  "license": "CC0"
+ },
+ "m_fight": {
+  "title": "Cyborg Factory Fight Theme",
+  "page": "https://opengameart.org/content/cyborg-factory-fight-theme",
+  "file": "Cyborg_Factory_Fight_0.ogg",
+  "author": "GTDStudio (Palrom)",
+  "license": "OGA-BY 3.0"
+ },
+ "m_iron": {
+  "title": "Iron wasteland",
+  "page": "https://opengameart.org/content/iron-wasteland",
+  "file": "Iron wasteland.ogg",
+  "author": "Alexandr Zhelanov",
+  "license": "CC-BY 4.0"
+ },
+ "m_menu": {
+  "title": "Tragic ambient main menu",
+  "page": "https://opengameart.org/content/tragic-ambient-main-menu",
+  "file": "ambientmain_0.ogg",
+  "author": "HaelDB",
+  "license": "CC0"
+ },
+ "m_scavenger": {
+  "title": "Lone Scavenger",
+  "page": "https://opengameart.org/content/lone-scavenger",
+  "file": "lone_scavenger_4.mp3",
+  "author": "vitalezzz",
+  "license": "CC0"
+ },
+ "scifi_sfx": {
+  "title": "Sci-Fi Sounds",
+  "page": "https://opengameart.org/content/sci-fi-sounds",
+  "file": "sci-fi_sounds.zip",
+  "author": "Kenney",
+  "license": "CC0"
+ },
+ "td": {
+  "title": "Tower Defense Kit",
+  "page": "https://opengameart.org/content/tower-defense-kit",
+  "file": "kenney_tower-defense-kit_1.zip",
+  "author": "Kenney",
+  "license": "CC0"
+ },
+ "ui": {
+  "title": "UI Pack - Sci-Fi",
+  "page": "https://opengameart.org/content/ui-pack-sci-fi",
+  "file": "kenney_ui-pack-scifi.zip",
+  "author": "Kenney",
+  "license": "CC0"
+ },
+ "ui_sfx": {
+  "title": "Interface Sounds",
+  "page": "https://opengameart.org/content/interface-sounds",
+  "file": "kenney_interfaceSounds.zip",
+  "author": "Kenney",
+  "license": "CC0"
+ }
+}
