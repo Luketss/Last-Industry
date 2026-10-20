@@ -94,6 +94,30 @@ func output_cell() -> Vector2i:
 	return output_cell_for(pos, size, rot)
 
 
+## Every tile just outside the front edge. Machines deliver to any of them, so the
+## rule for players is simply "items leave through the yellow front side".
+func output_cells() -> Array:
+	return output_cells_for(pos, size, rot)
+
+
+static func output_cells_for(p: Vector2i, s: Vector2i, r: int) -> Array:
+	var out := []
+	match posmod(r, 4):
+		0:
+			for y in s.y:
+				out.append(Vector2i(p.x + s.x, p.y + y))
+		1:
+			for x in s.x:
+				out.append(Vector2i(p.x + x, p.y + s.y))
+		2:
+			for y in s.y:
+				out.append(Vector2i(p.x - 1, p.y + y))
+		_:
+			for x in s.x:
+				out.append(Vector2i(p.x + x, p.y - 1))
+	return out
+
+
 ## The output tile sits on the front edge. For even sizes it is the tile that
 ## rotates with the building (the "upper" tile when facing east), so rotating a
 ## layout keeps every output aligned with its belt.

@@ -79,6 +79,15 @@ terminais de lore nas ruínas e a estrutura final Genesis com os três finais.
 - Testes: `test_platform.gd` (conquistas e persistência, estatísticas de elite/sem perdas,
   remapeamento, fallback offline, ids das conquistas).
 
+### Revisão de esteiras e saídas (feedback de jogo)
+- Máquinas entregam por **qualquer tile do lado da frente**, marcado por uma faixa amarela brilhante e
+  setas no chão. Antes era um único tile, difícil de enxergar.
+- Esteiras com superfície animada (setas no sentido do fluxo; vermelhas quando travadas), **curvas**
+  automáticas quando alimentadas pela lateral (itens seguem o arco), tampa vermelha em fim sem destino,
+  prévia de construção já mostra a curva.
+- Dicas de passar o mouse explicam direção, curva e destino de cada esteira e o lado de saída das máquinas.
+- Testes: saída por qualquer tile da frente, forma das esteiras e fim sem destino, geometria das curvas.
+
 ### Pendências gerais
 Suporte a controle / Steam Deck, localização (EN/ES), filtros no divisor, estrutura final Genesis
 com os três finais, perfil de renderização em GPU dedicada.

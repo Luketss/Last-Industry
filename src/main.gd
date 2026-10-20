@@ -305,6 +305,12 @@ func _smoke_step() -> void:
 		362:
 			_shot("10_achievements")
 			hud.toggle_achievements()
+			controller._select([])
+			var c: Vector2i = world.core().pos
+			camera.focus(Vector3(c.x - 4, 0, c.y + 3), true)
+			camera.zoom = 11.0
+		385:
+			_shot("11_belts_close")
 		420:
 			_shot("06_loaded")
 			print("SMOKE OK tick=%d enemies=%d buildings=%d" % [world.tick, world.enemies.size(), world.buildings.size()])

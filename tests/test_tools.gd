@@ -63,5 +63,5 @@ func test_blueprint_rotation() -> void:
 	eq(JSON.stringify(r4), JSON.stringify(bp), "quatro rotações voltam ao original")
 	Blueprint.paste(w, r1, Vector2i(20, 3))
 	var s = w.building_at(Vector2i(20, 3))
-	check(s != null and s.type == "smelter" and s.output_cell() == Vector2i(21, 5), "fundição girada aponta para a esteira")
+	check(s != null and s.type == "smelter" and Vector2i(21, 5) in s.output_cells(), "fundição girada entrega na esteira")
 	eq(w.building_at(Vector2i(21, 5)).type, "belt", "esteira na saída girada")

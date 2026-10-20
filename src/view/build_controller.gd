@@ -11,6 +11,7 @@ const Building = preload("res://src/sim/building.gd")
 const Blueprint = preload("res://src/sim/blueprint.gd")
 const Meshes = preload("res://src/view/meshes.gd")
 const Bindings = preload("res://src/ui/bindings.gd")
+const Logistics = preload("res://src/sim/systems/logistics_system.gd")
 
 const BLUEPRINT_TOOL := "@blueprint"
 
@@ -31,6 +32,7 @@ var _last_cell := Vector2i(-1, -1)
 var _last_belt := 0
 var _preview: Node3D
 var _preview_key := ""
+var _preview_h := {}
 var _range_ring: MeshInstance3D
 var _area_box: MeshInstance3D
 var _select_mm: MultiMeshInstance3D
@@ -498,7 +500,8 @@ func _update_preview(w) -> void:
 				h.root.position = Vector3(int(e.x), 0, int(e.y))
 				_preview.add_child(h.root)
 		else:
-			_preview = Meshes.build(tool, w.data.buildings[tool], rot).root
+			_preview_h = Meshes.build(tool, w.data.buildings[tool], rot)
+			_preview = _preview_h.root
 		main.view.add_child(_preview)
 		_preview_key = key
 	if tool == BLUEPRINT_TOOL:
@@ -520,6 +523,11 @@ func _update_preview(w) -> void:
 	var o := hover if _is_line_tool() else origin_for(tool, rot)
 	var reason: String = w.can_place(tool, o, rot)
 	last_reason = reason
+	if tool == "belt" and _preview_h.has("belt_mi"):
+		var shape: int = Logistics.shape_at(w, o, rot)
+		if shape != _preview_h.shape:
+			_preview_h.shape = shape
+			_preview_h.belt_mi.mesh = Meshes.belt_mesh(shape)
 	Meshes.override_all(_preview, _ok_mat if reason == "" else _bad_mat)
 	_preview.position = Vector3(o.x, 0.02, o.y)
 	_preview.visible = true
