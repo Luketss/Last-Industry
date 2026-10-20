@@ -126,10 +126,10 @@ func _pull(w, dt: float) -> void:
 	for b in w.list("pullers"):
 		if b.adj_belts.is_empty() or not b.enabled:
 			continue
-		b.scan -= dt
-		if b.scan > 0.0:
+		b.pull_cd -= dt
+		if b.pull_cd > 0.0:
 			continue
-		b.scan = 0.25
+		b.pull_cd = 0.25
 		var acc: Dictionary = b.def.get("accepts", {})
 		for item in acc:
 			if Items.count(b.inv, item) >= int(acc[item]):

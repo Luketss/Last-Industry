@@ -87,6 +87,8 @@ func step(w, dt: float) -> void:
 	for b in w.buildings.values():
 		if b.power_net == -1:
 			b.power_sat = 0.0
+			if b.kind == "generator" or b.kind == "battery":
+				b.status = "sem conexão"
 	for net in networks:
 		var cap_free := 0.0
 		var cap_gen := 0.0

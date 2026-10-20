@@ -325,6 +325,15 @@ func ghost_at(c: Vector2i) -> int:
 	return -1
 
 
+## Re-orients a square structure in place (its footprint is unchanged).
+func rotate_building(b, r: int) -> void:
+	if b == null or b.size.x != b.size.y or b.kind == "core" or b.rot == posmod(r, 4):
+		return
+	b.rot = posmod(r, 4)
+	_mark_structures()
+	events.append({"e": "built", "id": b.id})
+
+
 func set_recipe(b, recipe: String) -> void:
 	if b == null or b.kind != "crafter" or recipe == b.recipe or not (recipe in b.def.get("recipes", [])):
 		return

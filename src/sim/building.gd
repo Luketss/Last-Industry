@@ -11,7 +11,7 @@ const STATUS_LEVEL := {
 	"reparando": 0, "pronta": 0, "armazenando": 0, "ociosa": 1, "ocioso": 1,
 	"sem insumos": 1, "saída bloqueada": 1, "carregando": 1, "sem combustível": 2,
 	"sem materiais": 1, "sem energia": 2, "sem munição": 2, "esgotado": 2, "desligado": 2,
-	"energia baixa": 1,
+	"energia baixa": 1, "sem conexão": 2,
 }
 
 var id := 0
@@ -40,7 +40,8 @@ var energy := 0.0       ## battery / tesla charge (kJ), generator fuel (kJ), rep
 var cooldown := 0.0
 var rounds := 0
 var target := 0
-var scan := 0.0
+var scan := 0.0           ## target / repair scan timer
+var pull_cd := 0.0        ## adjacent-belt pull timer
 var rr := 0
 var belt_items: Array = []   ## [[item_id, progress 0..1], ...] front-most first
 var last_damaged := -100.0
@@ -124,7 +125,7 @@ func to_dict() -> Dictionary:
 	var d := {
 		"id": id, "type": type, "x": pos.x, "y": pos.y, "rot": rot, "hp": hp, "en": enabled,
 		"inv": inv, "out": out, "recipe": recipe, "prog": progress, "craft": crafting,
-		"energy": energy, "cd": cooldown, "rounds": rounds, "target": target, "scan": scan, "rr": rr,
+		"energy": energy, "cd": cooldown, "rounds": rounds, "target": target, "scan": scan, "pull": pull_cd, "rr": rr,
 		"status": status, "dmg": last_damaged,
 	}
 	if kind == "belt":
@@ -145,6 +146,7 @@ func load_dict(d: Dictionary) -> void:
 	rounds = int(d.get("rounds", 0))
 	target = int(d.get("target", 0))
 	scan = float(d.get("scan", 0.0))
+	pull_cd = float(d.get("pull", 0.0))
 	rr = int(d.get("rr", 0))
 	status = str(d.get("status", ""))
 	last_damaged = float(d.get("dmg", -100.0))
