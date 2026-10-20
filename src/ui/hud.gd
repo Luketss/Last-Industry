@@ -28,6 +28,8 @@ var info_status: Label
 var info_hp: ProgressBar
 var info_body: RichTextLabel
 var info_recipes: HBoxContainer
+var info_filters: GridContainer
+var _filter_opts: Array = []
 var info_toggle: Button
 var info_demolish: Button
 var tooltip: PanelContainer
@@ -297,6 +299,22 @@ func _build_info() -> void:
 	info_body.custom_minimum_size.x = 300
 	info_recipes = HBoxContainer.new()
 	vb.add_child(info_recipes)
+	# Splitter routing: one item filter per output.
+	info_filters = GridContainer.new()
+	info_filters.columns = 2
+	info_filters.add_theme_constant_override("h_separation", 10)
+	vb.add_child(info_filters)
+	for i in 3:
+		_label(info_filters, ["Esquerda", "Frente", "Direita"][i], 13, UiTheme.DIM)
+		var ob := OptionButton.new()
+		ob.focus_mode = Control.FOCUS_NONE
+		ob.custom_minimum_size.x = 200
+		ob.add_theme_font_override("font", ThemeDB.fallback_font)
+		ob.add_theme_font_size_override("font_size", 13)
+		ob.item_selected.connect(_on_filter.bind(i))
+		info_filters.add_child(ob)
+		_filter_opts.append(ob)
+	info_filters.visible = false
 	var actions := HBoxContainer.new()
 	vb.add_child(actions)
 	info_toggle = _button(actions, "Desligar", _on_toggle)
@@ -1105,6 +1123,9 @@ func _update_info(w) -> void:
 				btn.toggle_mode = true
 				btn.add_theme_font_size_override("font_size", 12)
 		info_demolish.visible = b.kind != "core"
+		info_filters.visible = b.kind == "splitter"
+		if b.kind == "splitter":
+			_fill_filters(w, b)
 		info_toggle.visible = b.kind not in ["core", "belt", "wall", "pole", "depot", "splitter", "solar"]
 	for ch in info_recipes.get_children():
 		if ch is Button:
@@ -1162,6 +1183,8 @@ func _update_info(w) -> void:
 			lines.append("Pacotes: " + (_cost_text(b.inv) if not b.inv.is_empty() else "nenhum"))
 		"solar":
 			lines.append("Rendimento atual: %d kW (luz %d%%)" % [int(float(b.def.power_out) * w.daylight()), int(w.daylight() * 100)])
+		"splitter":
+			lines.append("Itens filtrados vão só para a saída escolhida; os demais seguem pelas saídas livres.")
 		"belt":
 			lines.append("Itens: %d · direção: %s" % [b.belt_items.size(), Defs.DIR_NAMES[b.rot]])
 			if Logistics.belt_dead_end(w, b):
@@ -1180,6 +1203,7 @@ func _update_multi_info(w, sel: Array) -> void:
 		for ch in info_recipes.get_children():
 			ch.queue_free()
 		_button(info_recipes, "Copiar como planta (Ctrl+C)", main.controller.copy_selection_blueprint).add_theme_font_size_override("font_size", 12)
+		info_filters.visible = false
 		info_toggle.visible = true
 		info_demolish.visible = true
 	var counts := {}
@@ -1258,6 +1282,29 @@ func _on_recipe(r: String) -> void:
 	_info_for = -1
 
 
+func _fill_filters(w, b) -> void:
+	var items: Array = w.data.items.keys()
+	for i in 3:
+		var ob: OptionButton = _filter_opts[i]
+		ob.clear()
+		ob.add_item("Qualquer item")
+		ob.set_item_metadata(0, "")
+		for k in items:
+			ob.add_item(w.data.item_name(k))
+			ob.set_item_metadata(ob.item_count - 1, k)
+			if b.filter[i] == k:
+				ob.select(ob.item_count - 1)
+		if b.filter[i] == "":
+			ob.select(0)
+
+
+func _on_filter(index: int, slot: int) -> void:
+	var w = main.world
+	var b = w.buildings.get(main.controller.selected)
+	if b != null:
+		w.set_filter(b, slot, str(_filter_opts[slot].get_item_metadata(index)))
+
+
 func _on_toggle() -> void:
 	if main.controller.selection.size() > 1:
 		main.controller.toggle_selection()
@@ -1320,7 +1367,7 @@ const HELP_TEXT := """[b]Objetivo:[/b] manter o Núcleo vivo. Se ele cair, a par
 [b]Pesquisa[/b]: construa um Laboratório e leve Pacotes de Pesquisa (Montadora: placa + componente) por esteira. T abre a árvore. Pacotes Militares (munição + componente) liberam a linha de defesa avançada.
 [b]Jogo[/b]: Espaço pausa · ponto/vírgula (ou +/− do teclado numérico) mudam a velocidade · N chama a próxima horda agora · Tab estatísticas · F3 depuração (rotas, redes, alvos) · F5 salvar · F9 carregar · Esc menu.
 
-[b]Fluxo de itens[/b]: mineradoras e máquinas enviam produtos pelo [color=#ffc04a]lado com a faixa amarela[/color] (setas no chão) — qualquer esteira encostada nesse lado recebe os itens. As setas animadas das esteiras mostram o sentido; desenhe em L para fazer curvas (a esquina vira curva sozinha) e use R para girar. Um [color=#ff6a50]fim vermelho[/color] indica esteira sem destino; setas vermelhas indicam esteira travada. Esteiras levam o item para o que estiver à frente. Máquinas recebem de esteiras apontadas para elas. Torres, geradores e estações de reparo também [i]puxam[/i] o que precisam de qualquer esteira encostada nelas — passe uma linha de munição ao lado das torres. O Núcleo aceita tudo e seu estoque paga as construções.
+[b]Fluxo de itens[/b]: mineradoras e máquinas enviam produtos pelo [color=#ffc04a]lado com a faixa amarela[/color] (setas no chão) — qualquer esteira encostada nesse lado recebe os itens. As setas animadas das esteiras mostram o sentido; desenhe em L para fazer curvas (a esquina vira curva sozinha) e use R para girar. Um [color=#ff6a50]fim vermelho[/color] indica esteira sem destino; setas vermelhas indicam esteira travada. Esteiras levam o item para o que estiver à frente. O Divisor alterna entre esquerda, frente e direita; selecione-o para filtrar que item vai por cada saída. Máquinas recebem de esteiras apontadas para elas. Torres, geradores e estações de reparo também [i]puxam[/i] o que precisam de qualquer esteira encostada nelas — passe uma linha de munição ao lado das torres. O Núcleo aceita tudo e seu estoque paga as construções.
 [b]Energia[/b]: o Núcleo e os Postes distribuem energia na área ao redor; postes próximos se conectam sozinhos. Grupos separados formam redes independentes. Se faltar energia, [color=#ff8060]defesas[/color] são atendidas antes da [color=#ffc04a]produção[/color]. Baterias guardam o excedente.
 [b]Inimigos[/b]: Rastejantes atacam o que estiver perto da rota · Corredores procuram brechas · Aríetes atravessam muros e causam dano em área · Sabotadores caçam geradores, postes e esteiras · Planadores voam sobre muros (só Antiaérea e Torre Elétrica os atingem). As hordas são anunciadas com direção e composição; patrulhas podem surgir sem aviso.
 [b]Luzes de estado[/b]: [color=#73f27f]verde[/color] funcionando · [color=#ffc04a]amarelo[/color] esperando (insumo, saída cheia) · [color=#ff5a3c]vermelho[/color] falha (sem energia, sem munição)."""

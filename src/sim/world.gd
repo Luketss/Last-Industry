@@ -297,7 +297,7 @@ func destroy(b) -> void:
 		state = "lost"
 		events.append({"e": "lost"})
 		return
-	ghosts[idx(b.pos)] = {"type": b.type, "rot": b.rot, "recipe": b.recipe, "x": b.pos.x, "y": b.pos.y}
+	ghosts[idx(b.pos)] = {"type": b.type, "rot": b.rot, "recipe": b.recipe, "x": b.pos.x, "y": b.pos.y, "filter": b.filter.duplicate()}
 	ghosts_version += 1
 	add_alert("destroyed", "%s destruída! (G para reconstruir)" % b.def.name, "danger", b.center(), 3.0)
 
@@ -319,7 +319,10 @@ func rebuild_ghost(key: int) -> bool:
 	var g = ghosts.get(key)
 	if g == null:
 		return false
-	return place(g.type, Vector2i(int(g.x), int(g.y)), int(g.rot), false, str(g.recipe)) != 0
+	var id := place(g.type, Vector2i(int(g.x), int(g.y)), int(g.rot), false, str(g.recipe))
+	if id != 0 and g.has("filter"):
+		set_filters(buildings[id], g.filter)
+	return id != 0
 
 
 func rebuild_all_ghosts() -> int:
@@ -365,6 +368,22 @@ func set_recipe(b, recipe: String) -> void:
 	b.recipe = recipe
 	b.crafting = false
 	b.progress = 0.0
+
+
+## Splitter routing: `slot` 0 left, 1 front, 2 right relative to its rotation;
+## "" lets any item through. Items with a matching filter go only there; other
+## items use the unfiltered outputs.
+func set_filter(b, slot: int, item: String) -> void:
+	if b == null or b.kind != "splitter" or slot < 0 or slot > 2:
+		return
+	if item != "" and not data.items.has(item):
+		return
+	b.filter[slot] = item
+
+
+func set_filters(b, f: Array) -> void:
+	for i in mini(f.size(), 3):
+		set_filter(b, i, str(f[i]))
 
 
 # --- items --------------------------------------------------------------------
@@ -603,7 +622,8 @@ static func from_dict(p_data, d: Dictionary):
 		w.enemies[e.id] = e
 	w.next_id = int(d.next_id)
 	for g in d.ghosts:
-		var gd := {"type": str(g.type), "rot": int(g.rot), "recipe": str(g.recipe), "x": int(g.x), "y": int(g.y)}
+		var gd := {"type": str(g.type), "rot": int(g.rot), "recipe": str(g.recipe), "x": int(g.x), "y": int(g.y),
+			"filter": Array(g.get("filter", ["", "", ""]))}
 		w.ghosts[w.idx(Vector2i(gd.x, gd.y))] = gd
 	w.spawn_points = []
 	for s in d.spawns:

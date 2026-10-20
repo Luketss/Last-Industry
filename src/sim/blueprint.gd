@@ -23,7 +23,7 @@ static func capture(w, ids: Array) -> Dictionary:
 	var entries := []
 	for b in bs:
 		entries.append({"type": b.type, "x": b.pos.x - lo.x, "y": b.pos.y - lo.y, "rot": b.rot,
-			"recipe": b.recipe, "enabled": b.enabled})
+			"recipe": b.recipe, "enabled": b.enabled, "filter": b.filter.duplicate()})
 	return {"w": hi.x - lo.x, "h": hi.y - lo.y, "entries": entries}
 
 
@@ -60,6 +60,8 @@ static func paste(w, bp: Dictionary, origin: Vector2i) -> Array:
 			continue
 		placed += 1
 		w.buildings[id].enabled = bool(e.get("enabled", true))
+		if e.has("filter"):
+			w.set_filters(w.buildings[id], e.filter)
 	return [placed, skipped]
 
 

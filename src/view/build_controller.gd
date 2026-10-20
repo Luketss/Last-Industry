@@ -327,6 +327,8 @@ func _place_at(c: Vector2i) -> void:
 			_last_belt = b.id
 		return
 	var id: int = w.place(tool, c, rot, false, str(clipboard.get("recipe", "")) if clipboard.get("type", "") == tool else "")
+	if id != 0 and tool == "splitter" and clipboard.get("type", "") == tool:
+		w.set_filters(w.buildings[id], clipboard.get("filter", ["", "", ""]))
 	if tool == "belt":
 		_last_belt = id
 	main.audio.click()
@@ -360,7 +362,7 @@ func _pipette() -> void:
 		return
 	tool = b.type
 	rot = b.rot
-	clipboard = {"type": b.type, "recipe": b.recipe, "enabled": b.enabled}
+	clipboard = {"type": b.type, "recipe": b.recipe, "enabled": b.enabled, "filter": b.filter.duplicate()}
 	_preview_key = ""
 	main.view.show_grid = true
 
@@ -373,7 +375,7 @@ func _copy() -> void:
 	if b == null:
 		b = world().buildings.get(selected)
 	if b != null:
-		clipboard = {"type": b.type, "recipe": b.recipe, "enabled": b.enabled}
+		clipboard = {"type": b.type, "recipe": b.recipe, "enabled": b.enabled, "filter": b.filter.duplicate()}
 		main.hud.toast("Configuração copiada: %s" % b.def.name)
 
 
@@ -394,6 +396,8 @@ func _paste() -> void:
 			world().set_recipe(b, clipboard.recipe)
 		if b.type == clipboard.type:
 			b.enabled = bool(clipboard.get("enabled", b.enabled))
+			if b.kind == "splitter":
+				world().set_filters(b, clipboard.get("filter", ["", "", ""]))
 	main.hud.toast("Configuração colada em %d estrutura(s)" % targets.size())
 
 
