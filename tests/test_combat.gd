@@ -98,3 +98,26 @@ func test_spitter_attacks_over_walls_from_range() -> void:
 	check(spits > 0, "cuspiu ácido")
 	check(w.buildings[t].hp < hp0, "atingiu a torre atrás do muro")
 	check(w.enemies[e].pos.x < 8.0, "ficou do lado de fora do muro")
+
+
+func test_drone_hub_repairs_far_with_core_plates() -> void:
+	var w = empty_world({"width": 40, "height": 40})
+	w.research.complete(w, "automation_1")
+	w.research.complete(w, "military_1")
+	w.research.complete(w, "drones")
+	var c: Vector2i = w.core().pos
+	var hub: int = w.place("drone_hub", c + Vector2i(-4, 0), 0)
+	check(hub != 0, "hub construído (%s)" % w.can_place("drone_hub", c + Vector2i(-4, 0), 0))
+	var wall: int = w.place("wall", c + Vector2i(-14, 0), 0)
+	w.buildings[wall].hp = 50.0
+	var plates: int = int(w.storage.iron_plate)
+	var drones := 0
+	for i in int(6.0 / Defs.DT):
+		w.step()
+		for ev in w.events:
+			if ev.e == "drone":
+				drones += 1
+		w.events = []
+	check(w.buildings[wall].hp > 50.0, "muro distante reparado")
+	check(int(w.storage.iron_plate) < plates, "placas saem do estoque do Núcleo")
+	check(drones > 0, "drones voando")

@@ -1,5 +1,6 @@
 extends RefCounted
-## Turrets (ballistic and electric) and repair stations.
+## Turrets (ballistic and electric), repair stations and drone hubs. A drone hub
+## is a repair station with a long reach that takes its plates from the Core.
 
 const Items = preload("res://src/sim/items.gd")
 const I18n = preload("res://src/ui/i18n.gd")
@@ -11,7 +12,8 @@ func request(w) -> void:
 	for b in w.list("turret_tesla"):
 		b.power_req = float(b.def.power) if b.enabled and b.energy < float(b.def.shot_cost) else 0.0
 	for b in w.list("repair"):
-		var has_mat: bool = b.energy > 0.0 or Items.count(b.inv, str(b.def.item)) > 0
+		var stock: Dictionary = w.storage if b.def.get("from_storage", false) else b.inv
+		var has_mat: bool = b.energy > 0.0 or Items.count(stock, str(b.def.item)) > 0
 		b.power_req = float(b.def.power) if b.enabled and b.target != 0 and has_mat else 0.0
 
 
@@ -144,7 +146,8 @@ func _step_repair(w, b, dt: float) -> void:
 		b.status = "ocioso"
 		return
 	if b.energy <= 0.0:
-		if Items.take(b.inv, str(b.def.item), 1):
+		var stock: Dictionary = w.storage if b.def.get("from_storage", false) else b.inv
+		if Items.take(stock, str(b.def.item), 1):
 			b.energy += float(b.def.heal_per_item)
 			w.stats.on_consumed(str(b.def.item), 1)
 		else:
@@ -157,7 +160,10 @@ func _step_repair(w, b, dt: float) -> void:
 	t.hp += heal
 	b.energy -= heal
 	b.status = "reparando"
-	if w.tick % 10 == 0:
+	if b.def.get("from_storage", false):
+		if w.tick % 24 == b.id % 24:
+			w.events.append({"e": "drone", "from": b.center(), "to": t.center()})
+	elif w.tick % 10 == 0:
 		w.events.append({"e": "repair", "from": b.center(), "to": t.center()})
 
 

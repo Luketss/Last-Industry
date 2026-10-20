@@ -56,7 +56,8 @@ integração Steam opcional via GodotSteam, 12 conquistas, Rich Presence e remap
 **Depois da Fase 8:** modelos 3D, interface, ícones, música e sons de pacotes do OpenGameArt; criaturas
 com modelos próprios e o novo Cuspidor (ácido à distância); partículas de combate e fumaça nas
 chaminés; filtros por saída no Divisor; a **Estrutura Genesis** com três finais e quatro terminais de
-dados nas ruínas; opções gráficas; inglês e espanhol.
+dados nas ruínas; névoa de guerra com Sensor de Horda; Hub de Drones de reparo; marcador do
+objetivo no mapa; opções gráficas; suporte a controle/Steam Deck; inglês e espanhol.
 
 Também incluídos: objetivos guiados com recompensas, narrativa por transmissões e arquivos
 corrompidos, sobreposição de depuração (F3: rotas, redes elétricas, alvos), trilha sonora dinâmica (menu, ambiente, hordas) e efeitos sonoros com camada procedural de vento e maquinário.

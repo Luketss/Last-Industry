@@ -128,7 +128,7 @@ static func build(type: String, def: Dictionary, rot: int) -> Dictionary:
 	var hazard := mat("hazard", HAZARD)
 	var warm := mat("warm", WARM, {"emit": WARM, "energy": 3.0})
 	var cyan := mat("cyan", CYAN, {"emit": CYAN, "energy": 3.0})
-	var shape: String = type if type in ["turret_cannon", "turret_aa"] else str(def.get("kind", type))
+	var shape: String = type if type in ["turret_cannon", "turret_aa", "drone_hub"] else str(def.get("kind", type))
 	if not _kit_body(shape, type, root, body, h):
 		match shape:
 			"core":
@@ -426,6 +426,20 @@ static func _kit_body(shape: String, type: String, root: Node3D, body: Node3D, h
 			box(spin, Vector3(0.6, 0.04, 0.04), Vector3.ZERO, cyan)
 			h.spin = spin
 			h.h = 1.7
+		"drone_hub":
+			box(body, Vector3(1.9, 0.2, 1.9), Vector3(0, 0.1, 0), cdark)
+			Kit.place(body, "factory/hopper-round", Vector3(-0.35, 0.2, -0.35), Vector3(0.9, 0.8, 0.9))
+			box(body, Vector3(0.9, 0.05, 0.9), Vector3(0.4, 0.23, 0.4), hazard)
+			var gm := mat("greenl", GREEN, {"emit": GREEN, "energy": 2.5})
+			h.glow = box(body, Vector3(0.5, 0.06, 0.1), Vector3(0.4, 0.27, 0.4), gm)
+			var spin := Node3D.new()
+			spin.position = Vector3(0.4, 0.75, 0.4)
+			body.add_child(spin)
+			add(spin, sphere_mesh(0.14, 0.12), Vector3.ZERO, mdark)
+			for a in 4:
+				box(spin, Vector3(0.5, 0.025, 0.05), Vector3.ZERO, mat("metal", METAL, {"metal": 0.6, "rough": 0.55}), Vector3(0, a * PI * 0.25, 0))
+			h.spin = spin
+			h.h = 1.3
 		"sensor":
 			box(body, Vector3(1.9, 0.15, 1.9), Vector3(0, 0.075, 0), cdark)
 			Kit.place(body, "factory/scanner-low", Vector3(-0.4, 0.15, 0.2), Vector3(0.9, 1.0, 1.4), Q)

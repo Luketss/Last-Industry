@@ -1287,7 +1287,8 @@ func _update_info(w) -> void:
 		"turret_tesla":
 			lines.append(I18n.t("Carga: %d%%") % int(100.0 * b.energy / float(b.def.shot_cost)))
 		"repair":
-			lines.append(I18n.t("Placas: %d  ·  raio %.0f") % [Items.count(b.inv, "iron_plate"), float(b.def.radius)])
+			var stock: Dictionary = w.storage if b.def.get("from_storage", false) else b.inv
+			lines.append(I18n.t("Placas: %d  ·  raio %.0f") % [Items.count(stock, "iron_plate"), float(b.def.radius)])
 		"core":
 			lines.append(I18n.t("Recebe qualquer item por esteira. Estoque usado na construção."))
 		"genesis":

@@ -442,6 +442,8 @@ func on_events(events: Array) -> void:
 				fx.append({"k": "arc", "pts": ev.points, "c": Color(0.5, 0.9, 1.0), "t": 0.0, "life": 0.18, "seed": randi()})
 				for i in range(1, ev.points.size()):
 					particles.play("sparks", _v3(ev.points[i], 0.4), 0.6)
+			"drone":
+				fx.append({"k": "drone", "a": _v3(ev.from, 1.0), "b": _v3(ev.to, 0.8), "c": Color(0.4, 1.0, 0.5), "t": 0.0, "life": 0.9})
 			"repair":
 				fx.append({"k": "line", "a": _v3(ev.from, 1.0), "b": _v3(ev.to, 0.6), "c": Color(0.3, 1.0, 0.45), "t": 0.0, "life": 0.35})
 			"enemy_died":
@@ -721,6 +723,19 @@ func _update_fx(delta: float) -> void:
 						fx_mesh.surface_add_vertex(prev)
 						fx_mesh.surface_add_vertex(q)
 						prev = q
+			"drone":
+				# A small drone flies an arc from the hub to the repair target.
+				var s: float = f.t / f.life
+				var p: Vector3 = f.a.lerp(f.b, s) + Vector3(0, sin(s * PI) * 2.2, 0)
+				var q: Vector3 = f.a.lerp(f.b, maxf(s - 0.12, 0.0)) + Vector3(0, sin(maxf(s - 0.12, 0.0) * PI) * 2.2, 0)
+				var dc: Color = f.c * 1.6
+				fx_mesh.surface_set_color(Color(dc, 0.5))
+				fx_mesh.surface_add_vertex(q)
+				fx_mesh.surface_add_vertex(p)
+				fx_mesh.surface_set_color(dc)
+				for d in [Vector3(0.2, 0, 0.2), Vector3(0.2, 0, -0.2)]:
+					fx_mesh.surface_add_vertex(p - d)
+					fx_mesh.surface_add_vertex(p + d)
 			"burst":
 				var rng := RandomNumberGenerator.new()
 				rng.seed = f.seed

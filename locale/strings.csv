@@ -495,6 +495,8 @@ Estrutura Genesis,Genesis Structure,Estructura Genesis
 "Ativa o Projeto Genesis. Precisa de energia contínua por 4 minutos enquanto as hordas convergem de todos os ninhos. Ao final, você decide o destino do mundo.","Activates Project Genesis. Needs continuous power for 4 minutes while the hordes converge from every nest. At the end, you decide the fate of the world.","Activa el Proyecto Genesis. Necesita energía continua durante 4 minutos mientras las hordas convergen desde todos los nidos. Al final, tú decides el destino del mundo."
 Sensor de Horda,Horde Sensor,Sensor de Hordas
 "Antena de varredura: revela uma grande área da névoa ao redor, mostrando ruínas, jazidas, terminais e criaturas.","Scanning antenna: reveals a large area of fog around it, showing ruins, deposits, terminals and creatures.","Antena de barrido: revela una gran zona de niebla a su alrededor, mostrando ruinas, yacimientos, terminales y criaturas."
+Hub de Drones,Drone Hub,Centro de Drones
+Drones consertam estruturas num raio de 13 tiles usando placas de ferro do estoque do Núcleo.,Drones repair structures within 13 tiles using iron plates from the Core's stock.,Los drones reparan estructuras en un radio de 13 casillas usando placas de hierro de la reserva del Núcleo.
 Rastejante,Crawler,Rastrero
 Criatura básica. Ataca qualquer estrutura próxima de sua rota.,Basic creature. Attacks any structure near its route.,Criatura básica. Ataca cualquier estructura cercana a su ruta.
 Corredor,Runner,Corredor
@@ -605,3 +607,5 @@ Muros recebem 50% mais integridade (inclusive os já construídos).,Walls get 50
 Decodifica os arquivos selados da instalação. Algo nas ruínas vai notar.,Decodes the facility's sealed archives. Something in the ruins will notice.,Descifra los archivos sellados de la instalación. Algo en las ruinas lo notará.
 Protocolo Genesis,Genesis Protocol,Protocolo Genesis
 "Desbloqueia a Estrutura Genesis, que encerra a campanha.","Unlocks the Genesis Structure, which ends the campaign.","Desbloquea la Estructura Genesis, que termina la campaña."
+Drones de Reparo,Repair Drones,Drones de Reparación
+Desbloqueia o Hub de Drones: reparos automáticos à distância com placas do Núcleo.,Unlocks the Drone Hub: automatic long-range repairs with plates from the Core.,Desbloquea el Centro de Drones: reparaciones automáticas a distancia con placas del Núcleo.
