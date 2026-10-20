@@ -14,6 +14,8 @@ precisa ser fabricada, cada torre consome energia, cada reparo custa materiais.
 ![Árvore de pesquisa](docs/img/pesquisa.png)
 ![Seleção, planta, rastreamento de fluxo, dica e minimapa](docs/img/ferramentas.png)
 ![Esteiras com curvas e saídas das máquinas](docs/img/esteiras.png)
+![Combate com criaturas e efeitos](docs/img/combate.png)
+![Estrutura Genesis: a escolha final](docs/img/genesis.png)
 
 **Plataformas:** Windows e Linux (x86_64) · **Engine:** Godot 4.3 (GDScript) · **Modo:** solo, offline · **Idiomas:** português, inglês, espanhol · **Destino:** Steam
 
