@@ -375,6 +375,7 @@ static func _kit_body(shape: String, type: String, root: Node3D, body: Node3D, h
 			if type == "smelter":
 				Kit.place(body, "factory/machine-fortified", Vector3(0.1, 0.12, 0.2), Vector3(1.5, 1.4, 1.5), Q)
 				Kit.place(body, "city/chimney-large", Vector3(-0.55, 0.12, -0.55), Vector3(0.75, 1.9, 0.75))
+				h["smoke_at"] = Vector3(-0.55, 2.0, -0.55)
 				h.glow = box(body, Vector3(0.06, 0.3, 0.8), Vector3(0.9, 0.42, 0.2), warm)
 				h.h = 2.1
 			else:
@@ -386,6 +387,7 @@ static func _kit_body(shape: String, type: String, root: Node3D, body: Node3D, h
 			box(body, Vector3(1.9, 0.2, 1.9), Vector3(0, 0.1, 0), cdark)
 			Kit.place(body, "city/detail-tank-large", Vector3(-0.2, 0.2, 0.1), Vector3(1.5, 1.2, 1.6), Q)
 			Kit.place(body, "city/chimney-medium", Vector3(0.6, 0.2, -0.65), Vector3(0.45, 1.7, 0.45))
+			h["smoke_at"] = Vector3(0.6, 1.9, -0.65)
 			h.glow = box(body, Vector3(0.5, 0.22, 0.06), Vector3(0.45, 0.4, 0.93), warm)
 			h.h = 1.9
 		"battery":

@@ -7,6 +7,7 @@ const Meshes = preload("res://src/view/meshes.gd")
 const GroundShader = preload("res://src/view/ground.gdshader")
 const Logistics = preload("res://src/sim/systems/logistics_system.gd")
 const Kit = preload("res://src/view/kit.gd")
+const Fx = preload("res://src/view/fx.gd")
 const RUIN_MODELS := ["city/building-a", "city/building-e", "city/building-f", "city/building-g", "city/building-l",
 	"city/building-n", "city/building-p", "city/building-q", "city/building-r", "city/water-tower",
 	"city/chimney-large", "city/detail-tank-large", "city/windmill-low", "factory/machine-bed", "factory/crane"]
@@ -31,6 +32,7 @@ var fx_mesh := ImmediateMesh.new()
 var wires_mesh := ImmediateMesh.new()
 var debug_mesh := ImmediateMesh.new()
 var fx: Array = []
+var particles: Node3D       ## fx.gd: pooled one-shot particle effects
 var ash: GPUParticles3D
 var _ghosts_ver := -1
 var _power_ver := -1
@@ -50,6 +52,8 @@ func _ready() -> void:
 	add_child(buildings_root)
 	ghosts_root = Node3D.new()
 	add_child(ghosts_root)
+	particles = Fx.new()
+	add_child(particles)
 	items_mm = _make_mm(Meshes.box_mesh(Vector3(0.22, 0.16, 0.22)), Meshes.mat("items", Color.WHITE, {"vcol": true, "rough": 0.6}))
 	bars_mm = _make_mm(Meshes.box_mesh(Vector3(1, 0.05, 0.1)), Meshes.mat("bars", Color.WHITE, {"vcol": true, "unshaded": true}))
 	bars_mm.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -303,6 +307,8 @@ func _add_building(b) -> void:
 	h.root.position = Vector3(b.pos.x, 0, b.pos.y)
 	h["level"] = -1
 	buildings_root.add_child(h.root)
+	if h.has("smoke_at"):
+		h["smoke"] = particles.make_smoke(h.body, h.smoke_at)
 	nodes[b.id] = h
 
 
@@ -328,20 +334,36 @@ func on_events(events: Array) -> void:
 			"destroyed":
 				_remove_building(ev.id)
 				_burst(ev.pos, Color(1.0, 0.5, 0.15), 14, 1.6, 0.6)
+				particles.play("fire", _v3(ev.pos, 0.4), 1.4)
+				particles.play("smoke", _v3(ev.pos, 0.8), 1.5)
 			"shot":
-				fx.append({"k": "line", "a": _v3(ev.from, 0.95), "b": _v3(ev.to, 1.9 if ev.get("air", false) else 0.35), "c": Color(1.0, 0.85, 0.4), "t": 0.0, "life": 0.06})
+				var to := _v3(ev.to, 1.9 if ev.get("air", false) else 0.35)
+				var muzzle := _v3(ev.from, 0.95)
+				muzzle += (to - muzzle).normalized() * 0.75
+				fx.append({"k": "line", "a": muzzle, "b": to, "c": Color(1.0, 0.85, 0.4), "t": 0.0, "life": 0.06})
+				particles.play("flash", muzzle, 0.8)
+				particles.play("sparks", to, 0.7)
 			"shell":
 				fx.append({"k": "line", "a": _v3(ev.from, 1.0), "b": _v3(ev.to, 0.3), "c": Color(1.0, 0.6, 0.25), "t": 0.0, "life": 0.12})
 				_burst(ev.to, Color(1.0, 0.55, 0.2), 18, float(ev.r), 0.35)
+				particles.play("flash", _v3(ev.from, 1.0), 1.4)
+				particles.play("fire", _v3(ev.to, 0.3), clampf(float(ev.r), 0.6, 1.6))
+				particles.play("dust", _v3(ev.to, 0.1), clampf(float(ev.r), 0.8, 2.0))
 			"arc":
 				fx.append({"k": "arc", "pts": ev.points, "c": Color(0.5, 0.9, 1.0), "t": 0.0, "life": 0.18, "seed": randi()})
+				for i in range(1, ev.points.size()):
+					particles.play("sparks", _v3(ev.points[i], 0.4), 0.6)
 			"repair":
 				fx.append({"k": "line", "a": _v3(ev.from, 1.0), "b": _v3(ev.to, 0.6), "c": Color(0.3, 1.0, 0.45), "t": 0.0, "life": 0.35})
 			"enemy_died":
 				_burst(ev.pos, Color(0.85, 0.2, 0.1) if not ev.elite else Color(1, 0.4, 0.1), 8 if not ev.elite else 24, 0.7 if not ev.elite else 2.5, 0.3)
+				particles.play("gore", _v3(ev.pos, 0.3), 1.0 if not ev.elite else 1.8)
+				if ev.elite:
+					particles.play("fire", _v3(ev.pos, 0.3), 1.2)
 			"bite":
 				if ev.splash:
 					_burst(ev.pos, Color(0.8, 0.6, 0.3), 10, 1.2, 0.25)
+					particles.play("dust", _v3(ev.pos, 0.1), 1.4)
 			"wave_start":
 				_alarm = 4.0
 
@@ -457,6 +479,8 @@ func _update_buildings(delta: float) -> void:
 					h.glow.visible = true
 				_:
 					h.glow.visible = working
+		if h.has("smoke"):
+			h.smoke.emitting = working
 		if h.spin != null and working:
 			h.spin.rotation.y += delta * (6.0 if b.kind == "miner" else 2.5)
 		if h.head != null:
