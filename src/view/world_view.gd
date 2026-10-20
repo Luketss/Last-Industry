@@ -39,6 +39,7 @@ var debug_mesh := ImmediateMesh.new()
 var fx: Array = []
 var particles: Node3D       ## fx.gd: pooled one-shot particle effects
 var terminal_nodes := {}    ## cell index -> {root, lamp, light}
+var nest_nodes: Array = []  ## parallel to world.spawn_points
 var objective_target = null ## Vector2 map position of the active objective (set by the HUD)
 var _marker: Node3D
 var ash: GPUParticles3D
@@ -301,8 +302,10 @@ func _build_terrain() -> void:
 	terrain_root.add_child(ore_mm)
 	_rebuild_ore()
 	# Nests
+	nest_nodes.clear()
 	for sp in world.spawn_points:
 		var n := Node3D.new()
+		nest_nodes.append(n)
 		n.position = Vector3(sp.x + 0.5, 0, sp.y + 0.5)
 		var red := Meshes.mat("nest", Color(0.25, 0.04, 0.03), {"emit": Color(0.9, 0.12, 0.05), "energy": 1.6})
 		Meshes.cyl(n, 1.9, 0.08, Vector3(0, 0.04, 0), red, 2.1, 16)
@@ -457,6 +460,17 @@ func on_events(events: Array) -> void:
 					particles.play("fire", _v3(ev.pos, 0.3), 1.2)
 			"terminal":
 				_update_terminal(ev.key)
+			"nest_destroyed":
+				for i in nest_nodes.size():
+					var nn: Node3D = nest_nodes[i]
+					if Vector2(nn.position.x, nn.position.z).distance_to(ev.pos) < 0.1:
+						nn.queue_free()
+						nest_nodes.remove_at(i)
+						break
+				for k in 3:
+					particles.play("fire", _v3(ev.pos, 0.4 + k * 0.5), 2.0)
+				particles.play("smoke", _v3(ev.pos, 1.5), 2.5)
+				particles.play("gore", _v3(ev.pos, 0.5), 2.5)
 			"genesis_ready":
 				var gb = world.buildings.get(ev.id)
 				if gb != null:
@@ -675,6 +689,9 @@ func _update_bars() -> void:
 	for b in world.buildings.values():
 		if b.hp < b.max_hp:
 			entries.append([b.center(), b.hp / b.max_hp, float(nodes.get(b.id, {"h": 1.0}).h) + 0.35, float(b.size.x) * 0.8])
+	for i in world.spawn_points.size():
+		if i < world.nests.hp.size() and world.nests.hp[i] < world.nests.max_hp:
+			entries.append([Vector2(world.spawn_points[i]) + Vector2(0.5, 0.5), world.nests.hp[i] / world.nests.max_hp, 2.2, 3.0])
 	for e in world.enemies.values():
 		if e.hp < e.max_hp:
 			var s: float = float(e.def.size) * e.size_mult

@@ -986,6 +986,8 @@ func toast(text: String) -> void:
 
 func on_events(events: Array) -> void:
 	for ev in events:
+		if ev.e == "nest_destroyed" and main.world != null:
+			bind_world(main.world)
 		if ev.e == "objective":
 			toast(I18n.t("Objetivo concluído!"))
 
@@ -1170,7 +1172,10 @@ func _update_tooltip() -> void:
 		else:
 			var g: int = w.ghost_at(c.hover)
 			var term = w.terminals.get(w.idx(c.hover)) if w.in_bounds(c.hover) else null
-			if w.in_bounds(c.hover) and not w.is_revealed(c.hover):
+			var nest: int = w.nests.nearest(w, Vector2(c.hover) + Vector2(0.5, 0.5), 2.2)
+			if nest != -1:
+				txt = I18n.t("[color=#ff6a50]Ninho[/color]  %d/%d\nTorres terrestres ao alcance o atacam quando não há criaturas. Destruído, deixa de gerar hordas.") % [int(w.nests.hp[nest]), int(w.nests.max_hp)]
+			elif w.in_bounds(c.hover) and not w.is_revealed(c.hover):
 				txt = I18n.t("[color=#8f877c]Área inexplorada — construa perto dela ou use um Sensor de Horda[/color]")
 			elif term != null:
 				if term.read:
@@ -1496,5 +1501,5 @@ const HELP_TEXT := """[b]Objetivo:[/b] manter o Núcleo vivo. Se ele cair, a par
 [b]Fluxo de itens[/b]: mineradoras e máquinas enviam produtos pelo [color=#ffc04a]lado com a faixa amarela[/color] (setas no chão) — qualquer esteira encostada nesse lado recebe os itens. As setas animadas das esteiras mostram o sentido; desenhe em L para fazer curvas (a esquina vira curva sozinha) e use R para girar. Um [color=#ff6a50]fim vermelho[/color] indica esteira sem destino; setas vermelhas indicam esteira travada. Esteiras levam o item para o que estiver à frente. O Divisor alterna entre esquerda, frente e direita; selecione-o para filtrar que item vai por cada saída. Máquinas recebem de esteiras apontadas para elas. Torres, geradores e estações de reparo também [i]puxam[/i] o que precisam de qualquer esteira encostada nelas — passe uma linha de munição ao lado das torres. O Núcleo aceita tudo e seu estoque paga as construções.
 [b]Névoa[/b]: só se constrói em área explorada; cada estrutura revela o entorno e o Sensor de Horda revela uma área grande. Terminais de dados nas ruínas guardam arquivos e sucata.
 [b]Energia[/b]: o Núcleo e os Postes distribuem energia na área ao redor; postes próximos se conectam sozinhos. Grupos separados formam redes independentes. Se faltar energia, [color=#ff8060]defesas[/color] são atendidas antes da [color=#ffc04a]produção[/color]. Baterias guardam o excedente.
-[b]Inimigos[/b]: Rastejantes atacam o que estiver perto da rota · Corredores procuram brechas · Aríetes atravessam muros e causam dano em área · Sabotadores caçam geradores, postes e esteiras · Planadores voam sobre muros (só Antiaérea e Torre Elétrica os atingem) · Cuspidores cospem ácido de longe, por cima dos muros. As hordas são anunciadas com direção e composição; patrulhas podem surgir sem aviso.
+[b]Inimigos[/b]: Rastejantes atacam o que estiver perto da rota · Corredores procuram brechas · Aríetes atravessam muros e causam dano em área · Sabotadores caçam geradores, postes e esteiras · Planadores voam sobre muros (só Antiaérea e Torre Elétrica os atingem) · Cuspidores cospem ácido de longe, por cima dos muros. As hordas são anunciadas com direção e composição; patrulhas podem surgir sem aviso. Ninhos podem ser destruídos por torres terrestres ao alcance (eles se regeneram e mandam defensores).
 [b]Luzes de estado[/b]: [color=#73f27f]verde[/color] funcionando · [color=#ffc04a]amarelo[/color] esperando (insumo, saída cheia) · [color=#ff5a3c]vermelho[/color] falha (sem energia, sem munição)."""

@@ -140,6 +140,8 @@ func start_wave(w) -> void:
 
 ## Unannounced small group: dangerous areas are never fully safe.
 func _patrol(w) -> void:
+	if w.spawn_points.is_empty():
+		return
 	var sp := _pick_spawn(w, -1)
 	var n := 2 + mini(index, 6)
 	for i in n:
@@ -149,6 +151,17 @@ func _patrol(w) -> void:
 			t = "saboteur"
 		_spawn_at(w, t, sp, {})
 	w.add_alert("patrol", I18n.t("Movimento hostil inesperado detectado ao %s!") % I18n.t(Defs.compass(Vector2(w.spawn_points[sp]), w.width, w.height)), "danger", null, 1.0)
+
+
+## A nest was destroyed: keep the announced spawn index valid.
+func on_nest_removed(w, i: int) -> void:
+	var n: int = w.spawn_points.size()
+	if n == 0:
+		next_spawn = 0
+	elif next_spawn == i or next_spawn >= n:
+		next_spawn = _pick_spawn(w, -1)
+	elif next_spawn > i:
+		next_spawn -= 1
 
 
 func _spawn_at(w, type: String, sp: int, mods: Dictionary) -> void:

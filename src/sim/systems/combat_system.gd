@@ -43,7 +43,21 @@ func _step_gun(w, b, dt: float) -> void:
 		return
 	var e = _acquire(w, b, dt)
 	if e == null:
-		b.status = "vigiando"
+		# Nothing to shoot at: ground turrets wear down a nest in range.
+		var n: int = -1 if str(b.def.get("targets", "ground")) == "air" else w.nests.nearest(w, b.center(), float(b.def.range))
+		if n == -1:
+			b.status = "vigiando"
+			return
+		var np := Vector2(w.spawn_points[n]) + Vector2(0.5, 0.5)
+		b.aim = atan2(np.y - b.center().y, np.x - b.center().x)
+		b.status = "atacando"
+		if b.cooldown <= 0.0:
+			b.cooldown = float(b.def.cooldown)
+			b.rounds -= 1
+			w.stats.shots += 1
+			var kind := "shell" if float(b.def.get("splash", 0.0)) > 0.0 else "shot"
+			w.events.append({"e": kind, "id": b.id, "from": b.center(), "to": np, "r": float(b.def.get("splash", 0.0))})
+			w.nests.damage(w, n, float(b.def.damage) * (1.0 + w.research.mod("turret_damage")))
 		return
 	b.status = "atacando" if b.power_sat > 0.5 else "energia baixa"
 	if b.cooldown <= 0.0:

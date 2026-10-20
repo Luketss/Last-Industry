@@ -19,6 +19,7 @@ const Stats = preload("res://src/sim/systems/stats.gd")
 const Objectives = preload("res://src/sim/systems/objectives.gd")
 const ResearchSystem = preload("res://src/sim/systems/research_system.gd")
 const GenesisSystem = preload("res://src/sim/systems/genesis_system.gd")
+const NestSystem = preload("res://src/sim/systems/nest_system.gd")
 const I18n = preload("res://src/ui/i18n.gd")
 
 const SAVE_VERSION := 1
@@ -68,6 +69,7 @@ var stats: Stats
 var objectives: Objectives
 var research: ResearchSystem
 var genesis: GenesisSystem
+var nests: NestSystem
 var terminals := {}          ## cell index -> {n, read}: data terminals near the ruins
 var ending := ""             ## restore | destroy | fortress once Genesis is decided
 
@@ -99,6 +101,7 @@ func _init(p_data, p_seed: int = 1, opts: Dictionary = {}) -> void:
 	objectives = Objectives.new(data.objectives)
 	research = ResearchSystem.new(data.research)
 	genesis = GenesisSystem.new()
+	nests = NestSystem.new()
 	if not opts.get("load", false):
 		storage = Items.from_json(opts.get("storage", data.game.get("start_storage", {})))
 		if opts.get("generate", true):
@@ -115,6 +118,7 @@ func _init(p_data, p_seed: int = 1, opts: Dictionary = {}) -> void:
 		if opts.has("waves"):
 			waves = WaveSystem.new(opts.waves)
 		waves.setup(self)
+		nests.setup(self)
 		trigger_lore("start")
 
 
@@ -551,6 +555,7 @@ func step() -> void:
 	pathing.update(self, dt)
 	enemy_sys.step(self, dt)
 	combat.step(self, dt)
+	nests.step(self, dt)
 	flush_dead()
 	if state != "playing":
 		return
@@ -639,7 +644,7 @@ func to_dict() -> Dictionary:
 		"research": research.to_dict(),
 		"transmissions": transmissions, "pathing_cd": pathing.cooldown,
 		"terminals": _terminals_list(), "ending": ending,
-		"revealed": Marshalls.raw_to_base64(revealed),
+		"revealed": Marshalls.raw_to_base64(revealed), "nests": nests.to_dict(),
 	}
 
 
@@ -702,6 +707,7 @@ static func from_dict(p_data, d: Dictionary):
 	for s in d.spawns:
 		w.spawn_points.append(Vector2i(int(s[0]), int(s[1])))
 	w.waves.load_dict(d.waves)
+	w.nests.load_dict(w, d.get("nests", {}))
 	w.stats.load_dict(d.stats)
 	w.objectives.load_dict(d.objectives)
 	w.transmissions = d.get("transmissions", [])

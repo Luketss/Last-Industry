@@ -28,5 +28,6 @@
 		"drone_hub",
 		"sensor",
 		"genesis"
-	]
+	],
+	"nest_hp": 6000
 }
