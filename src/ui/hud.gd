@@ -8,6 +8,7 @@ const Defs = preload("res://src/sim/defs.gd")
 const Settings = preload("res://src/ui/settings.gd")
 const Bindings = preload("res://src/ui/bindings.gd")
 const Logistics = preload("res://src/sim/systems/logistics_system.gd")
+const Genesis = preload("res://src/sim/systems/genesis_system.gd")
 const I18n = preload("res://src/ui/i18n.gd")
 
 var main
@@ -23,6 +24,7 @@ var hotbar: GridContainer
 var hot_buttons := {}
 var hot_keys := {}
 var credits_panel: PanelContainer
+var genesis_panel: PanelContainer
 var info_panel: PanelContainer
 var info_title: Label
 var info_status: Label
@@ -96,6 +98,7 @@ func _ready() -> void:
 	_build_tooltip()
 	_build_overlays()
 	_build_options()
+	_build_genesis()
 	_build_achievements()
 	_build_minimap()
 	_build_hint()
@@ -496,6 +499,7 @@ func show_main_menu(has_save: bool) -> void:
 	game_ui.visible = false
 	pause_panel.visible = false
 	end_panel.visible = false
+	genesis_panel.visible = false
 	stats_panel.visible = false
 	menu_continue.disabled = not has_save
 
@@ -505,6 +509,7 @@ func show_game() -> void:
 	game_ui.visible = true
 	pause_panel.visible = false
 	end_panel.visible = false
+	genesis_panel.visible = false
 	help_panel.visible = false
 	credits_panel.visible = false
 	_trans_shown = -1
@@ -518,8 +523,12 @@ func show_pause(v: bool) -> void:
 func show_end(state: String) -> void:
 	var w = main.world
 	end_panel.visible = true
-	end_continue.visible = state == "won"
-	if state == "won":
+	genesis_panel.visible = false
+	end_continue.visible = state == "won" and w.ending in ["", "fortress"]
+	if state == "won" and w.ending != "":
+		end_title.text = _ending_lore(w).get("title", "")
+		end_title.add_theme_color_override("font_color", UiTheme.OK)
+	elif state == "won":
 		end_title.text = I18n.t("O NÚCLEO SOBREVIVEU")
 		end_title.add_theme_color_override("font_color", UiTheme.OK)
 	else:
@@ -528,8 +537,39 @@ func show_end(state: String) -> void:
 	end_body.text = I18n.t("Hordas repelidas: %d\nCriaturas abatidas: %d\nEstruturas perdidas: %d\nTempo de operação: %s\nPlacas produzidas: %d   ·   Munição produzida: %d") % [
 		w.stats.waves, w.stats.kills, w.stats.lost, _clock(w.time),
 		int(w.stats.produced.get("iron_plate", 0)), int(w.stats.produced.get("ammo", 0))]
-	if state == "won":
+	if state == "won" and w.ending != "":
+		end_body.text = str(_ending_lore(w).get("text", "")) + "\n\n" + end_body.text
+	elif state == "won":
 		end_body.text += "\n\n" + str(w.transmissions.back().text if not w.transmissions.is_empty() else "")
+
+
+func _ending_lore(w) -> Dictionary:
+	for e in w.data.lore:
+		if e.trigger == "ending:" + w.ending:
+			return e
+	return {}
+
+
+## Genesis is fully charged: the three protocols.
+func _build_genesis() -> void:
+	genesis_panel = _center_panel(640)
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 10)
+	genesis_panel.add_child(v)
+	var t := _heading(v, I18n.t("GENESIS"), 28, Color(0.5, 1.0, 0.6))
+	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var body := _label(v, I18n.t("A carga está completa. Três protocolos aguardam a sua autorização. A escolha encerra a campanha."), 15)
+	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	body.custom_minimum_size.x = 620
+	for e in [["restore", I18n.t("RESTAURAR — ativar Genesis e deixar que reescreva o mundo"), "right"],
+			["destroy", I18n.t("DESTRUIR — sobrecarregar o núcleo e apagar a tecnologia"), "cross"],
+			["fortress", I18n.t("MANTER — selar Genesis e seguir produzindo para sempre"), "wrench"]]:
+		var b := _menu_button(v, e[1], main.choose_ending.bind(e[0]), e[2], Vector2(620, 48))
+		b.add_theme_font_override("font", ThemeDB.fallback_font)
+
+
+func show_genesis() -> void:
+	genesis_panel.visible = true
 
 
 func toggle_stats() -> void:
@@ -830,6 +870,8 @@ func _update_minimap(w, delta: float) -> void:
 	for key in w.ghosts:
 		var g: Dictionary = w.ghosts[key]
 		_mini_img.set_pixel(int(g.x), int(g.y), Color(0.6, 0.1, 0.1))
+	for key in w.terminals:
+		_mini_img.set_pixel(key % w.width, key / w.width, Color(0.3, 0.6, 0.7) if w.terminals[key].read else Color(0.4, 0.95, 1.0))
 	for e in w.enemies.values():
 		var q := Vector2i(floori(e.pos.x), floori(e.pos.y))
 		if w.in_bounds(q):
@@ -1093,7 +1135,15 @@ func _update_tooltip() -> void:
 				txt += I18n.t("\n[color=#ffa040]■ %d fontes[/color]  [color=#50d8ff]■ %d destinos[/color]") % [c.trace_up.size(), c.trace_down.size()]
 		else:
 			var g: int = w.ghost_at(c.hover)
-			if g != -1:
+			var term = w.terminals.get(w.idx(c.hover)) if w.in_bounds(c.hover) else null
+			if term != null:
+				if term.read:
+					txt = I18n.t("[color=#50d8ff]Terminal de dados[/color]\nJá decodificado")
+				elif Genesis.near_structure(w, c.hover):
+					txt = I18n.t("[color=#50d8ff]Terminal de dados[/color]\nClique para decodificar (arquivo + sucata)")
+				else:
+					txt = I18n.t("[color=#50d8ff]Terminal de dados[/color]\n[color=#ff6a50]Construa algo a até 7 tiles para decodificar[/color]")
+			elif g != -1:
 				var gd: Dictionary = w.ghosts[g]
 				var def: Dictionary = w.data.buildings[gd.type]
 				txt = I18n.t("[color=#ff8060]Ruína: %s[/color]\nClique para reconstruir (%s)") % [def.name, _cost_text(def.get("cost", {}))]
@@ -1208,6 +1258,9 @@ func _update_info(w) -> void:
 			lines.append(I18n.t("Placas: %d  ·  raio %.0f") % [Items.count(b.inv, "iron_plate"), float(b.def.radius)])
 		"core":
 			lines.append(I18n.t("Recebe qualquer item por esteira. Estoque usado na construção."))
+		"genesis":
+			lines.append(I18n.t("Carga Genesis: %d%%") % int(b.progress * 100))
+			lines.append(I18n.t("Precisa de energia contínua. Durante a carga, ondas chegam de todos os ninhos."))
 		"lab":
 			var cur: String = w.research.current
 			if cur == "":

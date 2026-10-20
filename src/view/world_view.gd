@@ -33,6 +33,7 @@ var wires_mesh := ImmediateMesh.new()
 var debug_mesh := ImmediateMesh.new()
 var fx: Array = []
 var particles: Node3D       ## fx.gd: pooled one-shot particle effects
+var terminal_nodes := {}    ## cell index -> {root, lamp, light}
 var ash: GPUParticles3D
 var _ghosts_ver := -1
 var _power_ver := -1
@@ -250,6 +251,9 @@ func _build_terrain() -> void:
 	rmi.multimesh = mm
 	rmi.material_override = Meshes.mat("ruins", Color.WHITE, {"vcol": true, "rough": 0.95})
 	terrain_root.add_child(rmi)
+	terminal_nodes.clear()
+	for key in world.terminals:
+		_add_terminal(key)
 	ore_mm = MultiMeshInstance3D.new()
 	ore_mm.material_override = Meshes.mat("ore", Color.WHITE, {"vcol": true, "rough": 0.7, "metal": 0.3})
 	terrain_root.add_child(ore_mm)
@@ -272,6 +276,34 @@ func _build_terrain() -> void:
 		l.position = Vector3(0, 1.2, 0)
 		n.add_child(l)
 		terrain_root.add_child(n)
+
+
+## Data terminal: an old console on a slab with a beacon that goes dark once read.
+func _add_terminal(key: int) -> void:
+	var c := Vector2i(key % world.width, key / world.width)
+	var n := Node3D.new()
+	n.position = Vector3(c.x + 0.5, 0, c.y + 0.5)
+	terrain_root.add_child(n)
+	Meshes.box(n, Vector3(0.95, 0.08, 0.95), Vector3(0, 0.04, 0), Meshes.mat("cdark", Meshes.CONCRETE_DARK))
+	Kit.place(n, "factory/scanner-high", Vector3(0, 0.08, 0), Vector3(0.9, 1.1, 0.9))
+	var lamp := Meshes.add(n, Meshes.sphere_mesh(0.12), Vector3(0, 1.35, 0), Meshes.mat("cyan", Meshes.CYAN, {"emit": Meshes.CYAN, "energy": 3.0}))
+	var l := OmniLight3D.new()
+	l.light_color = Meshes.CYAN
+	l.light_energy = 1.2
+	l.omni_range = 4.0
+	l.position = Vector3(0, 1.4, 0)
+	n.add_child(l)
+	terminal_nodes[key] = {"root": n, "lamp": lamp, "light": l}
+	_update_terminal(key)
+
+
+func _update_terminal(key: int) -> void:
+	var t = world.terminals.get(key)
+	var h = terminal_nodes.get(key)
+	if t == null or h == null:
+		return
+	h.light.visible = not t.read
+	h.lamp.material_override = Meshes.status_mat(0) if t.read else Meshes.mat("cyan", Meshes.CYAN, {"emit": Meshes.CYAN, "energy": 3.0})
 
 
 func _rebuild_ore() -> void:
@@ -360,6 +392,12 @@ func on_events(events: Array) -> void:
 				particles.play("gore", _v3(ev.pos, 0.3), 1.0 if not ev.elite else 1.8)
 				if ev.elite:
 					particles.play("fire", _v3(ev.pos, 0.3), 1.2)
+			"terminal":
+				_update_terminal(ev.key)
+			"genesis_ready":
+				var gb = world.buildings.get(ev.id)
+				if gb != null:
+					particles.play("flash", _v3(gb.center(), 3.4), 4.0)
 			"spit":
 				fx.append({"k": "line", "a": _v3(ev.from, 0.5), "b": _v3(ev.to, 0.4), "c": Color(0.6, 1.0, 0.2), "t": 0.0, "life": 0.25})
 				particles.play("acid", _v3(ev.to, 0.3), clampf(float(ev.r), 0.8, 1.6))
@@ -478,14 +516,14 @@ func _update_buildings(delta: float) -> void:
 					h.glow.visible = b.status == "pesquisando" or fmod(_t, 1.2) < 0.2
 				"turret_tesla":
 					h.glow.visible = b.energy >= float(b.def.shot_cost) * 0.99 or fmod(_t, 0.3) < 0.15 * b.energy / float(b.def.shot_cost)
-				"core":
+				"core", "genesis":
 					h.glow.visible = true
 				_:
 					h.glow.visible = working
 		if h.has("smoke"):
 			h.smoke.emitting = working
 		if h.spin != null and working:
-			h.spin.rotation.y += delta * (6.0 if b.kind == "miner" else 2.5)
+			h.spin.rotation.y += delta * (6.0 if b.kind == "miner" else (1.0 + 6.0 * b.progress if b.kind == "genesis" else 2.5))
 		if h.head != null:
 			h.head.rotation.y = lerp_angle(h.head.rotation.y, -b.aim, minf(delta * 12.0, 1.0))
 		# Damage flicker

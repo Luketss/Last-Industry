@@ -78,3 +78,33 @@ static func _ensure_corridor(w, from: Vector2i, to: Vector2i) -> void:
 			c.y += signi(d.y)
 		if w.terrain_at(c) == Defs.T_ROCK:
 			w.set_terrain(c, Defs.T_GROUND)
+
+
+## Four data terminals on open ground next to ruins, one per quadrant, away from
+## the core and the nests.
+static func place_terminals(w, p_seed: int) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = p_seed + 911
+	var center := Vector2(w.width * 0.5, w.height * 0.5)
+	var n := 1
+	for q in 4:
+		var best := Vector2i(-1, -1)
+		for attempt in 200:
+			var a := (q + rng.randf()) * PI * 0.5
+			var c := Vector2i(center + Vector2.from_angle(a) * rng.randf_range(13.0, minf(center.x, center.y) - 6.0))
+			if not w.in_bounds(c) or w.terrain_at(c) != Defs.T_GROUND:
+				continue
+			var near_rock := false
+			for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+				if w.in_bounds(c + d) and w.terrain_at(c + d) == Defs.T_ROCK:
+					near_rock = true
+			var far_from_nests := true
+			for sp in w.spawn_points:
+				if Vector2(sp).distance_to(Vector2(c)) < 8.0:
+					far_from_nests = false
+			if far_from_nests and (near_rock or attempt > 150):
+				best = c
+				break
+		if best.x >= 0:
+			w.terminals[w.idx(best)] = {"n": n, "read": false}
+			n += 1

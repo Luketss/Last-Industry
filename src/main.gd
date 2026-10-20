@@ -145,6 +145,13 @@ func load_game() -> void:
 		_end_shown = false
 
 
+func choose_ending(id: String) -> void:
+	if world == null:
+		return
+	world.choose_ending(id)
+	_end_shown = false
+
+
 func continue_survival() -> void:
 	if world != null:
 		world.continue_survival()
@@ -256,7 +263,10 @@ func _process(delta: float) -> void:
 		steam.set_presence("Horda %d · %d estruturas" % [world.waves.index, world.buildings.size()])
 	if in_game and world.state != "playing" and not _end_shown:
 		_end_shown = true
-		hud.show_end(world.state)
+		if world.state == "genesis":
+			hud.show_genesis()
+		else:
+			hud.show_end(world.state)
 	if _smoke >= 0:
 		_smoke_step()
 

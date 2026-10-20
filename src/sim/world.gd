@@ -18,6 +18,7 @@ const WaveSystem = preload("res://src/sim/systems/wave_system.gd")
 const Stats = preload("res://src/sim/systems/stats.gd")
 const Objectives = preload("res://src/sim/systems/objectives.gd")
 const ResearchSystem = preload("res://src/sim/systems/research_system.gd")
+const GenesisSystem = preload("res://src/sim/systems/genesis_system.gd")
 const I18n = preload("res://src/ui/i18n.gd")
 
 const SAVE_VERSION := 1
@@ -39,7 +40,7 @@ var next_id := 1
 var tick := 0
 var time := 0.0
 var rng := RandomNumberGenerator.new()
-var state := "playing"      ## playing | won | lost
+var state := "playing"      ## playing | genesis (waiting for the ending choice) | won | lost
 var survival := false
 
 var events: Array = []      ## transient, consumed by view/UI each frame
@@ -64,6 +65,9 @@ var waves: WaveSystem
 var stats: Stats
 var objectives: Objectives
 var research: ResearchSystem
+var genesis: GenesisSystem
+var terminals := {}          ## cell index -> {n, read}: data terminals near the ruins
+var ending := ""             ## restore | destroy | fortress once Genesis is decided
 
 
 func _init(p_data, p_seed: int = 1, opts: Dictionary = {}) -> void:
@@ -89,10 +93,12 @@ func _init(p_data, p_seed: int = 1, opts: Dictionary = {}) -> void:
 	stats = Stats.new()
 	objectives = Objectives.new(data.objectives)
 	research = ResearchSystem.new(data.research)
+	genesis = GenesisSystem.new()
 	if not opts.get("load", false):
 		storage = Items.from_json(opts.get("storage", data.game.get("start_storage", {})))
 		if opts.get("generate", true):
 			MapGenerator.generate(self, p_seed)
+			MapGenerator.place_terminals(self, p_seed)
 		if opts.get("core", true):
 			var c := Vector2i(width / 2 - 1, height / 2 - 1)
 			core_id = place("core", c, 0, true)
@@ -184,6 +190,8 @@ func can_place(type: String, p: Vector2i, rot: int, check_cost: bool = true) -> 
 			var i := idx(c)
 			if grid[i] != 0:
 				return I18n.t("Espaço ocupado")
+			if terminals.has(i):
+				return I18n.t("Terminal de dados no caminho")
 			var t := terrain[i]
 			if t == Defs.T_ROCK:
 				return I18n.t("Terreno bloqueado")
@@ -502,9 +510,13 @@ func step() -> void:
 	production.request(self)
 	combat.request(self)
 	research.request(self)
+	genesis.request(self)
 	power.step(self, dt)
 	production.step(self, dt)
 	research.step(self, dt)
+	genesis.step(self, dt)
+	if state != "playing":
+		return
 	logistics.step(self, dt)
 	pathing.update(self, dt)
 	enemy_sys.step(self, dt)
@@ -536,6 +548,22 @@ func win() -> void:
 		state = "won"
 		events.append({"e": "won"})
 		trigger_lore("victory")
+
+
+## Genesis is charged: the player's choice ends the campaign. "fortress" keeps
+## the factory running (survival continues from the end screen).
+func choose_ending(id: String) -> void:
+	if state != "genesis" or not (id in GenesisSystem.ENDINGS):
+		return
+	ending = id
+	stats.endings[id] = 1
+	state = "won"
+	events.append({"e": "won", "ending": id})
+	trigger_lore("ending:" + id)
+
+
+func read_terminal(c: Vector2i) -> String:
+	return genesis.read_terminal(self, c)
 
 
 func continue_survival() -> void:
@@ -580,7 +608,15 @@ func to_dict() -> Dictionary:
 		"waves": waves.to_dict(), "stats": stats.to_dict(), "objectives": objectives.to_dict(),
 		"research": research.to_dict(),
 		"transmissions": transmissions, "pathing_cd": pathing.cooldown,
+		"terminals": _terminals_list(), "ending": ending,
 	}
+
+
+func _terminals_list() -> Array:
+	var out := []
+	for k in terminals:
+		out.append([k, terminals[k].n, terminals[k].read])
+	return out
 
 
 static func from_dict(p_data, d: Dictionary):
@@ -595,6 +631,9 @@ static func from_dict(p_data, d: Dictionary):
 	w.storage = Items.from_json(d.storage)
 	w.state = str(d.state)
 	w.survival = bool(d.survival)
+	w.ending = str(d.get("ending", ""))
+	for t in d.get("terminals", []):
+		w.terminals[int(t[0])] = {"n": int(t[1]), "read": bool(t[2])}
 	w.rng.state = int(str(d.rng))
 	w.research.load_dict(d.get("research", {}))
 	for bd in d.buildings:

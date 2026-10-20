@@ -33,11 +33,17 @@ energia baixa,low power,energía baja
 sem conexão,not connected,sin conexión
 pesquisando,researching,investigando
 sem pesquisa,no research,sin investigación
+ativando,activating,activando
 Leste,East,Este
 Sul,South,Sur
 Oeste,West,Oeste
 Norte,North,Norte
 Torre Balística sem munição,Ballistic Turret out of ammo,Torre Balística sin munición
+Genesis em ativação: as hordas estão convergindo!,Genesis activating: the hordes are converging!,¡Genesis en activación: las hordas están convergiendo!
+Nenhum terminal aqui,No terminal here,Aquí no hay ningún terminal
+Terminal já decodificado,Terminal already decoded,Terminal ya descifrado
+Fora de alcance: construa algo a até 7 tiles do terminal,Out of reach: build something within 7 tiles of the terminal,Fuera de alcance: construye algo a 7 casillas o menos del terminal
+Terminal decodificado: arquivo recuperado e sucata recolhida,Terminal decoded: file recovered and scrap salvaged,Terminal descifrado: archivo recuperado y chatarra recogida
 Objetivo concluído: %s,Objective complete: %s,Objetivo completado: %s
 Energia insuficiente: %d%% da demanda atendida,Not enough power: %d%% of demand met,Energía insuficiente: %d%% de la demanda atendida
 Depósito esgotado sob uma Mineradora,Deposit depleted under a Miner,Yacimiento agotado bajo una Minadora
@@ -53,6 +59,7 @@ Estrutura desconhecida,Unknown structure,Estructura desconocida
 Requer pesquisa: %s,Requires research: %s,Requiere investigación: %s
 Fora do mapa,Out of the map,Fuera del mapa
 Espaço ocupado,Space occupied,Espacio ocupado
+Terminal de dados no caminho,A data terminal is in the way,Hay un terminal de datos en el camino
 Terreno bloqueado,Blocked terrain,Terreno bloqueado
 Requer depósito de minério,Requires an ore deposit,Requiere un yacimiento de mineral
 Muito perto de um ninho,Too close to a nest,Demasiado cerca de un nido
@@ -161,6 +168,11 @@ Criaturas abatidas: %d
 Estructuras perdidas: %d
 Tiempo de operación: %s
 Placas producidas: %d   ·   Munición producida: %d"
+GENESIS,GENESIS,GENESIS
+A carga está completa. Três protocolos aguardam a sua autorização. A escolha encerra a campanha.,The charge is complete. Three protocols await your authorization. The choice ends the campaign.,La carga está completa. Tres protocolos esperan tu autorización. La elección termina la campaña.
+RESTAURAR — ativar Genesis e deixar que reescreva o mundo,RESTORE — activate Genesis and let it rewrite the world,RESTAURAR — activar Genesis y dejar que reescriba el mundo
+DESTRUIR — sobrecarregar o núcleo e apagar a tecnologia,DESTROY — overload the core and erase the technology,DESTRUIR — sobrecargar el núcleo y borrar la tecnología
+MANTER — selar Genesis e seguir produzindo para sempre,KEEP — seal Genesis and keep producing forever,MANTENER — sellar Genesis y seguir produciendo para siempre
 OPÇÕES,OPTIONS,OPCIONES
 Volume geral,Master volume,Volumen general
 Música,Music,Música
@@ -237,6 +249,18 @@ BLOQUEADO — requiere investigación: %s"
 [color=#ffa040]■ %d fontes[/color]  [color=#50d8ff]■ %d destinos[/color]","
 [color=#ffa040]■ %d sources[/color]  [color=#50d8ff]■ %d destinations[/color]","
 [color=#ffa040]■ %d orígenes[/color]  [color=#50d8ff]■ %d destinos[/color]"
+"[color=#50d8ff]Terminal de dados[/color]
+Já decodificado","[color=#50d8ff]Data terminal[/color]
+Already decoded","[color=#50d8ff]Terminal de datos[/color]
+Ya descifrado"
+"[color=#50d8ff]Terminal de dados[/color]
+Clique para decodificar (arquivo + sucata)","[color=#50d8ff]Data terminal[/color]
+Click to decode (file + scrap)","[color=#50d8ff]Terminal de datos[/color]
+Haz clic para descifrar (archivo + chatarra)"
+"[color=#50d8ff]Terminal de dados[/color]
+[color=#ff6a50]Construa algo a até 7 tiles para decodificar[/color]","[color=#50d8ff]Data terminal[/color]
+[color=#ff6a50]Build something within 7 tiles to decode it[/color]","[color=#50d8ff]Terminal de datos[/color]
+[color=#ff6a50]Construye algo a 7 casillas o menos para descifrarlo[/color]"
 "[color=#ff8060]Ruína: %s[/color]
 Clique para reconstruir (%s)","[color=#ff8060]Ruin: %s[/color]
 Click to rebuild (%s)","[color=#ff8060]Ruina: %s[/color]
@@ -274,6 +298,8 @@ Abastecimento: esteiras adjacentes ou apontadas para a torre,Supply: belts next 
 Carga: %d%%,Charge: %d%%,Carga: %d%%
 Placas: %d  ·  raio %.0f,Plates: %d  ·  radius %.0f,Placas: %d  ·  radio %.0f
 Recebe qualquer item por esteira. Estoque usado na construção.,Takes any item by belt. Its stock pays for construction.,Recibe cualquier objeto por cinta. Su reserva paga las construcciones.
+Carga Genesis: %d%%,Genesis charge: %d%%,Carga de Genesis: %d%%
+"Precisa de energia contínua. Durante a carga, ondas chegam de todos os ninhos.","Needs continuous power. While it charges, waves come from every nest.",Necesita energía continua. Durante la carga llegan oleadas desde todos los nidos.
 [color=#ffc04a]Nenhuma pesquisa selecionada (T)[/color],[color=#ffc04a]No research selected (T)[/color],[color=#ffc04a]Ninguna investigación seleccionada (T)[/color]
 Pesquisando: %s (%d%%),Researching: %s (%d%%),Investigando: %s (%d%%)
 Faltam: ,Remaining: ,Faltan: 
@@ -412,6 +438,14 @@ A Última Indústria,The Last Industry,La Última Industria
 Mantenha 500 estruturas ao mesmo tempo.,Keep 500 structures at the same time.,Mantén 500 estructuras al mismo tiempo.
 Fortaleza Eterna,Eternal Fortress,Fortaleza Eterna
 Sobreviva a 20 hordas.,Survive 20 hordes.,Sobrevive a 20 hordas.
+Semente,Seed,Semilla
+Escolha restaurar o mundo com Genesis.,Choose to restore the world with Genesis.,Elige restaurar el mundo con Genesis.
+Cinzas,Ashes,Cenizas
+Escolha destruir a tecnologia Genesis.,Choose to destroy the Genesis technology.,Elige destruir la tecnología Genesis.
+Fortaleza Sem Fim,Endless Fortress,Fortaleza sin Fin
+Escolha manter a fábrica funcionando para sempre.,Choose to keep the factory running forever.,Elige mantener la fábrica funcionando para siempre.
+Arquivista,Archivist,Archivista
+Decodifique os quatro terminais de dados.,Decode all four data terminals.,Descifra los cuatro terminales de datos.
 Núcleo,Core,Núcleo
 "O coração da instalação. Armazena recursos e fornece energia residual. Se for destruído, tudo acaba.","The heart of the facility. Stores resources and supplies residual power. If it is destroyed, it is all over.","El corazón de la instalación. Almacena recursos y aporta energía residual. Si es destruido, todo termina."
 Esteira,Belt,Cinta
@@ -448,6 +482,8 @@ Torre de Canhão,Cannon Turret,Torre de Cañón
 "Projéteis explosivos com dano em área, ideais contra grupos. Consome Projéteis de Canhão.","Explosive shells with area damage, ideal against groups. Uses Cannon Shells.","Proyectiles explosivos con daño en área, ideales contra grupos. Consume Proyectiles de Cañón."
 Torre Antiaérea,AA Turret,Torre Antiaérea
 Rastreia e abate criaturas voadoras. Não atinge alvos terrestres. Usa pentes de munição.,Tracks and shoots down flying creatures. Cannot hit ground targets. Uses ammo magazines.,Rastrea y derriba criaturas voladoras. No alcanza objetivos terrestres. Usa cargadores de munición.
+Estrutura Genesis,Genesis Structure,Estructura Genesis
+"Ativa o Projeto Genesis. Precisa de energia contínua por 4 minutos enquanto as hordas convergem de todos os ninhos. Ao final, você decide o destino do mundo.","Activates Project Genesis. Needs continuous power for 4 minutes while the hordes converge from every nest. At the end, you decide the fate of the world.","Activa el Proyecto Genesis. Necesita energía continua durante 4 minutos mientras las hordas convergen desde todos los nidos. Al final, tú decides el destino del mundo."
 Rastejante,Crawler,Rastrero
 Criatura básica. Ataca qualquer estrutura próxima de sua rota.,Basic creature. Attacks any structure near its route.,Criatura básica. Ataca cualquier estructura cercana a su ruta.
 Corredor,Runner,Corredor
@@ -507,6 +543,24 @@ Formas aladas foram vistas sobre as ruínas ao norte. Elas não existiam quando 
 GENESIS — ARQUIVO 01,GENESIS — FILE 01,GENESIS — ARCHIVO 01
 Genesis não constrói. Genesis reescreve. Toda matéria orgânica num raio de 300 km foi... recompilada. Nós chamamos isso de restauração. Os sobreviventes chamaram de outra coisa.,Genesis does not build. Genesis rewrites. All organic matter within 300 km was... recompiled. We called it restoration. The survivors called it something else.,Genesis no construye. Genesis reescribe. Toda la materia orgánica en un radio de 300 km fue... recompilada. Nosotros lo llamamos restauración. Los supervivientes lo llamaron de otra forma.
 O núcleo sobreviveu. A instalação está estável. Novas coordenadas foram descriptografadas: há outras fábricas. Algumas ainda estão funcionando.,The core survived. The facility is stable. New coordinates have been decrypted: there are other factories. Some of them are still running.,El núcleo sobrevivió. La instalación está estable. Se han descifrado nuevas coordenadas: hay otras fábricas. Algunas siguen funcionando.
+TERMINAL 7-A,TERMINAL 7-A,TERMINAL 7-A
+Dia 412. A produção de Genesis foi suspensa por ordem do conselho. Metade da equipe quer reativá-la. A outra metade quer derreter o núcleo.,Day 412. Genesis production was suspended by order of the council. Half the team wants to restart it. The other half wants to melt the core down.,Día 412. La producción de Genesis fue suspendida por orden del consejo. La mitad del equipo quiere reactivarla. La otra mitad quiere fundir el núcleo.
+TERMINAL 3-C,TERMINAL 3-C,TERMINAL 3-C
+As criaturas não são invasoras. São o resultado do primeiro teste. Genesis reescreveu a fauna local em três semanas. Elas se lembram disso.,The creatures are not invaders. They are the result of the first test. Genesis rewrote the local fauna in three weeks. They remember it.,Las criaturas no son invasoras. Son el resultado de la primera prueba. Genesis reescribió la fauna local en tres semanas. Ellas lo recuerdan.
+TERMINAL 9-F,TERMINAL 9-F,TERMINAL 9-F
+Se alguém estiver lendo isto: uma Estrutura Genesis completa precisa de energia contínua por alguns minutos. Elas vão sentir. Todas virão ao mesmo tempo.,If anyone is reading this: a complete Genesis Structure needs continuous power for a few minutes. They will sense it. All of them will come at once.,Si alguien está leyendo esto: una Estructura Genesis completa necesita energía continua durante unos minutos. Lo sentirán. Vendrán todas a la vez.
+TERMINAL 1-B — DRA. ALVES,TERMINAL 1-B — DR. ALVES,TERMINAL 1-B — DRA. ALVES
+"Deixei três protocolos no núcleo: RESTAURAR, DESTRUIR, MANTER. Não sei qual é o certo. Talvez nenhum seja. Escolha pelo que você viu lá fora.","I left three protocols in the core: RESTORE, DESTROY, KEEP. I do not know which one is right. Maybe none of them is. Choose by what you have seen out there.","Dejé tres protocolos en el núcleo: RESTAURAR, DESTRUIR, MANTENER. No sé cuál es el correcto. Quizá ninguno lo sea. Elige según lo que hayas visto ahí fuera."
+GENESIS — ATIVAÇÃO,GENESIS — ACTIVATION,GENESIS — ACTIVACIÓN
+Sequência de ativação iniciada. Assinaturas hostis convergindo de todas as direções. Mantenha a energia.,Activation sequence started. Hostile signatures converging from every direction. Keep the power on.,Secuencia de activación iniciada. Firmas hostiles convergiendo desde todas las direcciones. Mantén la energía.
+GENESIS — CARGA COMPLETA,GENESIS — FULLY CHARGED,GENESIS — CARGA COMPLETA
+Três protocolos aguardam a autorização do operador.,Three protocols await the operator's authorization.,Tres protocolos esperan la autorización del operador.
+FINAL: RESTAURAÇÃO,ENDING: RESTORATION,FINAL: RESTAURACIÓN
+"Genesis desperta. Uma onda verde atravessa as ruínas e as criaturas param, uma a uma, como se finalmente pudessem descansar. O mundo que vai crescer daqui não será o antigo. Mas será vivo.","Genesis awakens. A green wave sweeps through the ruins and the creatures stop, one by one, as if they could finally rest. The world that grows from here will not be the old one. But it will be alive.","Genesis despierta. Una ola verde atraviesa las ruinas y las criaturas se detienen, una a una, como si por fin pudieran descansar. El mundo que crecerá desde aquí no será el antiguo. Pero estará vivo."
+FINAL: ESQUECIMENTO,ENDING: OBLIVION,FINAL: OLVIDO
+Você sobrecarrega o núcleo de Genesis. A explosão apaga o último arquivo e o último protocolo. As hordas se dispersam. Ninguém mais vai reescrever o mundo — nem consertá-lo.,You overload the Genesis core. The blast erases the last file and the last protocol. The hordes scatter. No one will ever rewrite the world again — or fix it.,Sobrecargas el núcleo de Genesis. La explosión borra el último archivo y el último protocolo. Las hordas se dispersan. Nadie volverá a reescribir el mundo — ni a repararlo.
+FINAL: A ÚLTIMA INDÚSTRIA,ENDING: THE LAST INDUSTRY,FINAL: LA ÚLTIMA INDUSTRIA
+"Você mantém Genesis selado e as máquinas trabalhando. A instalação se torna uma fortaleza que nunca para. Lá fora, as hordas continuam vindo. Aqui dentro, a produção continua.","You keep Genesis sealed and the machines working. The facility becomes a fortress that never stops. Out there, the hordes keep coming. In here, production goes on.","Mantienes Genesis sellado y las máquinas trabajando. La instalación se convierte en una fortaleza que nunca se detiene. Ahí fuera, las hordas siguen llegando. Aquí dentro, la producción continúa."
 Construa uma Mineradora sobre minério de ferro e ligue-a ao Núcleo com esteiras,Build a Miner on iron ore and connect it to the Core with belts,Construye una Minadora sobre mineral de hierro y conéctala al Núcleo con cintas
 Produza 20 Placas de Ferro em uma Fundição,Produce 20 Iron Plates in a Smelter,Produce 20 Placas de Hierro en una Fundición
 Construa um Gerador e alimente-o com carvão,Build a Generator and feed it coal,Construye un Generador y aliméntalo con carbón
@@ -538,3 +592,5 @@ Torres de munição causam 25% mais dano.,Ammo turrets deal 25% more damage.,Las
 Fortificação,Fortification,Fortificación
 Muros recebem 50% mais integridade (inclusive os já construídos).,Walls get 50% more integrity (including the ones already built).,Los muros reciben un 50% más de integridad (incluidos los ya construidos).
 Decodifica os arquivos selados da instalação. Algo nas ruínas vai notar.,Decodes the facility's sealed archives. Something in the ruins will notice.,Descifra los archivos sellados de la instalación. Algo en las ruinas lo notará.
+Protocolo Genesis,Genesis Protocol,Protocolo Genesis
+"Desbloqueia a Estrutura Genesis, que encerra a campanha.","Unlocks the Genesis Structure, which ends the campaign.","Desbloquea la Estructura Genesis, que termina la campaña."

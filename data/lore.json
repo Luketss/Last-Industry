@@ -15,5 +15,14 @@
 	{"trigger": "research_count:3", "title": "ANÁLISE DE COMPORTAMENTO", "text": "As hordas mudaram. Já não atacam ao acaso: procuram geradores, postes, esteiras. Como se soubessem o que mantém a fábrica viva."},
 	{"trigger": "research:anti_air", "title": "REGISTRO DE CAMPO", "text": "Formas aladas foram vistas sobre as ruínas ao norte. Elas não existiam quando a instalação foi selada."},
 	{"trigger": "research:genesis_1", "title": "GENESIS — ARQUIVO 01", "text": "Genesis não constrói. Genesis reescreve. Toda matéria orgânica num raio de 300 km foi... recompilada. Nós chamamos isso de restauração. Os sobreviventes chamaram de outra coisa."},
-	{"trigger": "victory", "title": "SISTEMA CENTRAL", "text": "O núcleo sobreviveu. A instalação está estável. Novas coordenadas foram descriptografadas: há outras fábricas. Algumas ainda estão funcionando."}
+	{"trigger": "victory", "title": "SISTEMA CENTRAL", "text": "O núcleo sobreviveu. A instalação está estável. Novas coordenadas foram descriptografadas: há outras fábricas. Algumas ainda estão funcionando."},
+	{"trigger": "terminal:1", "title": "TERMINAL 7-A", "text": "Dia 412. A produção de Genesis foi suspensa por ordem do conselho. Metade da equipe quer reativá-la. A outra metade quer derreter o núcleo."},
+	{"trigger": "terminal:2", "title": "TERMINAL 3-C", "text": "As criaturas não são invasoras. São o resultado do primeiro teste. Genesis reescreveu a fauna local em três semanas. Elas se lembram disso."},
+	{"trigger": "terminal:3", "title": "TERMINAL 9-F", "text": "Se alguém estiver lendo isto: uma Estrutura Genesis completa precisa de energia contínua por alguns minutos. Elas vão sentir. Todas virão ao mesmo tempo."},
+	{"trigger": "terminal:4", "title": "TERMINAL 1-B — DRA. ALVES", "text": "Deixei três protocolos no núcleo: RESTAURAR, DESTRUIR, MANTER. Não sei qual é o certo. Talvez nenhum seja. Escolha pelo que você viu lá fora."},
+	{"trigger": "genesis_start", "title": "GENESIS — ATIVAÇÃO", "text": "Sequência de ativação iniciada. Assinaturas hostis convergindo de todas as direções. Mantenha a energia."},
+	{"trigger": "genesis_ready", "title": "GENESIS — CARGA COMPLETA", "text": "Três protocolos aguardam a autorização do operador."},
+	{"trigger": "ending:restore", "title": "FINAL: RESTAURAÇÃO", "text": "Genesis desperta. Uma onda verde atravessa as ruínas e as criaturas param, uma a uma, como se finalmente pudessem descansar. O mundo que vai crescer daqui não será o antigo. Mas será vivo."},
+	{"trigger": "ending:destroy", "title": "FINAL: ESQUECIMENTO", "text": "Você sobrecarrega o núcleo de Genesis. A explosão apaga o último arquivo e o último protocolo. As hordas se dispersam. Ninguém mais vai reescrever o mundo — nem consertá-lo."},
+	{"trigger": "ending:fortress", "title": "FINAL: A ÚLTIMA INDÚSTRIA", "text": "Você mantém Genesis selado e as máquinas trabalhando. A instalação se torna uma fortaleza que nunca para. Lá fora, as hordas continuam vindo. Aqui dentro, a produção continua."}
 ]

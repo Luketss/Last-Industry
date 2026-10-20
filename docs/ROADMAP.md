@@ -52,8 +52,7 @@ verificáveis e testes automatizados.
   esteiras, canhão em área, voador × antiaérea, sabotador, solar, salvamento da pesquisa).
 
 ### Pendências para fases futuras
-Cuspidor (ácido em área), drones de reparo/abastecimento, sensor de horda, névoa de guerra,
-terminais de lore nas ruínas e a estrutura final Genesis com os três finais.
+Drones de reparo/abastecimento, sensor de horda e névoa de guerra.
 
 ### Fase 7 — Otimização, interface e experiência
 - **Desempenho:** campo de fluxo em float64 (o arredondamento em float32 causava reexpansões em
@@ -89,8 +88,7 @@ terminais de lore nas ruínas e a estrutura final Genesis com os três finais.
 - Testes: saída por qualquer tile da frente, forma das esteiras e fim sem destino, geometria das curvas.
 
 ### Pendências gerais
-Suporte a controle / Steam Deck, estrutura final Genesis
-com os três finais, perfil de renderização em GPU dedicada.
+Suporte a controle / Steam Deck, perfil de renderização em GPU dedicada.
 
 ## Como executar
 

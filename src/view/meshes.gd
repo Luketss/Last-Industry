@@ -426,6 +426,21 @@ static func _kit_body(shape: String, type: String, root: Node3D, body: Node3D, h
 			box(spin, Vector3(0.6, 0.04, 0.04), Vector3.ZERO, cyan)
 			h.spin = spin
 			h.h = 1.7
+		"genesis":
+			box(body, Vector3(2.95, 0.3, 2.95), Vector3(0, 0.15, 0), cdark)
+			Kit.place(body, "td/tower-round-crystals", Vector3(0, 0.3, 0), Vector3(2.6, 0, 2.6))
+			for c in [Vector2(-1, -1), Vector2(1, -1), Vector2(-1, 1), Vector2(1, 1)]:
+				Kit.place(body, "factory/piston-round", Vector3(c.x * 1.15, 0.3, c.y * 1.15), Vector3(0.5, 1.2, 0.5))
+			cyl(body, 0.3, 2.2, Vector3(0, 2.0, 0), mdark, 0.45)
+			var gm := mat("genesis", GREEN, {"emit": Color(0.4, 1.0, 0.5), "energy": 3.5})
+			h.glow = add(body, sphere_mesh(0.55), Vector3(0, 3.4, 0), gm)
+			var spin := Node3D.new()
+			spin.position = Vector3(0, 2.6, 0)
+			body.add_child(spin)
+			for a in 3:
+				box(spin, Vector3(1.6, 0.06, 0.08), Vector3.ZERO, gm, Vector3(0, a * PI / 3.0, 0))
+			h.spin = spin
+			h.h = 4.0
 		"solar":
 			Kit.place(body, "city/solar-panel-landscape-group", Vector3.ZERO, Vector3(1.95, 0, 1.95), PI)
 			h.h = 0.8

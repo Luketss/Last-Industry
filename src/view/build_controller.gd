@@ -222,6 +222,11 @@ func _click_select() -> void:
 		if not w.rebuild_ghost(g):
 			main.hud.toast(I18n.t("Recursos insuficientes para reconstruir"))
 		return
+	if w.in_bounds(hover) and w.terminals.has(w.idx(hover)):
+		var why: String = w.read_terminal(hover)
+		if why != "":
+			main.hud.toast(why)
+		return
 	_select([])
 
 

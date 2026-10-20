@@ -81,7 +81,7 @@ func test_steam_offline_fallback() -> void:
 func test_every_achievement_stat_is_known() -> void:
 	var w = empty_world()
 	var known := ["produced", "consumed", "delivered", "built", "kills", "burned", "loaded", "waves",
-		"researched", "tech", "elite_kills", "flawless", "peak_power", "structures"]
+		"researched", "tech", "ending", "terminals", "elite_kills", "flawless", "peak_power", "structures"]
 	for d in data().achievements:
 		check(str(d.stat).split(":")[0] in known, "estatística conhecida: %s" % d.stat)
 		check(str(d.id) == str(d.id).to_upper(), "id no formato da Steam: %s" % d.id)
