@@ -5,6 +5,7 @@ extends Node3D
 const Defs = preload("res://src/sim/defs.gd")
 const Meshes = preload("res://src/view/meshes.gd")
 const GroundShader = preload("res://src/view/ground.gdshader")
+const Logistics = preload("res://src/sim/systems/logistics_system.gd")
 
 var world
 var nodes := {}           ## building id -> visual handles
@@ -31,6 +32,7 @@ var _ghosts_ver := -1
 var _power_ver := -1
 var _ore_ver := -1
 var _debug_ver := -1
+var _belt_ver := -1
 var _t := 0.0
 var _alarm := 0.0
 var camera_focus := Vector3.ZERO
@@ -150,6 +152,7 @@ func bind(p_world) -> void:
 	_power_ver = -1
 	_ore_ver = -1
 	_debug_ver = -1
+	_belt_ver = -1
 	_build_terrain()
 	for b in world.buildings.values():
 		_add_building(b)
@@ -348,6 +351,8 @@ func _process(delta: float) -> void:
 		_rebuild_wires()
 	if world.ore_version != _ore_ver:
 		_rebuild_ore()
+	if world.structures_version != _belt_ver:
+		_update_belt_shapes()
 	_update_buildings(delta)
 	_update_items()
 	_update_enemies()
@@ -373,11 +378,32 @@ func _update_lighting(delta: float) -> void:
 		core_h.omni.light_energy = lerpf(2.2, 3.2, night)
 
 
+## Curves and dead-end caps depend on neighbours, so they are refreshed whenever
+## the layout changes.
+func _update_belt_shapes() -> void:
+	_belt_ver = world.structures_version
+	for b in world.list("belt"):
+		var h = nodes.get(b.id)
+		if h == null or not h.has("belt_mi"):
+			continue
+		var shape: int = Logistics.belt_shape(world, b)
+		if shape != h.shape:
+			h.shape = shape
+			h.belt_mi.mesh = Meshes.belt_mesh(shape)
+		h.endcap.visible = Logistics.belt_dead_end(world, b)
+
+
 func _update_buildings(delta: float) -> void:
 	for id in nodes:
 		var h: Dictionary = nodes[id]
 		var b = world.buildings.get(id)
 		if b == null:
+			continue
+		if b.kind == "belt":
+			var st := 2 if b.status == "saída bloqueada" else (1 if not b.belt_items.is_empty() else 0)
+			if st != h.bstate:
+				h.bstate = st
+				h.belt_mi.set_surface_override_material(1, Meshes.belt_material([0.35, 1.0, 0.0][st], st == 2))
 			continue
 		var lvl: int = b.status_level()
 		if h.light != null and lvl != h.level:
@@ -423,10 +449,14 @@ func _update_items() -> void:
 	var mm := _ensure(items_mm, n)
 	var k := 0
 	for b in belts:
-		var d: Vector2i = Defs.dir_vec(b.rot)
+		var fwd := Vector2(Defs.dir_vec(b.rot))
+		var right := Vector2(Defs.dir_vec(b.rot + 1))
+		var h = nodes.get(b.id)
+		var shape: int = h.shape if h != null and h.has("shape") else 0
 		for it in b.belt_items:
-			var off := float(it[1]) - 0.5
-			var p := Vector3(b.pos.x + 0.5 + d.x * off, 0.17, b.pos.y + 0.5 + d.y * off)
+			var lp: Vector2 = Meshes.belt_point(shape, float(it[1]))
+			var wp := Vector2(b.pos.x + 0.5, b.pos.y + 0.5) + fwd * lp.x + right * lp.y
+			var p := Vector3(wp.x, 0.17, wp.y)
 			mm.set_instance_transform(k, Transform3D(Basis(), p))
 			mm.set_instance_color(k, world.data.item_color(it[0]))
 			k += 1

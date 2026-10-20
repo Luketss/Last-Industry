@@ -49,7 +49,7 @@ func _push_outputs(w) -> void:
 		if b.kind == "splitter":
 			targets = [b.pos + Defs.dir_vec(b.rot - 1), b.pos + Defs.dir_vec(b.rot), b.pos + Defs.dir_vec(b.rot + 1)]
 		else:
-			targets = [b.output_cell()]
+			targets = b.output_cells()
 		var keys := src.keys()
 		var item: String = keys[w.tick % keys.size()]
 		for attempt in targets.size():
@@ -150,7 +150,7 @@ func flow_graph(w) -> Dictionary:
 			if t != null and t.kind != "miner" and not (t.kind == "belt" and t.pos + Defs.dir_vec(t.rot) == b.pos):
 				dst.append(t.id)
 		elif b.kind in ["miner", "crafter", "depot", "splitter"]:
-			var cells: Array = [b.output_cell()]
+			var cells: Array = b.output_cells()
 			if b.kind == "splitter":
 				cells = [b.pos + Defs.dir_vec(b.rot - 1), b.pos + Defs.dir_vec(b.rot), b.pos + Defs.dir_vec(b.rot + 1)]
 			for c in cells:
@@ -190,6 +190,54 @@ func trace(w, id: int, upstream: bool, limit: int = 600) -> Array:
 				if nb != null and nb.kind != "core":
 					queue.append(nxt)
 	return out
+
+
+## Visual/diagnostic shape of a belt: 0 straight, -1 curve fed from its left,
+## +1 curve fed from its right. A belt is a curve when nothing feeds it from behind
+## and exactly one side feeds it (a belt, or a machine whose front faces it).
+static func belt_shape(w, b) -> int:
+	return shape_at(w, b.pos, b.rot)
+
+
+## Shape a belt at `p` facing `rot` has (or would have, for placement previews).
+static func shape_at(w, p: Vector2i, rot: int) -> int:
+	var back: Vector2i = p - Defs.dir_vec(rot)
+	if _feeds(w, back, p):
+		return 0
+	var left: bool = _feeds(w, p + Defs.dir_vec(rot - 1), p)
+	var right: bool = _feeds(w, p + Defs.dir_vec(rot + 1), p)
+	if left and not right:
+		return -1
+	if right and not left:
+		return 1
+	return 0
+
+
+## Whether whatever stands at `from` sends items into the tile `to`.
+static func _feeds(w, from: Vector2i, to: Vector2i) -> bool:
+	var s = w.building_at(from)
+	if s == null:
+		return false
+	if s.kind == "belt":
+		return s.pos + Defs.dir_vec(s.rot) == to
+	if s.kind in ["miner", "crafter", "depot"]:
+		return to in s.output_cells()
+	if s.kind == "splitter":
+		for r in [s.rot - 1, s.rot, s.rot + 1]:
+			if s.pos + Defs.dir_vec(r) == to:
+				return true
+	return false
+
+
+## True when a belt's front tile cannot take its items (nothing there, a miner,
+## or a belt pointing back at it). Shown as a red end marker.
+static func belt_dead_end(w, b) -> bool:
+	var t = w.building_at(b.pos + Defs.dir_vec(b.rot))
+	if t == null or t.kind == "miner":
+		return true
+	if t.kind == "belt":
+		return t.pos + Defs.dir_vec(t.rot) == b.pos
+	return false
 
 
 func _pull(w, dt: float) -> void:

@@ -7,6 +7,7 @@ const Items = preload("res://src/sim/items.gd")
 const Defs = preload("res://src/sim/defs.gd")
 const Settings = preload("res://src/ui/settings.gd")
 const Bindings = preload("res://src/ui/bindings.gd")
+const Logistics = preload("res://src/sim/systems/logistics_system.gd")
 
 var main
 var root: Control
@@ -588,7 +589,7 @@ func _hint_candidates(w) -> Array:
 	var h := []
 	var t: float = w.time
 	if t > 15 and w.list("miner").is_empty():
-		h.append(["miner", "Selecione a Mineradora (2) e posicione-a sobre as pedras alaranjadas (minério de ferro). Depois ligue a saída (seta amarela) ao Núcleo com Esteiras (1)."])
+		h.append(["miner", "Selecione a Mineradora (2) e posicione-a sobre as pedras alaranjadas (minério de ferro). O lado com a faixa amarela é a saída: arraste Esteiras (1) a partir dele até o Núcleo — desenhe em L para fazer curvas."])
 	for b in w.buildings.values():
 		if b.power_net == -1 and float(b.def.get("power", 0)) > 0:
 			h.append(["power_net", "%s está fora da rede elétrica. Construa Postes de Energia (6): a área quadrada mostra o alcance. Postes próximos se conectam sozinhos." % b.def.name])
@@ -943,6 +944,7 @@ func _update_tooltip() -> void:
 		var b = c.hovered_building()
 		if b != null:
 			txt = "[b]%s[/b]  %d/%d\n%s" % [b.def.name, int(b.hp), int(b.max_hp), _status_bb(b)]
+			txt += _flow_hint(w, b)
 			if c.trace_mode:
 				txt += "\n[color=#ffa040]■ %d fontes[/color]  [color=#50d8ff]■ %d destinos[/color]" % [c.trace_up.size(), c.trace_down.size()]
 		else:
@@ -964,6 +966,22 @@ func _update_tooltip() -> void:
 		var mp := root.get_viewport().get_mouse_position()
 		tooltip.position = mp + Vector2(18, 18)
 		tooltip.reset_size()
+
+
+## One-line explanation of where a structure's items go (shown on hover).
+func _flow_hint(w, b) -> String:
+	match b.kind:
+		"belt":
+			var dir: String = Defs.DIR_NAMES[b.rot]
+			var shape: int = Logistics.belt_shape(w, b)
+			var curve := "" if shape == 0 else " · curva"
+			if Logistics.belt_dead_end(w, b):
+				return "\n[color=#ff6a50]→ %s%s · sem destino: os itens param no fim[/color]" % [dir, curve]
+			var t = w.building_at(b.pos + Defs.dir_vec(b.rot))
+			return "\n[color=#8f877c]→ %s%s · entrega em: %s[/color]" % [dir, curve, t.def.name]
+		"miner", "crafter", "depot":
+			return "\n[color=#ffc04a]Saída: lado com a faixa amarela (→ %s)[/color]" % Defs.DIR_NAMES[b.rot]
+	return ""
 
 
 func _status_bb(b) -> String:
@@ -1019,11 +1037,13 @@ func _update_info(w) -> void:
 		lines.append("Consumo: %d kW  ·  prioridade %s" % [int(b.def.power), "DEFESA" if int(b.def.get("priority", 1)) == 0 else "produção"])
 	match b.kind:
 		"crafter":
+			lines.append("Saída: faixa amarela (→ %s) · entrada: esteiras apontadas para qualquer outro lado" % Defs.DIR_NAMES[b.rot])
 			var r: Dictionary = w.data.recipes.get(b.recipe, {})
 			if not r.is_empty():
 				lines.append("Receita: %s → %s  (%.1fs)" % [_cost_text(r.inputs), _cost_text(r.outputs), float(r.time)])
 				lines.append("Progresso: %d%%" % int(b.progress * 100))
 		"miner":
+			lines.append("Saída: lado com a faixa amarela (→ %s). R gira." % Defs.DIR_NAMES[b.rot])
 			var n := 0
 			for i in b.ore_cells:
 				n += w.ore[i]
@@ -1052,7 +1072,9 @@ func _update_info(w) -> void:
 		"solar":
 			lines.append("Rendimento atual: %d kW (luz %d%%)" % [int(float(b.def.power_out) * w.daylight()), int(w.daylight() * 100)])
 		"belt":
-			lines.append("Itens: %d" % b.belt_items.size())
+			lines.append("Itens: %d · direção: %s" % [b.belt_items.size(), Defs.DIR_NAMES[b.rot]])
+			if Logistics.belt_dead_end(w, b):
+				lines.append("[color=#ff6a50]Sem destino: aponte o fim da esteira para uma máquina, outra esteira ou o Núcleo.[/color]")
 	if not b.inv.is_empty() and b.kind not in ["turret_gun", "generator", "repair"]:
 		lines.append("Entrada: " + _cost_text(b.inv))
 	if not b.out.is_empty():
@@ -1207,7 +1229,7 @@ const HELP_TEXT := """[b]Objetivo:[/b] manter o Núcleo vivo. Se ele cair, a par
 [b]Pesquisa[/b]: construa um Laboratório e leve Pacotes de Pesquisa (Montadora: placa + componente) por esteira. T abre a árvore. Pacotes Militares (munição + componente) liberam a linha de defesa avançada.
 [b]Jogo[/b]: Espaço pausa · ponto/vírgula (ou +/− do teclado numérico) mudam a velocidade · N chama a próxima horda agora · Tab estatísticas · F3 depuração (rotas, redes, alvos) · F5 salvar · F9 carregar · Esc menu.
 
-[b]Fluxo de itens[/b]: mineradoras e máquinas enviam produtos pela saída (seta amarela). Esteiras levam o item para o que estiver à frente. Máquinas recebem de esteiras apontadas para elas. Torres, geradores e estações de reparo também [i]puxam[/i] o que precisam de qualquer esteira encostada nelas — passe uma linha de munição ao lado das torres. O Núcleo aceita tudo e seu estoque paga as construções.
+[b]Fluxo de itens[/b]: mineradoras e máquinas enviam produtos pelo [color=#ffc04a]lado com a faixa amarela[/color] (setas no chão) — qualquer esteira encostada nesse lado recebe os itens. As setas animadas das esteiras mostram o sentido; desenhe em L para fazer curvas (a esquina vira curva sozinha) e use R para girar. Um [color=#ff6a50]fim vermelho[/color] indica esteira sem destino; setas vermelhas indicam esteira travada. Esteiras levam o item para o que estiver à frente. Máquinas recebem de esteiras apontadas para elas. Torres, geradores e estações de reparo também [i]puxam[/i] o que precisam de qualquer esteira encostada nelas — passe uma linha de munição ao lado das torres. O Núcleo aceita tudo e seu estoque paga as construções.
 [b]Energia[/b]: o Núcleo e os Postes distribuem energia na área ao redor; postes próximos se conectam sozinhos. Grupos separados formam redes independentes. Se faltar energia, [color=#ff8060]defesas[/color] são atendidas antes da [color=#ffc04a]produção[/color]. Baterias guardam o excedente.
 [b]Inimigos[/b]: Rastejantes atacam o que estiver perto da rota · Corredores procuram brechas · Aríetes atravessam muros e causam dano em área · Sabotadores caçam geradores, postes e esteiras · Planadores voam sobre muros (só Antiaérea e Torre Elétrica os atingem). As hordas são anunciadas com direção e composição; patrulhas podem surgir sem aviso.
 [b]Luzes de estado[/b]: [color=#73f27f]verde[/color] funcionando · [color=#ffc04a]amarelo[/color] esperando (insumo, saída cheia) · [color=#ff5a3c]vermelho[/color] falha (sem energia, sem munição)."""

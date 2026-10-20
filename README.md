@@ -13,6 +13,7 @@ precisa ser fabricada, cada torre consome energia, cada reparo custa materiais.
 ![Base em funcionamento](docs/img/base.png)
 ![Árvore de pesquisa](docs/img/pesquisa.png)
 ![Seleção, planta, rastreamento de fluxo, dica e minimapa](docs/img/ferramentas.png)
+![Esteiras com curvas e saídas das máquinas](docs/img/esteiras.png)
 
 **Plataformas:** Windows e Linux (x86_64) · **Engine:** Godot 4.3 (GDScript) · **Modo:** solo, offline · **Destino:** Steam
 
@@ -82,8 +83,10 @@ rode pelo editor:
 
 ### Primeiros passos
 
-1. Coloque uma **Mineradora** sobre o minério de ferro (pedras alaranjadas) e leve o minério por
-   esteira até uma **Fundição**, depois até o Núcleo.
+1. Coloque uma **Mineradora** sobre o minério de ferro (pedras alaranjadas). O lado com a **faixa
+   amarela** é a saída. Arraste esteiras a partir dele até uma **Fundição** e depois até o Núcleo.
+   Desenhe em L para fazer curvas: a esquina vira curva sozinha. As setas animadas mostram o sentido;
+   um fim vermelho indica esteira sem destino.
 2. Minere **carvão**, passe a esteira encostada em um **Gerador** (ele puxa o combustível sozinho).
 3. Alimente uma **Montadora** com placas e carvão para produzir **munição**.
 4. Passe a linha de munição **ao lado** das Torres Balísticas: elas puxam os pentes da esteira.

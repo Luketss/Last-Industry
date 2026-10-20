@@ -107,3 +107,34 @@ func test_blocked_belt_resumes_when_freed() -> void:
 	w.place("belt", Vector2i(6, 5), 0)
 	run_seconds(w, 0.5)
 	eq(w.buildings[a].belt_items.size(), 0, "esteira volta a andar após liberar o destino")
+
+
+func test_machine_outputs_through_whole_front_side() -> void:
+	var w = empty_world()
+	# Smelter facing east occupies (11..12, 15..16); front tiles are (13,15) and (13,16).
+	var s: int = w.place("smelter", Vector2i(11, 15), 0)
+	w.place("belt", Vector2i(13, 16), 0)        # only the lower front tile has a belt
+	w.place("belt", Vector2i(14, 16), 0)
+	w.buildings[s].out = {"iron_plate": 3}
+	run_seconds(w, 3.0)
+	check(w.buildings[s].out.is_empty(), "saída esvaziada pela outra posição da frente")
+	eq(w.stats.delivered.get("iron_plate", 0), 3, "placas chegaram ao núcleo pela esteira de baixo")
+
+
+func test_belt_shapes_and_dead_ends() -> void:
+	var w = empty_world()
+	var LS = load("res://src/sim/systems/logistics_system.gd")
+	# East-running belt that turns south at (8,5).
+	w.place("belt", Vector2i(6, 5), 0)
+	w.place("belt", Vector2i(7, 5), 0)
+	var corner: int = w.place("belt", Vector2i(8, 5), 1)
+	var after: int = w.place("belt", Vector2i(8, 6), 1)
+	var c = w.buildings[corner]
+	# Facing south, the feeder from the west is on the belt's right-hand side.
+	eq(LS.belt_shape(w, c), 1, "esquina vira curva")
+	eq(LS.belt_shape(w, w.buildings[after]), 0, "reta depois da curva")
+	check(LS.belt_dead_end(w, w.buildings[after]), "fim de linha sem destino")
+	check(not LS.belt_dead_end(w, c), "curva conectada")
+	w.buildings[w.building_at(Vector2i(6, 5)).id].belt_items = [["coal", 0.9]]
+	run_seconds(w, 3.0)
+	eq(w.buildings[after].belt_items.size(), 1, "item percorre a curva")

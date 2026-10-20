@@ -17,6 +17,9 @@ const RED := Color(1.0, 0.16, 0.10)
 
 const STATUS_COLORS := [Color(0.35, 1.0, 0.4), Color(1.0, 0.72, 0.15), Color(1.0, 0.15, 0.1)]
 
+const BeltShader = preload("res://src/view/belt.gdshader")
+const BELT_HW := 0.4        ## half width of the moving surface
+
 static var _mats := {}
 static var _meshes := {}
 
@@ -142,12 +145,16 @@ static func build(type: String, def: Dictionary, rot: int) -> Dictionary:
 			h["omni"] = light
 			h.h = 3.4
 		"belt":
-			box(body, Vector3(0.98, 0.08, 0.98), Vector3(0, 0.04, 0), mdark)
-			box(body, Vector3(0.98, 0.14, 0.08), Vector3(0, 0.07, 0.45), metal)
-			box(body, Vector3(0.98, 0.14, 0.08), Vector3(0, 0.07, -0.45), metal)
-			var chev := mat("chevron", HAZARD * 0.7)
-			box(body, Vector3(0.32, 0.02, 0.07), Vector3(0.05, 0.09, -0.11), chev, Vector3(0, deg_to_rad(40), 0))
-			box(body, Vector3(0.32, 0.02, 0.07), Vector3(0.05, 0.09, 0.11), chev, Vector3(0, deg_to_rad(-40), 0))
+			var mi := MeshInstance3D.new()
+			mi.mesh = belt_mesh(0)
+			body.add_child(mi)
+			h["belt_mi"] = mi
+			h["shape"] = 0
+			h["bstate"] = -1
+			# Red end cap shown when the belt leads nowhere.
+			var cap := box(body, Vector3(0.07, 0.2, 0.86), Vector3(0.46, 0.12, 0), mat("deadend", RED, {"emit": RED, "energy": 2.0}))
+			cap.visible = false
+			h["endcap"] = cap
 			h.h = 0.3
 		"miner":
 			box(body, Vector3(1.9, 0.45, 1.9), Vector3(0, 0.225, 0), rust)
@@ -298,17 +305,17 @@ static func build(type: String, def: Dictionary, rot: int) -> Dictionary:
 		_:
 			box(body, Vector3(w * 0.9, 0.6, d * 0.9), Vector3(0, 0.3, 0), metal)
 	if def.get("kind", type) in ["miner", "crafter", "depot"]:
-		# Output marker on the exact tile items leave from.
-		var Bld = load("res://src/sim/building.gd")
-		var oc: Vector2i = Bld.output_cell_for(Vector2i.ZERO, Vector2i(int(fp.x), int(fp.y)), rot)
-		var dir: Vector2i = [Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0), Vector2i(0, -1)][rot]
-		var arrow := Node3D.new()
-		arrow.position = Vector3(oc.x + 0.5 - dir.x * 0.45, 0.02, oc.y + 0.5 - dir.y * 0.45)
-		arrow.rotation.y = -rot * PI * 0.5
-		root.add_child(arrow)
-		var am := mat("outarrow", HAZARD, {"emit": HAZARD, "energy": 1.2})
-		box(arrow, Vector3(0.28, 0.03, 0.07), Vector3(0.0, 0, -0.08), am, Vector3(0, deg_to_rad(35), 0))
-		box(arrow, Vector3(0.28, 0.03, 0.07), Vector3(0.0, 0, 0.08), am, Vector3(0, deg_to_rad(-35), 0))
+		# Output side: a glowing yellow strip along the whole front face plus an arrow
+		# on the ground in front of every front tile (items may leave through any).
+		var am := mat("outarrow", HAZARD, {"emit": HAZARD, "energy": 2.2})
+		box(body, Vector3(0.08, 0.16, d * 0.92), Vector3(w * 0.5 + 0.02, 0.3, 0), am)
+		box(body, Vector3(0.05, 0.05, d * 0.92), Vector3(w * 0.5 + 0.03, 0.04, 0), am)
+		for i in int(d):
+			var arrow := Node3D.new()
+			arrow.position = Vector3(w * 0.5 + 0.28, 0.02, -d * 0.5 + 0.5 + i)
+			body.add_child(arrow)
+			box(arrow, Vector3(0.26, 0.025, 0.07), Vector3(0.0, 0, -0.07), am, Vector3(0, deg_to_rad(38), 0))
+			box(arrow, Vector3(0.26, 0.025, 0.07), Vector3(0.0, 0, 0.07), am, Vector3(0, deg_to_rad(-38), 0))
 	if def.get("kind", type) not in ["belt", "wall", "pole"]:
 		# Status lamp on a short post at the footprint corner.
 		cyl(root, 0.025, 0.7, Vector3(0.14, 0.35, 0.14), mdark, -1.0, 5)
@@ -317,6 +324,101 @@ static func build(type: String, def: Dictionary, rot: int) -> Dictionary:
 		h.light = null
 	_shadows(root)
 	return h
+
+
+## Belt centre line in local space (exit towards +X, tile spans -0.5..0.5).
+## shape 0 straight, -1 enters from the left (-Z), +1 enters from the right (+Z).
+static func belt_point(shape: int, t: float) -> Vector2:
+	if shape == 0:
+		return Vector2(-0.5 + t, 0.0)
+	var c := Vector2(0.5, 0.5 * shape)
+	var a := lerpf(PI, PI * (1.0 + 0.5 * shape), t)
+	return c + Vector2(cos(a), sin(a)) * 0.5
+
+
+static func _belt_frame(shape: int, t: float) -> Array:
+	var p := belt_point(shape, t)
+	var q := belt_point(shape, clampf(t + 0.01, 0.0, 1.0))
+	var tangent := (q - p).normalized() if t < 0.99 else (p - belt_point(shape, t - 0.01)).normalized()
+	var normal := Vector2(-tangent.y, tangent.x)   # points to the belt's right (+Z for straight)
+	return [p, normal]
+
+
+## Procedural belt: base plate, moving surface (belt shader) and side rails,
+## built along the straight or curved centre line. Cached per shape.
+static func belt_mesh(shape: int) -> Mesh:
+	return _mesh("belt%d" % shape, func():
+		var segs := 1 if shape == 0 else 10
+		var am := ArrayMesh.new()
+		var layers := [
+			[0.49, 0.035, mat("beltbase", METAL_DARK, {"metal": 0.5, "rough": 0.6})],
+			[BELT_HW, 0.085, belt_material(1.0, false)],
+		]
+		for layer in layers:
+			var st := SurfaceTool.new()
+			st.begin(Mesh.PRIMITIVE_TRIANGLES)
+			st.set_normal(Vector3.UP)
+			for i in segs:
+				var t0 := float(i) / segs
+				var t1 := float(i + 1) / segs
+				var f0 := _belt_frame(shape, t0)
+				var f1 := _belt_frame(shape, t1)
+				var hw: float = layer[0]
+				var y: float = layer[1]
+				var a0: Vector2 = f0[0] - f0[1] * hw
+				var b0: Vector2 = f0[0] + f0[1] * hw
+				var a1: Vector2 = f1[0] - f1[1] * hw
+				var b1: Vector2 = f1[0] + f1[1] * hw
+				# Clockwise seen from above (Godot's front-face winding).
+				var verts := [[a0, 0.0, t0], [b1, 1.0, t1], [b0, 1.0, t0], [a0, 0.0, t0], [a1, 0.0, t1], [b1, 1.0, t1]]
+				for v in verts:
+					st.set_uv(Vector2(v[1], v[2]))
+					st.add_vertex(Vector3(v[0].x, y, v[0].y))
+			st.set_material(layer[2])
+			st.commit(am)
+		# Rails: a short wall on each side.
+		var rt := SurfaceTool.new()
+		rt.begin(Mesh.PRIMITIVE_TRIANGLES)
+		for side in [-1.0, 1.0]:
+			for i in segs:
+				var t0 := float(i) / segs
+				var t1 := float(i + 1) / segs
+				var f0 := _belt_frame(shape, t0)
+				var f1 := _belt_frame(shape, t1)
+				for off in [0.43, 0.48]:
+					var p0: Vector2 = f0[0] + f0[1] * off * side
+					var p1: Vector2 = f1[0] + f1[1] * off * side
+					var n := Vector3(f0[1].x * side, 0, f0[1].y * side) * (1.0 if off > 0.45 else -1.0)
+					rt.set_normal(n)
+					var quad := [Vector3(p0.x, 0.0, p0.y), Vector3(p1.x, 0.0, p1.y), Vector3(p1.x, 0.15, p1.y),
+						Vector3(p0.x, 0.0, p0.y), Vector3(p1.x, 0.15, p1.y), Vector3(p0.x, 0.15, p0.y)]
+					for v in quad:
+						rt.add_vertex(v)
+				var q0: Vector2 = f0[0] + f0[1] * 0.43 * side
+				var q1: Vector2 = f1[0] + f1[1] * 0.43 * side
+				var r0: Vector2 = f0[0] + f0[1] * 0.48 * side
+				var r1: Vector2 = f1[0] + f1[1] * 0.48 * side
+				rt.set_normal(Vector3.UP)
+				for v in ([q0, r1, r0, q0, q1, r1] if side > 0 else [q0, r0, r1, q0, r1, q1]):
+					rt.add_vertex(Vector3(v.x, 0.15, v.y))
+		var rail := mat("beltrail", METAL, {"metal": 0.6, "rough": 0.5})
+		rail.cull_mode = BaseMaterial3D.CULL_DISABLED
+		rt.set_material(rail)
+		rt.commit(am)
+		return am)
+
+
+## Belt surface material: moving, idle (slow) or blocked (stopped, red tint).
+static func belt_material(speed: float, blocked: bool) -> ShaderMaterial:
+	var key := "beltmat_%s_%s" % [speed, blocked]
+	if not _mats.has(key):
+		var m := ShaderMaterial.new()
+		m.shader = BeltShader
+		m.set_shader_parameter("speed", speed)
+		if blocked:
+			m.set_shader_parameter("arrow_color", Color(1.0, 0.25, 0.15))
+		_mats[key] = m
+	return _mats[key]
 
 
 static func _shadows(n: Node) -> void:
