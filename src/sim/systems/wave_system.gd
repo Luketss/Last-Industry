@@ -57,6 +57,7 @@ func wave_def(n: int) -> Dictionary:
 		{"type": "brute", "count": int(float(s.get("base_brute", 3)) * g)},
 		{"type": "glider", "count": int(float(s.get("base_glider", 8)) * g)},
 		{"type": "saboteur", "count": int(float(s.get("base_saboteur", 5)) * g), "spawn": "other"},
+		{"type": "spitter", "count": int(float(s.get("base_spitter", 6)) * g)},
 		{"type": "brute", "count": 1, "elite": true, "hp_mult": 4.0 + k, "size_mult": 1.6, "damage_mult": 2.0, "spawn": "other"},
 	]}
 

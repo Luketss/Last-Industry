@@ -103,15 +103,20 @@ func _attack(w, e, tb) -> void:
 	if tb.kind == "wall":
 		dmg *= float(e.def.get("wall_mult", 1.0))
 	var splash := float(e.def.get("splash", 0.0))
-	w.events.append({"e": "bite", "pos": e.pos, "splash": splash > 0.0})
+	if e.def.get("ranged", false):
+		# Acid arcs over walls onto the target; the splash lands around it.
+		w.events.append({"e": "spit", "from": e.pos, "to": tb.center(), "r": splash})
+	else:
+		w.events.append({"e": "bite", "pos": e.pos, "splash": splash > 0.0})
 	if splash > 0.0:
 		var hit := {}
-		var c := Vector2i(floori(e.pos.x), floori(e.pos.y))
+		var at: Vector2 = tb.center() if e.def.get("ranged", false) else e.pos
+		var c := Vector2i(floori(at.x), floori(at.y))
 		var r := int(ceil(splash)) + 1
 		for y in range(-r, r + 1):
 			for x in range(-r, r + 1):
 				var b = w.building_at(c + Vector2i(x, y))
-				if b != null and b != tb and not hit.has(b.id) and b.dist_to(e.pos) <= splash:
+				if b != null and b != tb and not hit.has(b.id) and b.dist_to(at) <= splash:
 					hit[b.id] = b
 		for b in hit.values():
 			w.damage_building(b, dmg * 0.5)

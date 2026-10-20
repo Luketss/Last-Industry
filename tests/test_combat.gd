@@ -78,3 +78,23 @@ func test_repair_station_heals_with_plates() -> void:
 	run_seconds(w, 4.0)
 	check(w.buildings[wall].hp > 150.0, "muro reparado: %.0f" % w.buildings[wall].hp)
 	check(w.stats.consumed.get("iron_plate", 0) >= 1, "placas consumidas")
+
+
+func test_spitter_attacks_over_walls_from_range() -> void:
+	var w = empty_world()
+	# A wall line between the spitter and a turret: it must hit the turret from afar.
+	for y in range(12, 20):
+		w.place("wall", Vector2i(8, y), 0)
+	var t: int = w.place("turret_gun", Vector2i(10, 15), 0)
+	var e: int = w.spawn_enemy("spitter", Vector2(6.5, 16.0))
+	var hp0: float = w.buildings[t].hp
+	var spits := 0
+	for i in int(6.0 / Defs.DT):
+		w.step()
+		for ev in w.events:
+			if ev.e == "spit":
+				spits += 1
+		w.events = []
+	check(spits > 0, "cuspiu ácido")
+	check(w.buildings[t].hp < hp0, "atingiu a torre atrás do muro")
+	check(w.enemies[e].pos.x < 8.0, "ficou do lado de fora do muro")

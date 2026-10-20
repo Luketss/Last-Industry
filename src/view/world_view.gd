@@ -360,6 +360,9 @@ func on_events(events: Array) -> void:
 				particles.play("gore", _v3(ev.pos, 0.3), 1.0 if not ev.elite else 1.8)
 				if ev.elite:
 					particles.play("fire", _v3(ev.pos, 0.3), 1.2)
+			"spit":
+				fx.append({"k": "line", "a": _v3(ev.from, 0.5), "b": _v3(ev.to, 0.4), "c": Color(0.6, 1.0, 0.2), "t": 0.0, "life": 0.25})
+				particles.play("acid", _v3(ev.to, 0.3), clampf(float(ev.r), 0.8, 1.6))
 			"bite":
 				if ev.splash:
 					_burst(ev.pos, Color(0.8, 0.6, 0.3), 10, 1.2, 0.25)

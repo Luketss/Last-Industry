@@ -139,6 +139,8 @@ func on_events(events: Array) -> void:
 				play("transmission")
 			"bite":
 				play("bite", ev.pos)
+			"spit":
+				play("bite", ev.to, 2.0)
 			"enemy_died":
 				play("die", ev.pos, 3.0 if ev.elite else 0.0)
 			"alert":

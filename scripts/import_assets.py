@@ -74,7 +74,7 @@ MODELS = {
 # fill 218, highlight 255). Each style maps those tones to the game's palette:
 # name -> (source, {tone: RGBA}).
 # enemy type -> monster number in the 50+ Monsters Pack (static OBJ + palette).
-ENEMIES = {"crawler": 53, "runner": 42, "brute": 43, "saboteur": 31, "glider": 14}
+ENEMIES = {"crawler": 53, "runner": 42, "brute": 43, "saboteur": 31, "glider": 14, "spitter": 12}
 
 # item -> (pack, file, darken): painted item icons shown in the HUD.
 ITEM_ICONS = {

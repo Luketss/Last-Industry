@@ -22,6 +22,8 @@ func _ready() -> void:
 		"ramp": [Color(0.25, 0.22, 0.2, 0.0), Color(0.22, 0.2, 0.18, 0.7), Color(0.3, 0.28, 0.26, 0.0)]})
 	_pool("gore", 12, 0.45, _smoke_mat(), {"speed": [1.0, 2.5], "scale": [0.15, 0.3], "spread": 80.0, "gravity": -7.0,
 		"ramp": [Color(0.6, 0.12, 0.06, 1.0), Color(0.3, 0.05, 0.03, 0.0)]})
+	_pool("acid", 14, 0.8, _smoke_mat(), {"speed": [0.8, 2.0], "scale": [0.25, 0.55], "spread": 75.0, "gravity": -5.0,
+		"ramp": [Color(0.7, 1.0, 0.2, 1.0), Color(0.35, 0.6, 0.1, 0.7), Color(0.2, 0.3, 0.05, 0.0)]})
 	_pool("dust", 10, 0.6, _smoke_mat(), {"speed": [0.6, 1.4], "scale": [0.3, 0.6], "spread": 90.0, "gravity": -1.0,
 		"ramp": [Color(0.5, 0.42, 0.32, 0.6), Color(0.45, 0.4, 0.34, 0.0)]})
 
