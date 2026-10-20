@@ -4,7 +4,7 @@ extends RefCounted
 const PATH := "user://settings.cfg"
 static var path := PATH     ## overridable by tests
 const DEFAULTS := {
-	"volume": 0.8, "music_volume": 0.6, "sfx_volume": 0.9, "fullscreen": false, "ui_scale": 1.0, "hints": true,
+	"language": "", "volume": 0.8, "music_volume": 0.6, "sfx_volume": 0.9, "fullscreen": false, "ui_scale": 1.0, "hints": true,
 	"edge_pan": false, "camera_speed": 1.0, "minimap": true, "hints_seen": [], "bindings": {},
 }
 

@@ -5,6 +5,8 @@ extends Node
 ## no-op and the game runs fully offline. Install GodotSteam into addons/godotsteam
 ## and set "steam/app_id" in Project Settings (see docs/STEAM.md).
 
+const I18n = preload("res://src/ui/i18n.gd")
+
 var available := false
 var status := "offline"
 var _steam = null

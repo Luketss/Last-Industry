@@ -8,3 +8,4 @@ export_presets.local.cfg
 .DS_Store
 Thumbs.db
 /.asset_cache/
+/locale/*.translation

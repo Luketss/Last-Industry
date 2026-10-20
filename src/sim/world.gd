@@ -18,6 +18,7 @@ const WaveSystem = preload("res://src/sim/systems/wave_system.gd")
 const Stats = preload("res://src/sim/systems/stats.gd")
 const Objectives = preload("res://src/sim/systems/objectives.gd")
 const ResearchSystem = preload("res://src/sim/systems/research_system.gd")
+const I18n = preload("res://src/ui/i18n.gd")
 
 const SAVE_VERSION := 1
 
@@ -169,33 +170,33 @@ func can_afford(cost: Dictionary) -> bool:
 func can_place(type: String, p: Vector2i, rot: int, check_cost: bool = true) -> String:
 	var def = data.buildings.get(type)
 	if def == null:
-		return "Estrutura desconhecida"
+		return I18n.t("Estrutura desconhecida")
 	if not is_unlocked(type):
 		var tech = research.techs.get(research.unlocked_by.get(type, ""))
-		return "Requer pesquisa: %s" % (tech.name if tech != null else "?")
+		return I18n.t("Requer pesquisa: %s") % (tech.name if tech != null else "?")
 	var sz := Building.footprint(def, rot)
 	var on_ore := false
 	for y in sz.y:
 		for x in sz.x:
 			var c := p + Vector2i(x, y)
 			if not in_bounds(c):
-				return "Fora do mapa"
+				return I18n.t("Fora do mapa")
 			var i := idx(c)
 			if grid[i] != 0:
-				return "Espaço ocupado"
+				return I18n.t("Espaço ocupado")
 			var t := terrain[i]
 			if t == Defs.T_ROCK:
-				return "Terreno bloqueado"
+				return I18n.t("Terreno bloqueado")
 			if Defs.ORE_ITEM.has(t) and ore[i] > 0:
 				on_ore = true
 	if def.get("kind", "") == "miner" and not on_ore:
-		return "Requer depósito de minério"
+		return I18n.t("Requer depósito de minério")
 	var center := Vector2(p) + Vector2(sz) * 0.5
 	for sp in spawn_points:
 		if (Vector2(sp) + Vector2(0.5, 0.5)).distance_to(center) < 5.0:
-			return "Muito perto de um ninho"
+			return I18n.t("Muito perto de um ninho")
 	if check_cost and not can_afford(def.get("cost", {})):
-		return "Recursos insuficientes"
+		return I18n.t("Recursos insuficientes")
 	return ""
 
 
@@ -281,9 +282,9 @@ func damage_building(b, amount: float) -> void:
 	b.hp -= amount
 	b.last_damaged = time
 	if b.kind == "core":
-		add_alert("core_hit", "O NÚCLEO ESTÁ SOB ATAQUE!", "danger", b.center(), 6.0)
+		add_alert("core_hit", I18n.t("O NÚCLEO ESTÁ SOB ATAQUE!"), "danger", b.center(), 6.0)
 	else:
-		add_alert("attack", "%s sob ataque" % b.def.name, "warn", b.center(), 6.0)
+		add_alert("attack", I18n.t("%s sob ataque") % b.def.name, "warn", b.center(), 6.0)
 	if b.hp <= 0.0:
 		destroy(b)
 
@@ -299,7 +300,7 @@ func destroy(b) -> void:
 		return
 	ghosts[idx(b.pos)] = {"type": b.type, "rot": b.rot, "recipe": b.recipe, "x": b.pos.x, "y": b.pos.y, "filter": b.filter.duplicate()}
 	ghosts_version += 1
-	add_alert("destroyed", "%s destruída! (G para reconstruir)" % b.def.name, "danger", b.center(), 3.0)
+	add_alert("destroyed", I18n.t("%s destruída! (G para reconstruir)") % b.def.name, "danger", b.center(), 3.0)
 
 
 func _clear_ghosts_overlapping(b) -> void:

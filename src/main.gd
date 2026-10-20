@@ -15,6 +15,7 @@ const Settings = preload("res://src/ui/settings.gd")
 const Bindings = preload("res://src/ui/bindings.gd")
 const Achievements = preload("res://src/platform/achievements.gd")
 const SteamService = preload("res://src/platform/steam_service.gd")
+const I18n = preload("res://src/ui/i18n.gd")
 
 const MAX_STEPS_PER_FRAME := 12
 const SPEEDS := [1.0, 2.0, 3.0]
@@ -53,6 +54,8 @@ func _ready() -> void:
 	audio = GameAudio.new(self)
 	add_child(audio)
 	Settings.load_all()
+	I18n.apply(str(Settings.get_value("language")))
+	data.localize()
 	Bindings.reload()
 	hud = Hud.new(self)
 	add_child(hud)
@@ -78,6 +81,23 @@ func _bind(w) -> void:
 	_end_shown = false
 
 
+## Language changed in the options: re-translate the data and rebuild the HUD
+## (its texts are translated when the controls are created).
+func relocalize() -> void:
+	I18n.apply(str(Settings.get_value("language")))
+	data.localize()
+	hud.queue_free()
+	hud = Hud.new(self)
+	add_child(hud)
+	hud.bind_world(world)
+	if in_game:
+		hud.show_game()
+		hud.show_pause(menu_paused)
+	else:
+		hud.show_main_menu(SaveSystem.has_save())
+	hud.toggle_options()
+
+
 func to_main_menu() -> void:
 	in_game = false
 	paused = false
@@ -91,7 +111,7 @@ func to_main_menu() -> void:
 func start_new_game() -> void:
 	_bind(World.new(data, randi() % 1000000 + 1))
 	_enter_game()
-	hud.toast("Instalação reativada. Construa uma Mineradora sobre o minério de ferro.")
+	hud.toast(I18n.t("Instalação reativada. Construa uma Mineradora sobre o minério de ferro."))
 
 
 func _enter_game() -> void:
@@ -108,19 +128,19 @@ func save_game() -> void:
 	if world == null or not in_game:
 		return
 	if SaveSystem.save(world):
-		hud.toast("Jogo salvo")
+		hud.toast(I18n.t("Jogo salvo"))
 	else:
-		hud.toast("Falha ao salvar")
+		hud.toast(I18n.t("Falha ao salvar"))
 
 
 func load_game() -> void:
 	var w = SaveSystem.load_world(data)
 	if w == null:
-		hud.toast("Nenhum jogo salvo compatível")
+		hud.toast(I18n.t("Nenhum jogo salvo compatível"))
 		return
 	_bind(w)
 	_enter_game()
-	hud.toast("Jogo carregado")
+	hud.toast(I18n.t("Jogo carregado"))
 	if w.state != "playing":
 		_end_shown = false
 
@@ -130,7 +150,7 @@ func continue_survival() -> void:
 		world.continue_survival()
 		_end_shown = false
 		hud.end_panel.visible = false
-		hud.toast("Modo Sobrevivência: as hordas ficarão cada vez maiores.")
+		hud.toast(I18n.t("Modo Sobrevivência: as hordas ficarão cada vez maiores."))
 
 
 func quit_game() -> void:

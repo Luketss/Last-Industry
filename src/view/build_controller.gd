@@ -12,6 +12,7 @@ const Blueprint = preload("res://src/sim/blueprint.gd")
 const Meshes = preload("res://src/view/meshes.gd")
 const Bindings = preload("res://src/ui/bindings.gd")
 const Logistics = preload("res://src/sim/systems/logistics_system.gd")
+const I18n = preload("res://src/ui/i18n.gd")
 
 const BLUEPRINT_TOOL := "@blueprint"
 
@@ -180,7 +181,7 @@ func handle_input(event: InputEvent) -> bool:
 				return true
 			"trace":
 				trace_mode = not trace_mode
-				main.hud.toast("Rastreamento de fluxo: %s" % ("ligado — passe o mouse sobre uma estrutura" if trace_mode else "desligado"))
+				main.hud.toast(I18n.t("Rastreamento de fluxo: %s") % (I18n.t("ligado — passe o mouse sobre uma estrutura") if trace_mode else I18n.t("desligado")))
 				return true
 			"blueprint":
 				if not blueprint.is_empty():
@@ -188,11 +189,11 @@ func handle_input(event: InputEvent) -> bool:
 					_preview_key = ""
 					main.view.show_grid = true
 				else:
-					main.hud.toast("Nenhuma planta copiada. Selecione uma área (Shift+arrastar) e pressione Ctrl+C")
+					main.hud.toast(I18n.t("Nenhuma planta copiada. Selecione uma área (Shift+arrastar) e pressione Ctrl+C"))
 				return true
 			"rebuild":
 				var n: int = w.rebuild_all_ghosts()
-				main.hud.toast("%d estruturas reconstruídas" % n if n > 0 else "Nada para reconstruir (ou recursos insuficientes)")
+				main.hud.toast(I18n.t("%d estruturas reconstruídas") % n if n > 0 else I18n.t("Nada para reconstruir (ou recursos insuficientes)"))
 				return true
 			"demolish":
 				if not selection.is_empty():
@@ -219,7 +220,7 @@ func _click_select() -> void:
 	var g: int = w.ghost_at(hover)
 	if g != -1:
 		if not w.rebuild_ghost(g):
-			main.hud.toast("Recursos insuficientes para reconstruir")
+			main.hud.toast(I18n.t("Recursos insuficientes para reconstruir"))
 		return
 	_select([])
 
@@ -243,7 +244,7 @@ func _finish_area_select() -> void:
 				ids.append(b.id)
 	_select(ids)
 	if ids.size() > 1:
-		main.hud.toast("%d estruturas selecionadas — Ctrl+C copia como planta, Del demole" % ids.size())
+		main.hud.toast(I18n.t("%d estruturas selecionadas — Ctrl+C copia como planta, Del demole") % ids.size())
 
 
 func demolish_selection() -> void:
@@ -275,7 +276,7 @@ func copy_selection_blueprint() -> void:
 	tool = BLUEPRINT_TOOL
 	_preview_key = ""
 	main.view.show_grid = true
-	main.hud.toast("Planta copiada (%d estruturas). Clique para colar · R gira · B reutiliza" % bp.entries.size())
+	main.hud.toast(I18n.t("Planta copiada (%d estruturas). Clique para colar · R gira · B reutiliza") % bp.entries.size())
 
 
 func _paste_blueprint() -> void:
@@ -284,7 +285,7 @@ func _paste_blueprint() -> void:
 	if r[0] > 0:
 		main.audio.click()
 	if r[1] > 0:
-		main.hud.toast("%d estruturas colocadas, %d puladas (espaço ocupado ou recursos)" % [r[0], r[1]])
+		main.hud.toast(I18n.t("%d estruturas colocadas, %d puladas (espaço ocupado ou recursos)") % [r[0], r[1]])
 
 
 func _drag_place() -> void:
@@ -376,7 +377,7 @@ func _copy() -> void:
 		b = world().buildings.get(selected)
 	if b != null:
 		clipboard = {"type": b.type, "recipe": b.recipe, "enabled": b.enabled, "filter": b.filter.duplicate()}
-		main.hud.toast("Configuração copiada: %s" % b.def.name)
+		main.hud.toast(I18n.t("Configuração copiada: %s") % b.def.name)
 
 
 func _paste() -> void:
@@ -398,7 +399,7 @@ func _paste() -> void:
 			b.enabled = bool(clipboard.get("enabled", b.enabled))
 			if b.kind == "splitter":
 				world().set_filters(b, clipboard.get("filter", ["", "", ""]))
-	main.hud.toast("Configuração colada em %d estrutura(s)" % targets.size())
+	main.hud.toast(I18n.t("Configuração colada em %d estrutura(s)") % targets.size())
 
 
 # --- per frame ------------------------------------------------------------------
@@ -518,9 +519,9 @@ func _update_preview(w) -> void:
 				bad += 1
 			Meshes.override_all(_preview.get_child(i), _ok_mat if ok else _bad_mat)
 		var cost: Dictionary = Blueprint.cost(w, blueprint)
-		last_reason = "" if w.can_afford(cost) else "Recursos insuficientes para a planta inteira"
+		last_reason = "" if w.can_afford(cost) else I18n.t("Recursos insuficientes para a planta inteira")
 		if bad > 0:
-			last_reason = "%d de %d estruturas não cabem aqui" % [bad, checks.size()]
+			last_reason = I18n.t("%d de %d estruturas não cabem aqui") % [bad, checks.size()]
 		_preview.position = Vector3(o.x, 0.02, o.y)
 		_preview.visible = true
 		return

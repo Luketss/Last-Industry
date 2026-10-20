@@ -15,10 +15,13 @@ const SUITES := [
 	"res://tests/test_platform.gd",
 	"res://tests/test_visual.gd",
 	"res://tests/test_assets.gd",
+	"res://tests/test_i18n.gd",
 ]
 
 
 func _init() -> void:
+	# Tests assert on the Portuguese source texts, whatever the machine's locale.
+	TranslationServer.set_locale("pt_BR")
 	var total := 0
 	var failed := 0
 	var t0 := Time.get_ticks_msec()

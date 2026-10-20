@@ -15,7 +15,7 @@ precisa ser fabricada, cada torre consome energia, cada reparo custa materiais.
 ![Seleção, planta, rastreamento de fluxo, dica e minimapa](docs/img/ferramentas.png)
 ![Esteiras com curvas e saídas das máquinas](docs/img/esteiras.png)
 
-**Plataformas:** Windows e Linux (x86_64) · **Engine:** Godot 4.3 (GDScript) · **Modo:** solo, offline · **Destino:** Steam
+**Plataformas:** Windows e Linux (x86_64) · **Engine:** Godot 4.3 (GDScript) · **Modo:** solo, offline · **Idiomas:** português, inglês, espanhol · **Destino:** Steam
 
 ## Estado atual: Fases 1 a 8 (MVP, pesquisa, ferramentas, desempenho e preparação para a Steam)
 
@@ -138,6 +138,13 @@ xvfb-run -a godot --path . --rendering-driver opengl3 -s res://scripts/render_ic
 ```
 
 Se um recurso faltar, o jogo volta aos modelos e sons procedurais.
+
+### Idiomas
+
+Português (Brasil), inglês e espanhol, escolhidos em **Opções › Idioma** (o padrão segue o idioma do
+sistema). Os textos-fonte em português são as chaves de `locale/strings.csv`; depois de mudar
+textos no código ou em `data/*.json`, rode `python3 scripts/i18n_extract.py` e preencha as
+colunas `en`/`es` das linhas novas. Os testes falham se faltar alguma tradução.
 
 ### Ajustar o conteúdo
 

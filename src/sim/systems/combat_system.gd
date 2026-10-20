@@ -2,6 +2,7 @@ extends RefCounted
 ## Turrets (ballistic and electric) and repair stations.
 
 const Items = preload("res://src/sim/items.gd")
+const I18n = preload("res://src/ui/i18n.gd")
 
 
 func request(w) -> void:
@@ -36,7 +37,7 @@ func _step_gun(w, b, dt: float) -> void:
 	b.cooldown = maxf(b.cooldown - dt * rate, 0.0)
 	if b.rounds <= 0:
 		b.status = "sem munição"
-		w.add_alert("no_ammo", "Torre Balística sem munição", "danger" if not w.enemies.is_empty() else "warn", b.center(), 12.0)
+		w.add_alert("no_ammo", I18n.t("Torre Balística sem munição"), "danger" if not w.enemies.is_empty() else "warn", b.center(), 12.0)
 		return
 	var e = _acquire(w, b, dt)
 	if e == null:

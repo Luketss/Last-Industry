@@ -3,6 +3,7 @@ extends RefCounted
 ## after the campaign, survival mode generates ever larger hordes.
 
 const Defs = preload("res://src/sim/defs.gd")
+const I18n = preload("res://src/ui/i18n.gd")
 
 var cfg: Dictionary
 var index := 0               ## waves started so far
@@ -68,11 +69,11 @@ func describe_next(w) -> String:
 	var parts := []
 	for g in wd.groups:
 		var nm: String = w.data.enemies[g.type].name
-		parts.append("%d %s%s" % [int(g.count), nm, " (ELITE)" if g.get("elite", false) else ""])
+		parts.append("%d %s%s" % [int(g.count), nm, I18n.t(" (ELITE)") if g.get("elite", false) else ""])
 	var dir := "?"
 	if not w.spawn_points.is_empty():
-		dir = Defs.compass(Vector2(w.spawn_points[next_spawn]), w.width, w.height)
-	return "%s — vindo do %s" % [", ".join(parts), dir]
+		dir = I18n.t(Defs.compass(Vector2(w.spawn_points[next_spawn]), w.width, w.height))
+	return I18n.t("%s — vindo do %s") % [", ".join(parts), dir]
 
 
 func step(w, dt: float) -> void:
@@ -82,7 +83,7 @@ func step(w, dt: float) -> void:
 			var key := "%d_%d" % [index, mark]
 			if timer <= mark and not _warned.has(key):
 				_warned[key] = true
-				w.add_alert("wave_warn", "Horda %d em %ds: %s" % [index + 1, mark, describe_next(w)], "danger" if mark <= 10 else "warn", null, 1.0)
+				w.add_alert("wave_warn", I18n.t("Horda %d em %ds: %s") % [index + 1, mark, describe_next(w)], "danger" if mark <= 10 else "warn", null, 1.0)
 				if mark == 60:
 					w.trigger_lore("wave_warn:%d" % (index + 1))
 		if timer <= 0.0:
@@ -103,7 +104,7 @@ func step(w, dt: float) -> void:
 		if w.stats.lost == w.stats.lost_at_wave_start:
 			w.stats.flawless += 1
 		w.events.append({"e": "wave_cleared", "n": index})
-		w.add_alert("wave_clear", "Horda %d repelida. Reconstrua e prepare-se." % index, "info", null, 1.0)
+		w.add_alert("wave_clear", I18n.t("Horda %d repelida. Reconstrua e prepare-se.") % index, "info", null, 1.0)
 		w.trigger_lore("wave_cleared:%d" % index)
 		if not w.survival and index >= campaign_length():
 			w.win()
@@ -132,7 +133,7 @@ func start_wave(w) -> void:
 	if index >= 2:
 		patrol_timer = timer * w.rng.randf_range(0.4, 0.65)
 	w.events.append({"e": "wave_start", "n": index, "boss": wd.get("boss", false)})
-	w.add_alert("wave_start", "HORDA %d INICIADA%s" % [index, " — CHEFE DETECTADO" if wd.get("boss", false) else ""], "danger", null, 1.0)
+	w.add_alert("wave_start", I18n.t("HORDA %d INICIADA%s") % [index, I18n.t(" — CHEFE DETECTADO") if wd.get("boss", false) else ""], "danger", null, 1.0)
 	w.trigger_lore("wave_start:%d" % index)
 
 
@@ -146,7 +147,7 @@ func _patrol(w) -> void:
 		if w.stats.researched >= 2 and i % 2 == 0:
 			t = "saboteur"
 		_spawn_at(w, t, sp, {})
-	w.add_alert("patrol", "Movimento hostil inesperado detectado ao %s!" % Defs.compass(Vector2(w.spawn_points[sp]), w.width, w.height), "danger", null, 1.0)
+	w.add_alert("patrol", I18n.t("Movimento hostil inesperado detectado ao %s!") % I18n.t(Defs.compass(Vector2(w.spawn_points[sp]), w.width, w.height)), "danger", null, 1.0)
 
 
 func _spawn_at(w, type: String, sp: int, mods: Dictionary) -> void:

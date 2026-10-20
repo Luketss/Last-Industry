@@ -89,7 +89,7 @@ terminais de lore nas ruínas e a estrutura final Genesis com os três finais.
 - Testes: saída por qualquer tile da frente, forma das esteiras e fim sem destino, geometria das curvas.
 
 ### Pendências gerais
-Suporte a controle / Steam Deck, localização (EN/ES), filtros no divisor, estrutura final Genesis
+Suporte a controle / Steam Deck, estrutura final Genesis
 com os três finais, perfil de renderização em GPU dedicada.
 
 ## Como executar

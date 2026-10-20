@@ -3,6 +3,7 @@ extends RefCounted
 ## and trigger a narrative transmission ("objective:<id>").
 
 const Items = preload("res://src/sim/items.gd")
+const I18n = preload("res://src/ui/i18n.gd")
 
 var list: Array
 var current := 0
@@ -37,7 +38,7 @@ func step(w, dt: float) -> void:
 		for k in reward:
 			Items.add(w.storage, k, int(reward[k]))
 		w.events.append({"e": "objective", "id": o.id, "text": o.text})
-		w.add_alert("obj", "Objetivo concluído: %s" % o.text, "info", null, 0.0)
+		w.add_alert("obj", I18n.t("Objetivo concluído: %s") % o.text, "info", null, 0.0)
 		w.trigger_lore("objective:%s" % o.id)
 
 

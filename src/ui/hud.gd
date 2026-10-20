@@ -8,6 +8,7 @@ const Defs = preload("res://src/sim/defs.gd")
 const Settings = preload("res://src/ui/settings.gd")
 const Bindings = preload("res://src/ui/bindings.gd")
 const Logistics = preload("res://src/sim/systems/logistics_system.gd")
+const I18n = preload("res://src/ui/i18n.gd")
 
 var main
 var root: Control
@@ -176,7 +177,7 @@ func _build_top() -> void:
 	var hb := HBoxContainer.new()
 	hb.add_theme_constant_override("separation", 24)
 	p.add_child(hb)
-	_heading(hb, "LAST INDUSTRY", 15)
+	_heading(hb, I18n.t("LAST INDUSTRY"), 15)
 	top_label = _rich(hb)
 	top_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top_label.autowrap_mode = TextServer.AUTOWRAP_OFF
@@ -195,7 +196,7 @@ func _build_left() -> void:
 	var vb := VBoxContainer.new()
 	vb.custom_minimum_size.x = 340
 	p.add_child(vb)
-	_heading(vb, "OBJETIVO", 11)
+	_heading(vb, I18n.t("OBJETIVO"), 11)
 	obj_label = _label(vb, "")
 	obj_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	obj_label.custom_minimum_size.x = 340
@@ -265,14 +266,14 @@ func _build_hotbar() -> void:
 
 
 func _build_tooltip_text(def: Dictionary) -> String:
-	var lines := [def.name, def.get("desc", ""), "", "Custo: " + _cost_text(def.get("cost", {}))]
+	var lines := [def.name, def.get("desc", ""), "", I18n.t("Custo: ") + _cost_text(def.get("cost", {}))]
 	if float(def.get("power", 0)) > 0:
-		lines.append("Energia: %d kW (%s)" % [int(def.power), "defesa" if int(def.get("priority", 1)) == 0 else "produção"])
+		lines.append(I18n.t("Energia: %d kW (%s)") % [int(def.power), I18n.t("defesa") if int(def.get("priority", 1)) == 0 else I18n.t("produção")])
 	if def.has("power_out"):
-		lines.append("Gera: %d kW" % int(def.power_out))
+		lines.append(I18n.t("Gera: %d kW") % int(def.power_out))
 	if def.has("range"):
-		lines.append("Alcance: %.1f  Dano: %d" % [float(def.range), int(def.damage)])
-	lines.append("Integridade: %d" % int(def.hp))
+		lines.append(I18n.t("Alcance: %.1f  Dano: %d") % [float(def.range), int(def.damage)])
+	lines.append(I18n.t("Integridade: %d") % int(def.hp))
 	return "\n".join(lines)
 
 
@@ -305,7 +306,7 @@ func _build_info() -> void:
 	info_filters.add_theme_constant_override("h_separation", 10)
 	vb.add_child(info_filters)
 	for i in 3:
-		_label(info_filters, ["Esquerda", "Frente", "Direita"][i], 13, UiTheme.DIM)
+		_label(info_filters, [I18n.t("Esquerda"), I18n.t("Frente"), I18n.t("Direita")][i], 13, UiTheme.DIM)
 		var ob := OptionButton.new()
 		ob.focus_mode = Control.FOCUS_NONE
 		ob.custom_minimum_size.x = 200
@@ -317,8 +318,8 @@ func _build_info() -> void:
 	info_filters.visible = false
 	var actions := HBoxContainer.new()
 	vb.add_child(actions)
-	info_toggle = _button(actions, "Desligar", _on_toggle)
-	info_demolish = _button(actions, "Demolir (Del)", _on_demolish)
+	info_toggle = _button(actions, I18n.t("Desligar"), _on_toggle)
+	info_demolish = _button(actions, I18n.t("Demolir (Del)"), _on_demolish)
 	info_panel.visible = false
 
 
@@ -346,7 +347,7 @@ func _build_overlays() -> void:
 	stats_panel = _center_panel(760)
 	var sv := VBoxContainer.new()
 	stats_panel.add_child(sv)
-	_heading(sv, "ESTATÍSTICAS E DIAGNÓSTICO  (Tab)", 16)
+	_heading(sv, I18n.t("ESTATÍSTICAS E DIAGNÓSTICO  (Tab)"), 16)
 	stats_body = _rich(sv)
 	stats_body.custom_minimum_size = Vector2(740, 0)
 
@@ -354,8 +355,8 @@ func _build_overlays() -> void:
 	var rv := VBoxContainer.new()
 	rv.add_theme_constant_override("separation", 6)
 	research_panel.add_child(rv)
-	_heading(rv, "ÁRVORE DE PESQUISA  (T)", 16)
-	_label(rv, "Laboratórios consomem pacotes recebidos por esteira. Fabrique-os na Montadora.", 13, UiTheme.DIM)
+	_heading(rv, I18n.t("ÁRVORE DE PESQUISA  (T)"), 16)
+	_label(rv, I18n.t("Laboratórios consomem pacotes recebidos por esteira. Fabrique-os na Montadora."), 13, UiTheme.DIM)
 	research_list = VBoxContainer.new()
 	research_list.add_theme_constant_override("separation", 4)
 	rv.add_child(research_list)
@@ -363,20 +364,20 @@ func _build_overlays() -> void:
 	help_panel = _center_panel(820)
 	var hv := VBoxContainer.new()
 	help_panel.add_child(hv)
-	_heading(hv, "COMO OPERAR A INSTALAÇÃO  (H)", 16)
+	_heading(hv, I18n.t("COMO OPERAR A INSTALAÇÃO  (H)"), 16)
 	var help := _rich(hv)
 	help.custom_minimum_size.x = 800
-	help.text = HELP_TEXT
+	help.text = I18n.t(HELP_TEXT)
 
 	pause_panel = _center_panel(320)
 	var pv := VBoxContainer.new()
 	pv.add_theme_constant_override("separation", 8)
 	pause_panel.add_child(pv)
-	_heading(pv, "PAUSADO", 22).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	for e in [["Continuar", func(): main.set_menu_paused(false), "right"], ["Salvar (F5)", main.save_game, "save"],
-			["Carregar (F9)", main.load_game, "import"], ["Ajuda (H)", func(): help_panel.visible = not help_panel.visible, "question"],
-			["Opções", toggle_options, "gear"], ["Conquistas", toggle_achievements, "trophy"],
-			["Menu principal", main.to_main_menu, "home"], ["Sair do jogo", main.quit_game, "exitRight"]]:
+	_heading(pv, I18n.t("PAUSADO"), 22).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	for e in [[I18n.t("Continuar"), func(): main.set_menu_paused(false), "right"], [I18n.t("Salvar (F5)"), main.save_game, "save"],
+			[I18n.t("Carregar (F9)"), main.load_game, "import"], [I18n.t("Ajuda (H)"), func(): help_panel.visible = not help_panel.visible, "question"],
+			[I18n.t("Opções"), toggle_options, "gear"], [I18n.t("Conquistas"), toggle_achievements, "trophy"],
+			[I18n.t("Menu principal"), main.to_main_menu, "home"], [I18n.t("Sair do jogo"), main.quit_game, "exitRight"]]:
 		_menu_button(pv, e[0], e[1], e[2], Vector2(280, 40))
 
 	end_panel = _center_panel(520)
@@ -388,9 +389,9 @@ func _build_overlays() -> void:
 	end_body = _label(ev, "")
 	end_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	end_body.custom_minimum_size.x = 500
-	end_continue = _menu_button(ev, "Continuar no modo Sobrevivência", main.continue_survival, "fastForward", Vector2(0, 42))
-	_menu_button(ev, "Nova partida", main.start_new_game, "return", Vector2(0, 42))
-	_menu_button(ev, "Menu principal", main.to_main_menu, "home", Vector2(0, 42))
+	end_continue = _menu_button(ev, I18n.t("Continuar no modo Sobrevivência"), main.continue_survival, "fastForward", Vector2(0, 42))
+	_menu_button(ev, I18n.t("Nova partida"), main.start_new_game, "return", Vector2(0, 42))
+	_menu_button(ev, I18n.t("Menu principal"), main.to_main_menu, "home", Vector2(0, 42))
 
 
 ## Large left-aligned button with an icon, used by the main, pause and end menus.
@@ -429,7 +430,7 @@ func _build_menu() -> void:
 	vb.position = Vector2(110, -270)
 	vb.add_theme_constant_override("separation", 10)
 	menu_root.add_child(vb)
-	var title := _heading(vb, "LAST INDUSTRY", 64, Color(0.93, 0.88, 0.8))
+	var title := _heading(vb, I18n.t("LAST INDUSTRY"), 64, Color(0.93, 0.88, 0.8))
 	title.add_theme_constant_override("outline_size", 12)
 	title.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.75))
 	# Hazard stripe under the title.
@@ -437,22 +438,22 @@ func _build_menu() -> void:
 	stripe.custom_minimum_size = Vector2(560, 4)
 	stripe.color = UiTheme.ACCENT
 	vb.add_child(stripe)
-	_label(vb, "“Quando o mundo acabou, as máquinas continuaram trabalhando.”", 19, UiTheme.ACCENT)
-	_heading(vb, "EXTRAIR · PRODUZIR · DEFENDER · SOBREVIVER", 12, UiTheme.DIM)
+	_label(vb, I18n.t("“Quando o mundo acabou, as máquinas continuaram trabalhando.”"), 19, UiTheme.ACCENT)
+	_heading(vb, I18n.t("EXTRAIR · PRODUZIR · DEFENDER · SOBREVIVER"), 12, UiTheme.DIM)
 	var spacer := Control.new()
 	spacer.custom_minimum_size.y = 26
 	vb.add_child(spacer)
 	var size := Vector2(340, 48)
-	_menu_button(vb, "Nova partida", main.start_new_game, "right", size)
-	menu_continue = _menu_button(vb, "Continuar", main.load_game, "import", size)
-	_menu_button(vb, "Como jogar", func(): help_panel.visible = not help_panel.visible, "question", size)
-	_menu_button(vb, "Opções", toggle_options, "gear", size)
-	_menu_button(vb, "Conquistas", toggle_achievements, "trophy", size)
-	_menu_button(vb, "Créditos", toggle_credits, "information", size)
-	_menu_button(vb, "Sair", main.quit_game, "exitRight", size)
-	var ver := _label(menu_root, "v%s — protótipo (MVP)  ·  Windows / Linux" % ProjectSettings.get_setting("application/config/version", "0.1.0"), 12, UiTheme.DIM)
+	_menu_button(vb, I18n.t("Nova partida"), main.start_new_game, "right", size)
+	menu_continue = _menu_button(vb, I18n.t("Continuar"), main.load_game, "import", size)
+	_menu_button(vb, I18n.t("Como jogar"), func(): help_panel.visible = not help_panel.visible, "question", size)
+	_menu_button(vb, I18n.t("Opções"), toggle_options, "gear", size)
+	_menu_button(vb, I18n.t("Conquistas"), toggle_achievements, "trophy", size)
+	_menu_button(vb, I18n.t("Créditos"), toggle_credits, "information", size)
+	_menu_button(vb, I18n.t("Sair"), main.quit_game, "exitRight", size)
+	var ver := _label(menu_root, I18n.t("v%s — protótipo (MVP)  ·  Windows / Linux") % ProjectSettings.get_setting("application/config/version", "0.1.0"), 12, UiTheme.DIM)
 	_place(ver, Control.PRESET_BOTTOM_LEFT, Vector2(16, 12))
-	var art := _label(menu_root, "Modelos, interface, ícones e sons: Kenney · Músicas: OpenGameArt.org — veja Créditos", 12, UiTheme.DIM)
+	var art := _label(menu_root, I18n.t("Modelos, interface, ícones e sons: Kenney · Músicas: OpenGameArt.org — veja Créditos"), 12, UiTheme.DIM)
 	_place(art, Control.PRESET_BOTTOM_RIGHT, Vector2(16, 12))
 	_build_credits()
 
@@ -464,12 +465,12 @@ func _build_credits() -> void:
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 8)
 	credits_panel.add_child(v)
-	_heading(v, "CRÉDITOS", 18)
+	_heading(v, I18n.t("CRÉDITOS"), 18)
 	var body := _rich(v)
 	body.custom_minimum_size.x = 700
 	body.mouse_filter = Control.MOUSE_FILTER_PASS
 	body.meta_clicked.connect(func(m): OS.shell_open(str(m)))
-	var t := "[b]Last Industry[/b] — design, código e áudio procedural do projeto.\n\n[b]Recursos de terceiros[/b] (OpenGameArt.org):\n"
+	var t := I18n.t("[b]Last Industry[/b] — design, código e áudio procedural do projeto.\n\n[b]Recursos de terceiros[/b] (OpenGameArt.org):\n")
 	var f := FileAccess.open("res://assets/sources.json", FileAccess.READ)
 	var src = JSON.parse_string(f.get_as_text()) if f != null else null
 	if src is Dictionary:
@@ -479,9 +480,9 @@ func _build_credits() -> void:
 			var e: Dictionary = src[k]
 			t += "• %s — [color=#d8cfc2]%s[/color]  [color=#8f877c](%s)[/color]  [url=%s][color=#f29938]%s[/color][/url]\n" % [
 				e.title, e.author, e.license, e.page, str(e.page).trim_prefix("https://")]
-	t += "\nFonte Kenney Future (CC0). Kits 3D recoloridos para a paleta do jogo."
+	t += I18n.t("\nFonte Kenney Future (CC0). Kits 3D recoloridos para a paleta do jogo.")
 	body.text = t
-	_button(v, "Fechar", toggle_credits, "cross")
+	_button(v, I18n.t("Fechar"), toggle_credits, "cross")
 
 
 func toggle_credits() -> void:
@@ -519,12 +520,12 @@ func show_end(state: String) -> void:
 	end_panel.visible = true
 	end_continue.visible = state == "won"
 	if state == "won":
-		end_title.text = "O NÚCLEO SOBREVIVEU"
+		end_title.text = I18n.t("O NÚCLEO SOBREVIVEU")
 		end_title.add_theme_color_override("font_color", UiTheme.OK)
 	else:
-		end_title.text = "NÚCLEO DESTRUÍDO"
+		end_title.text = I18n.t("NÚCLEO DESTRUÍDO")
 		end_title.add_theme_color_override("font_color", UiTheme.BAD)
-	end_body.text = "Hordas repelidas: %d\nCriaturas abatidas: %d\nEstruturas perdidas: %d\nTempo de operação: %s\nPlacas produzidas: %d   ·   Munição produzida: %d" % [
+	end_body.text = I18n.t("Hordas repelidas: %d\nCriaturas abatidas: %d\nEstruturas perdidas: %d\nTempo de operação: %s\nPlacas produzidas: %d   ·   Munição produzida: %d") % [
 		w.stats.waves, w.stats.kills, w.stats.lost, _clock(w.time),
 		int(w.stats.produced.get("iron_plate", 0)), int(w.stats.produced.get("ammo", 0))]
 	if state == "won":
@@ -540,13 +541,13 @@ func _build_options() -> void:
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 10)
 	options_panel.add_child(v)
-	_heading(v, "OPÇÕES", 18)
+	_heading(v, I18n.t("OPÇÕES"), 18)
 	var grid := GridContainer.new()
 	grid.columns = 2
 	grid.add_theme_constant_override("h_separation", 16)
 	grid.add_theme_constant_override("v_separation", 10)
 	v.add_child(grid)
-	for opt in [["volume", "Volume geral"], ["music_volume", "Música"], ["sfx_volume", "Efeitos sonoros"]]:
+	for opt in [["volume", I18n.t("Volume geral")], ["music_volume", I18n.t("Música")], ["sfx_volume", I18n.t("Efeitos sonoros")]]:
 		_label(grid, opt[1])
 		var vol := HSlider.new()
 		vol.min_value = 0.0
@@ -556,7 +557,7 @@ func _build_options() -> void:
 		vol.custom_minimum_size.x = 260
 		vol.value_changed.connect(func(x): _set_option(opt[0], x))
 		grid.add_child(vol)
-	_label(grid, "Escala da interface")
+	_label(grid, I18n.t("Escala da interface"))
 	var sc := OptionButton.new()
 	var scales := [0.85, 1.0, 1.15, 1.3, 1.5]
 	for s in scales:
@@ -564,7 +565,7 @@ func _build_options() -> void:
 	sc.selected = maxi(scales.find(float(Settings.get_value("ui_scale"))), 1) if float(Settings.get_value("ui_scale")) != 0.85 else 0
 	sc.item_selected.connect(func(i): _set_option("ui_scale", scales[i]))
 	grid.add_child(sc)
-	_label(grid, "Velocidade da câmera")
+	_label(grid, I18n.t("Velocidade da câmera"))
 	var cs := HSlider.new()
 	cs.min_value = 0.5
 	cs.max_value = 2.5
@@ -573,7 +574,7 @@ func _build_options() -> void:
 	cs.custom_minimum_size.x = 260
 	cs.value_changed.connect(func(x): _set_option("camera_speed", x))
 	grid.add_child(cs)
-	for opt in [["fullscreen", "Tela cheia"], ["edge_pan", "Mover câmera pela borda da tela"], ["hints", "Dicas contextuais"], ["minimap", "Minimapa"]]:
+	for opt in [["fullscreen", I18n.t("Tela cheia")], ["edge_pan", I18n.t("Mover câmera pela borda da tela")], ["hints", I18n.t("Dicas contextuais")], ["minimap", I18n.t("Minimapa")]]:
 		_label(grid, opt[1])
 		var cb := CheckButton.new()
 		cb.button_pressed = bool(Settings.get_value(opt[0]))
@@ -582,12 +583,27 @@ func _build_options() -> void:
 		grid.add_child(cb)
 	var row := HBoxContainer.new()
 	v.add_child(row)
-	_button(row, "Rever todas as dicas", func():
+	_button(row, I18n.t("Rever todas as dicas"), func():
 		Settings.set_value("hints_seen", [])
-		toast("As dicas voltarão a aparecer"))
-	_button(row, "Controles…", toggle_controls)
-	_button(row, "Fechar", toggle_options)
-	_label(v, "Idioma: Português (Brasil).", 12, UiTheme.DIM)
+		toast(I18n.t("As dicas voltarão a aparecer")))
+	_button(row, I18n.t("Controles…"), toggle_controls)
+	_button(row, I18n.t("Fechar"), toggle_options)
+	var lrow := HBoxContainer.new()
+	lrow.add_theme_constant_override("separation", 12)
+	v.add_child(lrow)
+	_label(lrow, I18n.t("Idioma"))
+	var lang := OptionButton.new()
+	lang.focus_mode = Control.FOCUS_NONE
+	lang.add_theme_font_override("font", ThemeDB.fallback_font)
+	var cur := str(Settings.get_value("language"))
+	for i in I18n.LANGS.size():
+		lang.add_item(I18n.t(I18n.LANGS[i][1]) if i == 0 else I18n.LANGS[i][1])
+		if I18n.LANGS[i][0] == cur:
+			lang.select(i)
+	lang.item_selected.connect(func(i):
+		Settings.set_value("language", I18n.LANGS[i][0])
+		main.relocalize())
+	lrow.add_child(lang)
 	_build_controls()
 
 
@@ -596,26 +612,26 @@ func _build_controls() -> void:
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 8)
 	controls_panel.add_child(v)
-	_heading(v, "CONTROLES", 18)
-	_label(v, "Clique numa ação e pressione a nova tecla (Esc cancela). Teclas em uso são trocadas entre as ações.", 13, UiTheme.DIM)
+	_heading(v, I18n.t("CONTROLES"), 18)
+	_label(v, I18n.t("Clique numa ação e pressione a nova tecla (Esc cancela). Teclas em uso são trocadas entre as ações."), 13, UiTheme.DIM)
 	var grid := GridContainer.new()
 	grid.columns = 4
 	grid.add_theme_constant_override("h_separation", 14)
 	grid.add_theme_constant_override("v_separation", 4)
 	v.add_child(grid)
 	for a in Bindings.ACTIONS:
-		_label(grid, a[1], 13)
+		_label(grid, I18n.t(a[1]), 13)
 		var b := _button(grid, Bindings.label(a[0]), _start_rebind.bind(a[0]))
 		b.custom_minimum_size = Vector2(110, 26)
 		b.add_theme_font_size_override("font_size", 12)
 		_bind_buttons[a[0]] = b
-	_label(v, "Fixos: Esc (menu/cancelar) · Ctrl+C / Ctrl+V (copiar/colar) · Shift (seleção em área, girar ao contrário, câmera rápida) · setas (câmera) · mouse.", 12, UiTheme.DIM)
+	_label(v, I18n.t("Fixos: Esc (menu/cancelar) · Ctrl+C / Ctrl+V (copiar/colar) · Shift (seleção em área, girar ao contrário, câmera rápida) · setas (câmera) · mouse."), 12, UiTheme.DIM)
 	var row := HBoxContainer.new()
 	v.add_child(row)
-	_button(row, "Restaurar padrões", func():
+	_button(row, I18n.t("Restaurar padrões"), func():
 		Bindings.reset()
 		_refresh_bindings())
-	_button(row, "Fechar", toggle_controls)
+	_button(row, I18n.t("Fechar"), toggle_controls)
 
 
 func toggle_controls() -> void:
@@ -627,7 +643,7 @@ func toggle_controls() -> void:
 func _start_rebind(action: String) -> void:
 	_rebinding = action
 	_refresh_bindings()
-	_bind_buttons[action].text = "pressione…"
+	_bind_buttons[action].text = I18n.t("pressione…")
 
 
 func _refresh_bindings() -> void:
@@ -667,14 +683,14 @@ func _build_hint() -> void:
 	game_ui.add_child(hint_panel)
 	var v := VBoxContainer.new()
 	hint_panel.add_child(v)
-	_heading(v, "DICA", 11, UiTheme.INFO)
+	_heading(v, I18n.t("DICA"), 11, UiTheme.INFO)
 	hint_label = _label(v, "")
 	hint_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hint_label.custom_minimum_size.x = 330
 	var row := HBoxContainer.new()
 	v.add_child(row)
-	_button(row, "Entendi", _dismiss_hint).add_theme_font_size_override("font_size", 12)
-	_button(row, "Desativar dicas", func():
+	_button(row, I18n.t("Entendi"), _dismiss_hint).add_theme_font_size_override("font_size", 12)
+	_button(row, I18n.t("Desativar dicas"), func():
 		_set_option("hints", false)
 		_dismiss_hint()).add_theme_font_size_override("font_size", 12)
 	_place(hint_panel, Control.PRESET_BOTTOM_LEFT, Vector2(12, 214))
@@ -695,33 +711,33 @@ func _hint_candidates(w) -> Array:
 	var h := []
 	var t: float = w.time
 	if t > 15 and w.list("miner").is_empty():
-		h.append(["miner", "Selecione a Mineradora (2) e posicione-a sobre as pedras alaranjadas (minério de ferro). O lado com a faixa amarela é a saída: arraste Esteiras (1) a partir dele até o Núcleo — desenhe em L para fazer curvas."])
+		h.append(["miner", I18n.t("Selecione a Mineradora (2) e posicione-a sobre as pedras alaranjadas (minério de ferro). O lado com a faixa amarela é a saída: arraste Esteiras (1) a partir dele até o Núcleo — desenhe em L para fazer curvas.")])
 	for b in w.buildings.values():
 		if b.power_net == -1 and float(b.def.get("power", 0)) > 0:
-			h.append(["power_net", "%s está fora da rede elétrica. Construa Postes de Energia (6): a área quadrada mostra o alcance. Postes próximos se conectam sozinhos." % b.def.name])
+			h.append(["power_net", I18n.t("%s está fora da rede elétrica. Construa Postes de Energia (6): a área quadrada mostra o alcance. Postes próximos se conectam sozinhos.") % b.def.name])
 			break
 	if float(w.power.totals.get("sat", 1.0)) < 0.9 and float(w.power.totals.get("demand", 0)) > 0:
-		h.append(["power_low", "A demanda de energia passou da geração. Construa um Gerador a Carvão (5) e passe uma esteira de carvão encostada nele. As defesas recebem energia antes da produção."])
+		h.append(["power_low", I18n.t("A demanda de energia passou da geração. Construa um Gerador a Carvão (5) e passe uma esteira de carvão encostada nele. As defesas recebem energia antes da produção.")])
 	for b in w.list("turret_gun"):
 		if b.status == "sem munição":
-			h.append(["ammo", "Torres de munição puxam pentes de qualquer esteira encostada nelas. Leve a saída da Montadora (receita: Pente de Munição) para passar ao lado das torres."])
+			h.append(["ammo", I18n.t("Torres de munição puxam pentes de qualquer esteira encostada nelas. Leve a saída da Montadora (receita: Pente de Munição) para passar ao lado das torres.")])
 			break
 	if not w.ghosts.is_empty():
-		h.append(["ghosts", "Estruturas destruídas viram ruínas vermelhas. Clique numa ruína ou pressione G para reconstruir tudo com os recursos do Núcleo."])
+		h.append(["ghosts", I18n.t("Estruturas destruídas viram ruínas vermelhas. Clique numa ruína ou pressione G para reconstruir tudo com os recursos do Núcleo.")])
 	if w.waves.has_more(w) and not w.waves.active and w.waves.timer < 75 and w.list("turret_gun").is_empty() and w.list("turret_tesla").is_empty():
-		h.append(["no_defense", "Uma horda está chegando e não há torres! A Torre Elétrica (8) só precisa de energia; a Balística (7) precisa de munição por esteira."])
+		h.append(["no_defense", I18n.t("Uma horda está chegando e não há torres! A Torre Elétrica (8) só precisa de energia; a Balística (7) precisa de munição por esteira.")])
 	if not w.list("lab").is_empty() and w.research.current == "" and w.research.done.is_empty():
-		h.append(["research", "Pressione T para escolher uma pesquisa. O Laboratório consome Pacotes de Pesquisa (Montadora: placa + componente) recebidos por esteira."])
+		h.append(["research", I18n.t("Pressione T para escolher uma pesquisa. O Laboratório consome Pacotes de Pesquisa (Montadora: placa + componente) recebidos por esteira.")])
 	var congested := 0
 	for b in w.list("belt"):
 		if b.status == "saída bloqueada":
 			congested += 1
 	if congested >= 6:
-		h.append(["congestion", "Várias esteiras estão congestionadas. Abra as estatísticas (Tab) para ver gargalos e use V para rastrear de onde vêm e para onde vão os itens."])
+		h.append(["congestion", I18n.t("Várias esteiras estão congestionadas. Abra as estatísticas (Tab) para ver gargalos e use V para rastrear de onde vêm e para onde vão os itens.")])
 	if w.stats.waves >= 1 and w.list("repair").is_empty():
-		h.append(["repair", "Uma Estação de Reparo (0) conserta estruturas próximas consumindo placas de ferro que ela puxa de esteiras encostadas."])
+		h.append(["repair", I18n.t("Uma Estação de Reparo (0) conserta estruturas próximas consumindo placas de ferro que ela puxa de esteiras encostadas.")])
 	if w.list("belt").size() > 40 and w.stats.waves >= 2:
-		h.append(["blueprint", "Shift+arrastar seleciona uma área. Ctrl+C copia como planta, R gira e o clique cola — ótimo para replicar linhas de produção."])
+		h.append(["blueprint", I18n.t("Shift+arrastar seleciona uma área. Ctrl+C copia como planta, R gira e o clique cola — ótimo para replicar linhas de produção.")])
 	return h
 
 
@@ -753,7 +769,7 @@ func _build_minimap() -> void:
 	minimap.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	minimap.mouse_default_cursor_shape = Control.CURSOR_CROSS
 	minimap.gui_input.connect(_on_minimap_input)
-	minimap.tooltip_text = "Minimapa — clique para mover a câmera"
+	minimap.tooltip_text = I18n.t("Minimapa — clique para mover a câmera")
 	p.add_child(minimap)
 	_place(p, Control.PRESET_BOTTOM_LEFT, Vector2(12, 10))
 
@@ -850,7 +866,7 @@ func toggle_help() -> void:
 
 
 func achievement(d: Dictionary) -> void:
-	toast("★ Conquista desbloqueada: %s" % d.name)
+	toast(I18n.t("★ Conquista desbloqueada: %s") % d.name)
 	_toast_t = 4.0
 	if not main.audio.play("achievement"):
 		main.audio.click()
@@ -861,10 +877,10 @@ func _build_achievements() -> void:
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 6)
 	achievements_panel.add_child(v)
-	_heading(v, "CONQUISTAS", 18)
+	_heading(v, I18n.t("CONQUISTAS"), 18)
 	achievements_list = _rich(v)
 	achievements_list.custom_minimum_size.x = 600
-	_button(v, "Fechar", toggle_achievements)
+	_button(v, I18n.t("Fechar"), toggle_achievements)
 
 
 func toggle_achievements() -> void:
@@ -880,7 +896,7 @@ func toggle_achievements() -> void:
 			n += 1
 		t += "[color=#%s]%s %s[/color]  [color=#8f877c]%s[/color]\n" % ["73f27f" if got else "8f877c", "★" if got else "☆", d.name, d.desc]
 	var st: String = main.steam.status
-	achievements_list.text = "[b]%d de %d[/b]   [color=#8f877c]Steam: %s[/color]\n\n" % [n, a.defs.size(), st] + t
+	achievements_list.text = I18n.t("[b]%d de %d[/b]   [color=#8f877c]Steam: %s[/color]\n\n") % [n, a.defs.size(), I18n.t(st)] + t
 
 
 func toast(text: String) -> void:
@@ -891,7 +907,7 @@ func toast(text: String) -> void:
 func on_events(events: Array) -> void:
 	for ev in events:
 		if ev.e == "objective":
-			toast("Objetivo concluído!")
+			toast(I18n.t("Objetivo concluído!"))
 
 
 static func _clock(t: float) -> String:
@@ -939,25 +955,25 @@ func _update_top(w) -> void:
 	var pcol := UiTheme.OK if float(pt.get("sat", 1.0)) > 0.98 else (UiTheme.WARN if float(pt.get("sat", 1.0)) > 0.6 else UiTheme.BAD)
 	var bat := ""
 	if float(pt.get("capacity", 0.0)) > 0.0:
-		bat = "  bateria %d%%" % int(100.0 * float(pt.stored) / float(pt.capacity))
+		bat = I18n.t("  bateria %d%%") % int(100.0 * float(pt.stored) / float(pt.capacity))
 	parts.append("[color=#%s]⚡ %d / %d kW%s[/color]" % [_hex(pcol), int(pt.get("used", 0.0)), int(pt.get("cap", 0.0)), bat])
 	top_label.text = "   ".join(parts)
 	var ws = w.waves
 	var txt := ""
 	if ws.active:
-		txt = "[color=#ff5a3c][b]HORDA %d EM ANDAMENTO[/b][/color] — %d inimigos" % [ws.index, w.enemies.size() + ws.queue.size()]
+		txt = I18n.t("[color=#ff5a3c][b]HORDA %d EM ANDAMENTO[/b][/color] — %d inimigos") % [ws.index, w.enemies.size() + ws.queue.size()]
 	elif ws.has_more(w):
 		var col := "ff5a3c" if ws.timer < 30 else ("ffc04a" if ws.timer < 90 else "d8cfc2")
-		txt = "[color=#%s]Horda %d%s em [b]%s[/b][/color] [color=#8f877c]%s[/color]" % [col, ws.index + 1,
+		txt = I18n.t("[color=#%s]Horda %d%s em [b]%s[/b][/color] [color=#8f877c]%s[/color]") % [col, ws.index + 1,
 			"" if w.survival else "/%d" % ws.campaign_length(), _clock(ws.timer), ws.describe_next(w)]
-	var spd: String = "  [color=#ffc04a]⏸ PAUSA[/color]" if main.paused else ("  ×%d" % int(main.speed) if main.speed != 1.0 else "")
+	var spd: String = I18n.t("  [color=#ffc04a]⏸ PAUSA[/color]") if main.paused else ("  ×%d" % int(main.speed) if main.speed != 1.0 else "")
 	wave_label.text = txt + spd
 
 
 func _update_objective(w) -> void:
 	var o = w.objectives.current_objective()
 	if o == null:
-		obj_label.text = "Todos os objetivos concluídos. Sobreviva." if not w.survival else "Modo Sobrevivência: resista o máximo possível."
+		obj_label.text = I18n.t("Todos os objetivos concluídos. Sobreviva.") if not w.survival else I18n.t("Modo Sobrevivência: resista o máximo possível.")
 		obj_bar.value = 100
 		return
 	var pr: Array = w.objectives.progress(w)
@@ -1029,7 +1045,7 @@ func _update_hotbar(w) -> void:
 		if not w.is_unlocked(type):
 			b.modulate = Color(0.45, 0.45, 0.5)
 			var tech = w.research.techs.get(w.research.unlocked_by.get(type, ""), {})
-			b.tooltip_text = _build_tooltip_text(def) + "\n\nBLOQUEADO — requer pesquisa: %s" % tech.get("name", "?")
+			b.tooltip_text = _build_tooltip_text(def) + I18n.t("\n\nBLOQUEADO — requer pesquisa: %s") % tech.get("name", "?")
 		else:
 			b.modulate = Color.WHITE if w.can_afford(def.get("cost", {})) else Color(1, 0.55, 0.5)
 			b.tooltip_text = _build_tooltip_text(def)
@@ -1040,35 +1056,35 @@ func _update_tooltip() -> void:
 	var w = main.world
 	var txt := ""
 	if c.tool == c.BLUEPRINT_TOOL:
-		txt = "[b]Planta[/b] (%d estruturas)  [color=#8f877c]%s[/color]" % [c.blueprint.entries.size(), _cost_text(load("res://src/sim/blueprint.gd").cost(w, c.blueprint))]
-		txt += "\n" + ("[color=#ff6a50]%s[/color]" % c.last_reason if c.last_reason != "" else "[color=#8f877c]Clique cola · R gira · Clique direito/Esc cancela[/color]")
+		txt = I18n.t("[b]Planta[/b] (%d estruturas)  [color=#8f877c]%s[/color]") % [c.blueprint.entries.size(), _cost_text(load("res://src/sim/blueprint.gd").cost(w, c.blueprint))]
+		txt += "\n" + ("[color=#ff6a50]%s[/color]" % c.last_reason if c.last_reason != "" else I18n.t("[color=#8f877c]Clique cola · R gira · Clique direito/Esc cancela[/color]"))
 	elif c.tool != "":
 		var def: Dictionary = w.data.buildings[c.tool]
 		txt = "[b]%s[/b]  [color=#8f877c]%s[/color]" % [def.name, _cost_text(def.get("cost", {}))]
 		if c.last_reason != "":
 			txt += "\n[color=#ff6a50]%s[/color]" % c.last_reason
 		else:
-			txt += "\n[color=#8f877c]R girar · Clique direito demolir · Esc cancelar[/color]"
+			txt += I18n.t("\n[color=#8f877c]R girar · Clique direito demolir · Esc cancelar[/color]")
 	else:
 		var b = c.hovered_building()
 		if b != null:
 			txt = "[b]%s[/b]  %d/%d\n%s" % [b.def.name, int(b.hp), int(b.max_hp), _status_bb(b)]
 			txt += _flow_hint(w, b)
 			if c.trace_mode:
-				txt += "\n[color=#ffa040]■ %d fontes[/color]  [color=#50d8ff]■ %d destinos[/color]" % [c.trace_up.size(), c.trace_down.size()]
+				txt += I18n.t("\n[color=#ffa040]■ %d fontes[/color]  [color=#50d8ff]■ %d destinos[/color]") % [c.trace_up.size(), c.trace_down.size()]
 		else:
 			var g: int = w.ghost_at(c.hover)
 			if g != -1:
 				var gd: Dictionary = w.ghosts[g]
 				var def: Dictionary = w.data.buildings[gd.type]
-				txt = "[color=#ff8060]Ruína: %s[/color]\nClique para reconstruir (%s)" % [def.name, _cost_text(def.get("cost", {}))]
+				txt = I18n.t("[color=#ff8060]Ruína: %s[/color]\nClique para reconstruir (%s)") % [def.name, _cost_text(def.get("cost", {}))]
 			elif w.in_bounds(c.hover):
 				var i: int = w.idx(c.hover)
 				var t: int = w.terrain[i]
 				if Defs.ORE_ITEM.has(t) and w.ore[i] > 0:
-					txt = "%s — %d restantes" % [w.data.item_name(Defs.ORE_ITEM[t]), w.ore[i]]
+					txt = I18n.t("%s — %d restantes") % [w.data.item_name(Defs.ORE_ITEM[t]), w.ore[i]]
 				elif t == Defs.T_ROCK:
-					txt = "[color=#8f877c]Ruínas intransponíveis[/color]"
+					txt = I18n.t("[color=#8f877c]Ruínas intransponíveis[/color]")
 	tooltip.visible = txt != ""
 	if tooltip.visible:
 		tooltip_label.text = txt
@@ -1081,22 +1097,22 @@ func _update_tooltip() -> void:
 func _flow_hint(w, b) -> String:
 	match b.kind:
 		"belt":
-			var dir: String = Defs.DIR_NAMES[b.rot]
+			var dir: String = I18n.t(Defs.DIR_NAMES[b.rot])
 			var shape: int = Logistics.belt_shape(w, b)
-			var curve := "" if shape == 0 else " · curva"
+			var curve := "" if shape == 0 else I18n.t(" · curva")
 			if Logistics.belt_dead_end(w, b):
-				return "\n[color=#ff6a50]→ %s%s · sem destino: os itens param no fim[/color]" % [dir, curve]
+				return I18n.t("\n[color=#ff6a50]→ %s%s · sem destino: os itens param no fim[/color]") % [dir, curve]
 			var t = w.building_at(b.pos + Defs.dir_vec(b.rot))
-			return "\n[color=#8f877c]→ %s%s · entrega em: %s[/color]" % [dir, curve, t.def.name]
+			return I18n.t("\n[color=#8f877c]→ %s%s · entrega em: %s[/color]") % [dir, curve, t.def.name]
 		"miner", "crafter", "depot":
-			return "\n[color=#ffc04a]Saída: lado com a faixa amarela (→ %s)[/color]" % Defs.DIR_NAMES[b.rot]
+			return I18n.t("\n[color=#ffc04a]Saída: lado com a faixa amarela (→ %s)[/color]") % I18n.t(Defs.DIR_NAMES[b.rot])
 	return ""
 
 
 func _status_bb(b) -> String:
 	var lvl: int = b.status_level()
 	var s: String = b.status if b.status != "" else "ok"
-	return "[color=#%s]● %s[/color]" % [_hex(UiTheme.LEVEL_COLORS[lvl]), s]
+	return "[color=#%s]● %s[/color]" % [_hex(UiTheme.LEVEL_COLORS[lvl]), I18n.t(s)]
 
 
 func _update_info(w) -> void:
@@ -1133,66 +1149,66 @@ func _update_info(w) -> void:
 	info_hp.visible = true
 	info_title.text = b.def.name
 	var lvl: int = b.status_level()
-	info_status.text = "● " + (b.status if b.status != "" else "ok")
+	info_status.text = "● " + I18n.t(b.status if b.status != "" else "ok")
 	info_status.add_theme_color_override("font_color", UiTheme.LEVEL_COLORS[lvl])
 	info_hp.max_value = b.max_hp
 	info_hp.value = b.hp
-	info_toggle.text = "Desligar" if b.enabled else "Ligar"
-	var lines := ["Integridade: %d / %d" % [int(b.hp), int(b.max_hp)]]
+	info_toggle.text = I18n.t("Desligar") if b.enabled else I18n.t("Ligar")
+	var lines := [I18n.t("Integridade: %d / %d") % [int(b.hp), int(b.max_hp)]]
 	if b.power_net >= 0 or float(b.def.get("power", 0)) > 0:
 		if b.power_net < 0:
-			lines.append("[color=#ff6a50]Sem conexão elétrica — construa um Poste próximo[/color]")
+			lines.append(I18n.t("[color=#ff6a50]Sem conexão elétrica — construa um Poste próximo[/color]"))
 		else:
 			var net: Dictionary = w.power.net_of(b)
-			lines.append("Rede #%d: %d/%d kW  (atendimento %d%%)" % [b.power_net + 1, int(net.get("used", 0)), int(net.get("cap", 0)), int(float(net.get("sat", 1.0)) * 100)])
+			lines.append(I18n.t("Rede #%d: %d/%d kW  (atendimento %d%%)") % [b.power_net + 1, int(net.get("used", 0)), int(net.get("cap", 0)), int(float(net.get("sat", 1.0)) * 100)])
 	if float(b.def.get("power", 0)) > 0:
-		lines.append("Consumo: %d kW  ·  prioridade %s" % [int(b.def.power), "DEFESA" if int(b.def.get("priority", 1)) == 0 else "produção"])
+		lines.append(I18n.t("Consumo: %d kW  ·  prioridade %s") % [int(b.def.power), I18n.t("DEFESA") if int(b.def.get("priority", 1)) == 0 else I18n.t("produção")])
 	match b.kind:
 		"crafter":
-			lines.append("Saída: faixa amarela (→ %s) · entrada: esteiras apontadas para qualquer outro lado" % Defs.DIR_NAMES[b.rot])
+			lines.append(I18n.t("Saída: faixa amarela (→ %s) · entrada: esteiras apontadas para qualquer outro lado") % I18n.t(Defs.DIR_NAMES[b.rot]))
 			var r: Dictionary = w.data.recipes.get(b.recipe, {})
 			if not r.is_empty():
-				lines.append("Receita: %s → %s  (%.1fs)" % [_cost_text(r.inputs), _cost_text(r.outputs), float(r.time)])
-				lines.append("Progresso: %d%%" % int(b.progress * 100))
+				lines.append(I18n.t("Receita: %s → %s  (%.1fs)") % [_cost_text(r.inputs), _cost_text(r.outputs), float(r.time)])
+				lines.append(I18n.t("Progresso: %d%%") % int(b.progress * 100))
 		"miner":
-			lines.append("Saída: lado com a faixa amarela (→ %s). R gira." % Defs.DIR_NAMES[b.rot])
+			lines.append(I18n.t("Saída: lado com a faixa amarela (→ %s). R gira.") % I18n.t(Defs.DIR_NAMES[b.rot]))
 			var n := 0
 			for i in b.ore_cells:
 				n += w.ore[i]
-			lines.append("Minério restante: %d  ·  %.1f/min" % [n, float(b.def.rate) * 60.0])
+			lines.append(I18n.t("Minério restante: %d  ·  %.1f/min") % [n, float(b.def.rate) * 60.0])
 		"generator":
-			lines.append("Combustível: %d%% + %d carvão  ·  carga %d%%" % [int(100.0 * b.energy / float(b.def.fuel_value)), Items.count(b.inv, "coal"), int(b.power_sat * 100)])
+			lines.append(I18n.t("Combustível: %d%% + %d carvão  ·  carga %d%%") % [int(100.0 * b.energy / float(b.def.fuel_value)), Items.count(b.inv, "coal"), int(b.power_sat * 100)])
 		"battery":
-			lines.append("Carga: %d / %d kJ" % [int(b.energy), int(b.def.battery_capacity)])
+			lines.append(I18n.t("Carga: %d / %d kJ") % [int(b.energy), int(b.def.battery_capacity)])
 		"turret_gun":
-			lines.append("Munição: %d disparos + %d pentes" % [b.rounds, Items.count(b.inv, "ammo")])
-			lines.append("Abastecimento: esteiras adjacentes ou apontadas para a torre")
+			lines.append(I18n.t("Munição: %d disparos + %d pentes") % [b.rounds, Items.count(b.inv, "ammo")])
+			lines.append(I18n.t("Abastecimento: esteiras adjacentes ou apontadas para a torre"))
 		"turret_tesla":
-			lines.append("Carga: %d%%" % int(100.0 * b.energy / float(b.def.shot_cost)))
+			lines.append(I18n.t("Carga: %d%%") % int(100.0 * b.energy / float(b.def.shot_cost)))
 		"repair":
-			lines.append("Placas: %d  ·  raio %.0f" % [Items.count(b.inv, "iron_plate"), float(b.def.radius)])
+			lines.append(I18n.t("Placas: %d  ·  raio %.0f") % [Items.count(b.inv, "iron_plate"), float(b.def.radius)])
 		"core":
-			lines.append("Recebe qualquer item por esteira. Estoque usado na construção.")
+			lines.append(I18n.t("Recebe qualquer item por esteira. Estoque usado na construção."))
 		"lab":
 			var cur: String = w.research.current
 			if cur == "":
-				lines.append("[color=#ffc04a]Nenhuma pesquisa selecionada (T)[/color]")
+				lines.append(I18n.t("[color=#ffc04a]Nenhuma pesquisa selecionada (T)[/color]"))
 			else:
-				lines.append("Pesquisando: %s (%d%%)" % [w.research.techs[cur].name, int(w.research.fraction(cur) * 100)])
-				lines.append("Faltam: " + _cost_text(w.research.remaining_of(cur)))
-			lines.append("Pacotes: " + (_cost_text(b.inv) if not b.inv.is_empty() else "nenhum"))
+				lines.append(I18n.t("Pesquisando: %s (%d%%)") % [w.research.techs[cur].name, int(w.research.fraction(cur) * 100)])
+				lines.append(I18n.t("Faltam: ") + _cost_text(w.research.remaining_of(cur)))
+			lines.append(I18n.t("Pacotes: ") + (_cost_text(b.inv) if not b.inv.is_empty() else I18n.t("nenhum")))
 		"solar":
-			lines.append("Rendimento atual: %d kW (luz %d%%)" % [int(float(b.def.power_out) * w.daylight()), int(w.daylight() * 100)])
+			lines.append(I18n.t("Rendimento atual: %d kW (luz %d%%)") % [int(float(b.def.power_out) * w.daylight()), int(w.daylight() * 100)])
 		"splitter":
-			lines.append("Itens filtrados vão só para a saída escolhida; os demais seguem pelas saídas livres.")
+			lines.append(I18n.t("Itens filtrados vão só para a saída escolhida; os demais seguem pelas saídas livres."))
 		"belt":
-			lines.append("Itens: %d · direção: %s" % [b.belt_items.size(), Defs.DIR_NAMES[b.rot]])
+			lines.append(I18n.t("Itens: %d · direção: %s") % [b.belt_items.size(), I18n.t(Defs.DIR_NAMES[b.rot])])
 			if Logistics.belt_dead_end(w, b):
-				lines.append("[color=#ff6a50]Sem destino: aponte o fim da esteira para uma máquina, outra esteira ou o Núcleo.[/color]")
+				lines.append(I18n.t("[color=#ff6a50]Sem destino: aponte o fim da esteira para uma máquina, outra esteira ou o Núcleo.[/color]"))
 	if not b.inv.is_empty() and b.kind not in ["turret_gun", "generator", "repair"]:
-		lines.append("Entrada: " + _cost_text(b.inv))
+		lines.append(I18n.t("Entrada: ") + _cost_text(b.inv))
 	if not b.out.is_empty():
-		lines.append("Saída: " + _cost_text(b.out))
+		lines.append(I18n.t("Saída: ") + _cost_text(b.out))
 	info_body.text = "\n".join(lines)
 
 
@@ -1202,7 +1218,7 @@ func _update_multi_info(w, sel: Array) -> void:
 		_info_for = -2
 		for ch in info_recipes.get_children():
 			ch.queue_free()
-		_button(info_recipes, "Copiar como planta (Ctrl+C)", main.controller.copy_selection_blueprint).add_theme_font_size_override("font_size", 12)
+		_button(info_recipes, I18n.t("Copiar como planta (Ctrl+C)"), main.controller.copy_selection_blueprint).add_theme_font_size_override("font_size", 12)
 		info_filters.visible = false
 		info_toggle.visible = true
 		info_demolish.visible = true
@@ -1214,26 +1230,26 @@ func _update_multi_info(w, sel: Array) -> void:
 			continue
 		counts[b.def.name] = int(counts.get(b.def.name, 0)) + 1
 		levels[b.status_level()] += 1
-	info_title.text = "%d estruturas selecionadas" % sel.size()
-	info_status.text = "● %d ok   ● %d atenção   ● %d falha" % levels
+	info_title.text = I18n.t("%d estruturas selecionadas") % sel.size()
+	info_status.text = I18n.t("● %d ok   ● %d atenção   ● %d falha") % levels
 	info_status.add_theme_color_override("font_color", UiTheme.LEVEL_COLORS[2 if levels[2] > 0 else (1 if levels[1] > 0 else 0)])
 	info_hp.visible = false
 	var parts := []
 	for k in counts:
 		parts.append("%d× %s" % [counts[k], k])
 	var bp_cost: Dictionary = load("res://src/sim/blueprint.gd").cost(w, load("res://src/sim/blueprint.gd").capture(w, sel))
-	info_body.text = "\n".join(parts) + "\n\nCusto para replicar: " + _cost_text(bp_cost)
-	info_toggle.text = "Ligar/Desligar todas"
+	info_body.text = "\n".join(parts) + I18n.t("\n\nCusto para replicar: ") + _cost_text(bp_cost)
+	info_toggle.text = I18n.t("Ligar/Desligar todas")
 
 
 func _update_research(w) -> void:
 	var rs = w.research
 	if rs.current != "":
-		research_label.text = "PESQUISA: %s — %d%%   (T)" % [rs.techs[rs.current].name, int(rs.fraction(rs.current) * 100)]
+		research_label.text = I18n.t("PESQUISA: %s — %d%%   (T)") % [rs.techs[rs.current].name, int(rs.fraction(rs.current) * 100)]
 	elif w.list("lab").is_empty():
-		research_label.text = "PESQUISA: construa um Laboratório para desbloquear tecnologias (T)"
+		research_label.text = I18n.t("PESQUISA: construa um Laboratório para desbloquear tecnologias (T)")
 	else:
-		research_label.text = "PESQUISA: nenhuma selecionada — pressione T"
+		research_label.text = I18n.t("PESQUISA: nenhuma selecionada — pressione T")
 	if not research_panel.visible:
 		return
 	var key := "%d|%s|%d" % [rs.done.size(), rs.current, int(rs.fraction(rs.current) * 100) if rs.current != "" else 0]
@@ -1250,19 +1266,19 @@ func _update_research(w) -> void:
 		var state := ""
 		var col := UiTheme.DIM
 		if rs.done.has(id):
-			state = "CONCLUÍDA"
+			state = I18n.t("CONCLUÍDA")
 			col = UiTheme.OK
 		elif rs.current == id:
-			state = "EM ANDAMENTO %d%%" % int(rs.fraction(id) * 100)
+			state = I18n.t("EM ANDAMENTO %d%%") % int(rs.fraction(id) * 100)
 			col = Color(0.55, 0.85, 1.0)
 		elif rs.is_available(id):
-			state = "DISPONÍVEL"
+			state = I18n.t("DISPONÍVEL")
 			col = UiTheme.TEXT
 		else:
 			var req := []
 			for r in t.get("requires", []):
 				req.append(rs.techs[r].name)
-			state = "requer: " + ", ".join(req)
+			state = I18n.t("requer: ") + ", ".join(req)
 		var btn := _button(row, t.name, _on_research.bind(id))
 		btn.custom_minimum_size = Vector2(210, 30)
 		btn.disabled = not rs.is_available(id) or rs.current == id
@@ -1287,7 +1303,7 @@ func _fill_filters(w, b) -> void:
 	for i in 3:
 		var ob: OptionButton = _filter_opts[i]
 		ob.clear()
-		ob.add_item("Qualquer item")
+		ob.add_item(I18n.t("Qualquer item"))
 		ob.set_item_metadata(0, "")
 		for k in items:
 			ob.add_item(w.data.item_name(k))
@@ -1319,19 +1335,19 @@ func _on_demolish() -> void:
 
 
 func _update_stats(w) -> void:
-	var t := "[table=5][cell][b]Item      [/b][/cell][cell][b]Produção/min   [/b][/cell][cell][b]Consumo/min   [/b][/cell][cell][b]Total produzido   [/b][/cell][cell][b]No Núcleo[/b][/cell]"
+	var t := I18n.t("[table=5][cell][b]Item      [/b][/cell][cell][b]Produção/min   [/b][/cell][cell][b]Consumo/min   [/b][/cell][cell][b]Total produzido   [/b][/cell][cell][b]No Núcleo[/b][/cell]")
 	for item in w.data.items:
 		var p: int = w.stats.rate(item)
 		var c: int = w.stats.rate(item, true)
 		var col := "d8cfc2" if p >= c else "ff6a50"
 		t += "[cell]%s[/cell][cell][color=#%s]%d[/color][/cell][cell]%d[/cell][cell]%d[/cell][cell]%d[/cell]" % [
 			w.data.item_name(item), col, p, c, int(w.stats.produced.get(item, 0)), Items.count(w.storage, item)]
-	t += "[/table]\n\n[b]Energia[/b]\n"
+	t += I18n.t("[/table]\n\n[b]Energia[/b]\n")
 	for net in w.power.networks:
-		t += "Rede #%d: %d nós, %d estruturas — geração %d kW, demanda %d kW, atendimento %d%%%s\n" % [
+		t += I18n.t("Rede #%d: %d nós, %d estruturas — geração %d kW, demanda %d kW, atendimento %d%%%s\n") % [
 			net.id + 1, net.nodes.size(), net.members.size(), int(net.get("cap", 0)), int(net.get("demand", 0)),
 			int(float(net.get("sat", 1)) * 100), ("  · bateria %d kJ" % int(net.stored)) if float(net.get("capacity", 0)) > 0 else ""]
-	t += "\n[b]Diagnóstico de máquinas[/b]  [color=#8f877c](gargalos, insumos faltando, excesso de produção)[/color]\n"
+	t += I18n.t("\n[b]Diagnóstico de máquinas[/b]  [color=#8f877c](gargalos, insumos faltando, excesso de produção)[/color]\n")
 	var summary := {}
 	for b in w.buildings.values():
 		if b.kind in ["belt", "wall", "pole", "core", "splitter", "depot"]:
@@ -1345,15 +1361,15 @@ func _update_stats(w) -> void:
 		var parts := []
 		for s in summary[key]:
 			var lvl: int = int(load("res://src/sim/building.gd").STATUS_LEVEL.get(s, 1))
-			parts.append("[color=#%s]%d %s[/color]" % [_hex(UiTheme.LEVEL_COLORS[lvl]), summary[key][s], s])
+			parts.append("[color=#%s]%d %s[/color]" % [_hex(UiTheme.LEVEL_COLORS[lvl]), summary[key][s], I18n.t(s)])
 		t += "%s: %s\n" % [key, ", ".join(parts)]
 	var blocked := 0
 	for b in w.list("belt"):
 		if b.status == "saída bloqueada":
 			blocked += 1
 	if blocked > 0:
-		t += "[color=#ffc04a]%d esteiras congestionadas (excesso de produção ou destino cheio)[/color]\n" % blocked
-	t += "\n[b]Combate[/b]: %d abates · %d disparos · %d estruturas perdidas · %d ruínas aguardando reconstrução" % [w.stats.kills, w.stats.shots, w.stats.lost, w.ghosts.size()]
+		t += I18n.t("[color=#ffc04a]%d esteiras congestionadas (excesso de produção ou destino cheio)[/color]\n") % blocked
+	t += I18n.t("\n[b]Combate[/b]: %d abates · %d disparos · %d estruturas perdidas · %d ruínas aguardando reconstrução") % [w.stats.kills, w.stats.shots, w.stats.lost, w.ghosts.size()]
 	stats_body.text = t
 
 
