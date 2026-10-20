@@ -45,6 +45,7 @@ SOURCES = {
     "m_factory": ("https://opengameart.org/content/factory-ambiance", "Factory_0.ogg", "yd", "CC0"),
     "m_scavenger": ("https://opengameart.org/content/lone-scavenger", "lone_scavenger_4.mp3", "vitalezzz", "CC0"),
     "m_iron": ("https://opengameart.org/content/iron-wasteland", "Iron%20wasteland.ogg", "Alexandr Zhelanov", "CC-BY 4.0"),
+    "m_boss": ("https://opengameart.org/content/boss-battle-9-metal", "boss_battle_9_metal_loop.wav", "nene", "CC0"),
     "m_fight": ("https://opengameart.org/content/cyborg-factory-fight-theme", "Cyborg_Factory_Fight_0.ogg", "GTDStudio (Palrom)", "OGA-BY 3.0"),
 }
 
@@ -53,7 +54,7 @@ TITLES = {
     "icons": "Game Icons", "monsters": "50+ Monsters Pack 3D",
     "scifi_items": "Different Sci-Fi Item Icons", "apoc_icons": "Free Set of 10 Post-apocalypse Icons", "scifi_sfx": "Sci-Fi Sounds", "ui_sfx": "Interface Sounds",
     "m_menu": "Tragic ambient main menu", "m_empty": "EmptyCity: Background Music", "m_factory": "Factory ambiance",
-    "m_scavenger": "Lone Scavenger", "m_iron": "Iron wasteland", "m_fight": "Cyborg Factory Fight Theme",
+    "m_scavenger": "Lone Scavenger", "m_iron": "Iron wasteland", "m_fight": "Cyborg Factory Fight Theme", "m_boss": "Boss Battle #9 [Metal]",
 }
 
 MODELS = {
@@ -129,6 +130,7 @@ MUSIC = {
     "calm_3": "m_scavenger",
     "calm_4": "m_iron",
     "combat": "m_fight",
+    "boss": "m_boss",
 }
 
 

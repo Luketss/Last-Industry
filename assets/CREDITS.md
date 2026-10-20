@@ -21,6 +21,7 @@ por máquina fica em [`sources.json`](sources.json); o jogo a exibe em **Menu �
 | Música ambiente | [Factory ambiance](https://opengameart.org/content/factory-ambiance) | yd | CC0 |
 | Música ambiente | [Lone Scavenger](https://opengameart.org/content/lone-scavenger) | vitalezzz | CC0 |
 | Música ambiente | [Iron wasteland](https://opengameart.org/content/iron-wasteland) | Alexandr Zhelanov | CC-BY 4.0 |
+| Música das hordas finais, com chefe e da ativação de Genesis | [Boss Battle #9 [Metal]](https://opengameart.org/content/boss-battle-9-metal) | nene | CC0 |
 | Música das hordas | [Cyborg Factory Fight Theme](https://opengameart.org/content/cyborg-factory-fight-theme) | GTDStudio (Palrom) | OGA-BY 3.0 |
 
 As licenças CC-BY 4.0 e OGA-BY 3.0 exigem atribuição, feita na tela de créditos e neste arquivo.

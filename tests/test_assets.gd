@@ -58,7 +58,7 @@ func test_ruin_models_exist() -> void:
 func test_sounds_and_music_exist() -> void:
 	for name in GameAudio.SOUNDS:
 		check(ResourceLoader.exists(GameAudio.SFX_DIR % name), "efeito %s" % name)
-	for name in GameAudio.CALM + ["menu", "combat"]:
+	for name in GameAudio.CALM + ["menu", "combat", "boss"]:
 		check(ResourceLoader.exists(GameAudio.MUSIC_DIR % name), "música %s" % name)
 
 

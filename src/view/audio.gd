@@ -152,8 +152,15 @@ func on_events(events: Array) -> void:
 func _desired_track() -> String:
 	if not main.in_game or main.world == null:
 		return "menu"
-	if main.world.waves.active:
-		return "combat"
+	var w = main.world
+	for g in w.list("genesis"):
+		if g.progress > 0.0 and g.progress < 1.0:
+			return "boss"
+	if w.waves.active:
+		# Boss hordes and the final hordes of the campaign get the heavier theme.
+		var wd: Dictionary = w.waves.wave_def(maxi(w.waves.index - 1, 0))
+		var final: bool = not w.survival and w.waves.index >= w.waves.campaign_length() - 1
+		return "boss" if wd.get("boss", false) or final else "combat"
 	return _track if _track in CALM else _calm_order[0]
 
 
@@ -164,7 +171,7 @@ func _switch(track: String) -> void:
 		return
 	var stream: AudioStream = load(path)
 	if stream is AudioStreamOggVorbis:
-		stream.loop = track in ["menu", "combat"]
+		stream.loop = track in ["menu", "combat", "boss"]
 	_music_cur = 1 - _music_cur
 	var p: AudioStreamPlayer = _music[_music_cur]
 	p.stream = stream
