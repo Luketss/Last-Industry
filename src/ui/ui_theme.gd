@@ -58,6 +58,9 @@ static func build() -> Theme:
 				s.draw_center = false
 				s.border_color = Color(ACCENT, 0.5)
 		t.set_stylebox(state, "Button", s)
+	var clear := StyleBoxEmpty.new()
+	for state in ["normal", "hover", "pressed", "hover_pressed", "focus"]:
+		t.set_stylebox(state, "CheckButton", clear)
 	t.set_color("font_color", "Button", TEXT)
 	t.set_color("font_hover_color", "Button", Color(1, 0.9, 0.75))
 	t.set_color("font_pressed_color", "Button", Color(1, 0.95, 0.85))

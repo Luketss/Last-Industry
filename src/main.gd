@@ -11,6 +11,7 @@ const CameraRig = preload("res://src/view/camera_rig.gd")
 const BuildController = preload("res://src/view/build_controller.gd")
 const GameAudio = preload("res://src/view/audio.gd")
 const Hud = preload("res://src/ui/hud.gd")
+const Settings = preload("res://src/ui/settings.gd")
 
 const MAX_STEPS_PER_FRAME := 12
 const SPEEDS := [1.0, 2.0, 3.0]
@@ -42,8 +43,10 @@ func _ready() -> void:
 	add_child(controller)
 	audio = GameAudio.new(self)
 	add_child(audio)
+	Settings.load_all()
 	hud = Hud.new(self)
 	add_child(hud)
+	Settings.apply(self)
 	to_main_menu()
 	for a in OS.get_cmdline_user_args():
 		if a == "--smoke":
@@ -55,6 +58,7 @@ func _ready() -> void:
 func _bind(w) -> void:
 	world = w
 	view.bind(w)
+	hud.bind_world(w)
 	camera.bounds = Rect2(0, 0, w.width, w.height)
 	var c = w.core()
 	var focus := Vector3(w.width * 0.5, 0, w.height * 0.5) if c == null else Vector3(c.center().x, 0, c.center().y)
@@ -255,6 +259,29 @@ func _smoke_step() -> void:
 			save_game()
 		300:
 			load_game()
+		330:
+			# Phase 7 tools: area selection -> blueprint -> paste; flow tracing.
+			var c: Vector2i = world.core().pos
+			world.storage["iron_plate"] = 2000
+			world.storage["gear"] = 1000
+			controller._drag_start = c + Vector2i(-10, -1)
+			controller.hover = c + Vector2i(-2, 2)
+			controller._finish_area_select()
+			print("smoke: selected %d" % controller.selection.size())
+			controller.copy_selection_blueprint()
+			controller.hover_point = Vector2(c.x - 5, c.y + 14)
+		336:
+			controller._paste_blueprint()
+			controller.set_tool("")
+			controller.trace_mode = true
+			controller.hover = world.core().pos + Vector2i(-6, 0)
+		345:
+			_shot("07_tools")
+			hud.toggle_options()
+		350:
+			_shot("08_options")
+			hud.toggle_options()
+			controller.trace_mode = false
 		420:
 			_shot("06_loaded")
 			print("SMOKE OK tick=%d enemies=%d buildings=%d" % [world.tick, world.enemies.size(), world.buildings.size()])

@@ -12,6 +12,8 @@ var yaw := 45.0
 var zoom := 28.0
 var input_enabled := true
 var orbit := false            ## slow automatic rotation used behind the main menu
+var edge_pan := false         ## move when the mouse touches the screen border
+var speed := 1.0
 var bounds := Rect2(0, 0, 64, 64)
 var _yaw := 45.0
 var _zoom := 28.0
@@ -48,9 +50,20 @@ func _process(delta: float) -> void:
 			v.x -= 1
 		if Input.is_key_pressed(KEY_D) or Input.is_key_pressed(KEY_RIGHT):
 			v.x += 1
+		if edge_pan and DisplayServer.window_is_focused():
+			var mp := get_viewport().get_mouse_position()
+			var vs := get_viewport().get_visible_rect().size
+			if mp.x < 6:
+				v.x -= 1
+			elif mp.x > vs.x - 6:
+				v.x += 1
+			if mp.y < 6:
+				v.y -= 1
+			elif mp.y > vs.y - 6:
+				v.y += 1
 		if v != Vector2.ZERO:
 			var fast := 2.0 if Input.is_key_pressed(KEY_SHIFT) else 1.0
-			target += _plane_dir(v.normalized()) * delta * _zoom * 0.9 * fast
+			target += _plane_dir(v.normalized()) * delta * _zoom * 0.9 * fast * speed
 	target.x = clampf(target.x, bounds.position.x, bounds.end.x)
 	target.z = clampf(target.z, bounds.position.y, bounds.end.y)
 	var k := minf(delta * 10.0, 1.0)

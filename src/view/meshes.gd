@@ -297,6 +297,18 @@ static func build(type: String, def: Dictionary, rot: int) -> Dictionary:
 			h.h = 0.5
 		_:
 			box(body, Vector3(w * 0.9, 0.6, d * 0.9), Vector3(0, 0.3, 0), metal)
+	if def.get("kind", type) in ["miner", "crafter", "depot"]:
+		# Output marker on the exact tile items leave from.
+		var Bld = load("res://src/sim/building.gd")
+		var oc: Vector2i = Bld.output_cell_for(Vector2i.ZERO, Vector2i(int(fp.x), int(fp.y)), rot)
+		var dir: Vector2i = [Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0), Vector2i(0, -1)][rot]
+		var arrow := Node3D.new()
+		arrow.position = Vector3(oc.x + 0.5 - dir.x * 0.45, 0.02, oc.y + 0.5 - dir.y * 0.45)
+		arrow.rotation.y = -rot * PI * 0.5
+		root.add_child(arrow)
+		var am := mat("outarrow", HAZARD, {"emit": HAZARD, "energy": 1.2})
+		box(arrow, Vector3(0.28, 0.03, 0.07), Vector3(0.0, 0, -0.08), am, Vector3(0, deg_to_rad(35), 0))
+		box(arrow, Vector3(0.28, 0.03, 0.07), Vector3(0.0, 0, 0.08), am, Vector3(0, deg_to_rad(-35), 0))
 	if def.get("kind", type) not in ["belt", "wall", "pole"]:
 		# Status lamp on a short post at the footprint corner.
 		cyl(root, 0.025, 0.7, Vector3(0.14, 0.35, 0.14), mdark, -1.0, 5)

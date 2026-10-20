@@ -12,10 +12,11 @@ precisa ser fabricada, cada torre consome energia, cada reparo custa materiais.
 ![Menu](docs/img/menu.png)
 ![Base em funcionamento](docs/img/base.png)
 ![Árvore de pesquisa](docs/img/pesquisa.png)
+![Seleção, planta, rastreamento de fluxo, dica e minimapa](docs/img/ferramentas.png)
 
 **Plataformas:** Windows e Linux (x86_64) · **Engine:** Godot 4.3 (GDScript) · **Modo:** solo, offline · **Destino:** Steam
 
-## Estado atual: MVP jogável + Fase 6 (pesquisa e progressão)
+## Estado atual: MVP jogável + Fases 6 e 7 (pesquisa, ferramentas e desempenho)
 
 | Item do MVP | Implementado |
 |---|---|
@@ -41,6 +42,11 @@ Torre de Canhão (dano em área), Torre Antiaérea, Painel Solar (fraco à noite
 Sabotador (caça infraestrutura) e Planador (voa sobre muros); modificadores de mineração, máquinas,
 esteiras, dano e muros; hordas e patrulhas que reagem ao avanço da pesquisa.
 
+**Fase 7:** seleção em área com ações em grupo, plantas (copiar, girar e colar grupos de estruturas),
+rastreamento da origem e do destino dos itens, minimapa clicável, alertas que levam a câmera ao
+problema, dicas contextuais, menu de opções salvo entre sessões e otimização para bases com
+milhares de estruturas.
+
 Também incluídos: objetivos guiados com recompensas, narrativa por transmissões e arquivos
 corrompidos, sobreposição de depuração (F3: rotas, redes elétricas, alvos), áudio procedural.
 
@@ -63,6 +69,8 @@ rode pelo editor:
 | Construir / girar | Clique esquerdo (arraste para esteiras, muros, postes) / R (Shift+R inverte) |
 | Demolir | Clique direito (arraste para várias) · Del na seleção |
 | Conta-gotas / copiar e colar configuração | Q / Ctrl+C, Ctrl+V |
+| Selecionar área / copiar como planta / reutilizar planta | Shift+arrastar / Ctrl+C na seleção / B |
+| Rastrear fluxo de itens | V (passe o mouse sobre uma estrutura) |
 | Reconstruir ruínas | G |
 | Pausar / velocidade / chamar horda | Espaço / + − / N |
 | Estatísticas / pesquisa / ajuda / depuração | Tab / T / H / F3 |

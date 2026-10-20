@@ -137,6 +137,61 @@ func _transfer(w, belt, item: String) -> bool:
 	return w.try_insert(t, item)
 
 
+# --- tracing (diagnostics) ---------------------------------------------------
+
+## Item flow graph: building id -> ids it delivers to. Used to trace where a
+## structure's inputs come from and where its outputs go.
+func flow_graph(w) -> Dictionary:
+	var g := {}
+	for b in w.buildings.values():
+		var dst := []
+		if b.kind == "belt":
+			var t = w.building_at(b.pos + Defs.dir_vec(b.rot))
+			if t != null and t.kind != "miner" and not (t.kind == "belt" and t.pos + Defs.dir_vec(t.rot) == b.pos):
+				dst.append(t.id)
+		elif b.kind in ["miner", "crafter", "depot", "splitter"]:
+			var cells: Array = [b.output_cell()]
+			if b.kind == "splitter":
+				cells = [b.pos + Defs.dir_vec(b.rot - 1), b.pos + Defs.dir_vec(b.rot), b.pos + Defs.dir_vec(b.rot + 1)]
+			for c in cells:
+				var t = w.building_at(c)
+				if t != null and t != b and t.kind != "miner" and not (t.kind == "belt" and b.contains(t.pos + Defs.dir_vec(t.rot))):
+					dst.append(t.id)
+		g[b.id] = dst
+	for p in w.list("pullers"):
+		for bid in p.adj_belts:
+			if g.has(bid) and not (p.id in g[bid]):
+				g[bid].append(p.id)
+	return g
+
+
+## Ids reachable from `id` following the flow (downstream) or against it (upstream).
+func trace(w, id: int, upstream: bool, limit: int = 600) -> Array:
+	var g := flow_graph(w)
+	if upstream:
+		var rev := {}
+		for src in g:
+			for dst in g[src]:
+				if not rev.has(dst):
+					rev[dst] = []
+				rev[dst].append(src)
+		g = rev
+	var seen := {id: true}
+	var queue := [id]
+	var out := []
+	while not queue.is_empty() and out.size() < limit:
+		var cur: int = queue.pop_front()
+		for nxt in g.get(cur, []):
+			if not seen.has(nxt):
+				seen[nxt] = true
+				out.append(nxt)
+				# The core is a sink: do not trace through it.
+				var nb = w.buildings.get(nxt)
+				if nb != null and nb.kind != "core":
+					queue.append(nxt)
+	return out
+
+
 func _pull(w, dt: float) -> void:
 	for b in w.list("pullers"):
 		if b.adj_belts.is_empty() or not b.enabled:

@@ -20,6 +20,7 @@ var ghosts_root: Node3D
 var ore_mm: MultiMeshInstance3D
 var items_mm: MultiMeshInstance3D
 var bars_mm: MultiMeshInstance3D
+var trace_mm: MultiMeshInstance3D
 var enemy_mm := {}        ## type -> MultiMeshInstance3D
 var fx_mesh := ImmediateMesh.new()
 var wires_mesh := ImmediateMesh.new()
@@ -46,6 +47,8 @@ func _ready() -> void:
 	items_mm = _make_mm(Meshes.box_mesh(Vector3(0.22, 0.16, 0.22)), Meshes.mat("items", Color.WHITE, {"vcol": true, "rough": 0.6}))
 	bars_mm = _make_mm(Meshes.box_mesh(Vector3(1, 0.05, 0.1)), Meshes.mat("bars", Color.WHITE, {"vcol": true, "unshaded": true}))
 	bars_mm.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	trace_mm = _make_mm(Meshes.box_mesh(Vector3.ONE), Meshes.mat("trace", Color.WHITE, {"vcol": true, "unshaded": true, "alpha": true}))
+	trace_mm.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	for m in [fx_mesh, wires_mesh, debug_mesh]:
 		var mi := MeshInstance3D.new()
 		mi.mesh = m
@@ -303,6 +306,27 @@ func on_events(events: Array) -> void:
 					_burst(ev.pos, Color(0.8, 0.6, 0.3), 10, 1.2, 0.25)
 			"wave_start":
 				_alarm = 4.0
+
+
+## Highlights the item flow around `target`: sources in amber, destinations in cyan.
+func set_trace(target, up: Array, down: Array) -> void:
+	var entries := []
+	if target != null:
+		entries.append([target, Color(1, 1, 1, 0.35)])
+	for id in up:
+		var b = world.buildings.get(id)
+		if b != null:
+			entries.append([b, Color(1.0, 0.6, 0.15, 0.4)])
+	for id in down:
+		var b = world.buildings.get(id)
+		if b != null:
+			entries.append([b, Color(0.3, 0.85, 1.0, 0.4)])
+	var mm := _ensure(trace_mm, entries.size())
+	for i in entries.size():
+		var b = entries[i][0]
+		var basis := Basis().scaled(Vector3(b.size.x * 0.96, 0.12, b.size.y * 0.96))
+		mm.set_instance_transform(i, Transform3D(basis, Vector3(b.center().x, 0.08, b.center().y)))
+		mm.set_instance_color(i, entries[i][1])
 
 
 func _burst(p: Vector2, c: Color, n: int, r: float, life: float) -> void:

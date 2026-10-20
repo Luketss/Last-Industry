@@ -5,6 +5,7 @@ extends CanvasLayer
 const UiTheme = preload("res://src/ui/ui_theme.gd")
 const Items = preload("res://src/sim/items.gd")
 const Defs = preload("res://src/sim/defs.gd")
+const Settings = preload("res://src/ui/settings.gd")
 
 var main
 var root: Control
@@ -43,6 +44,16 @@ var end_continue: Button
 var menu_root: Control
 var menu_continue: Button
 var game_ui: Control
+var options_panel: PanelContainer
+var hint_panel: PanelContainer
+var hint_label: Label
+var _hint_id := ""
+var _hint_timer := 0.0
+var minimap: TextureRect
+var _mini_base: Image
+var _mini_img: Image
+var _mini_tex: ImageTexture
+var _mini_timer := 0.0
 var _refresh := 0.0
 var _toast_t := 0.0
 var _trans_shown := -1
@@ -72,6 +83,9 @@ func _ready() -> void:
 	_build_info()
 	_build_tooltip()
 	_build_overlays()
+	_build_options()
+	_build_minimap()
+	_build_hint()
 	_build_menu()
 	game_ui.visible = false
 
@@ -307,6 +321,7 @@ func _build_overlays() -> void:
 	_button(pv, "Salvar (F5)", main.save_game)
 	_button(pv, "Carregar (F9)", main.load_game)
 	_button(pv, "Ajuda (H)", func(): help_panel.visible = not help_panel.visible)
+	_button(pv, "Opções", toggle_options)
 	_button(pv, "Menu principal", main.to_main_menu)
 	_button(pv, "Sair do jogo", main.quit_game)
 
@@ -352,6 +367,7 @@ func _build_menu() -> void:
 	menu_continue = _button(vb, "Continuar", main.load_game)
 	menu_continue.custom_minimum_size = Vector2(300, 46)
 	_button(vb, "Como jogar", func(): help_panel.visible = not help_panel.visible).custom_minimum_size = Vector2(300, 46)
+	_button(vb, "Opções", toggle_options).custom_minimum_size = Vector2(300, 46)
 	_button(vb, "Sair", main.quit_game).custom_minimum_size = Vector2(300, 46)
 	var ver := _label(menu_root, "v%s — protótipo (MVP)  ·  Windows / Linux" % ProjectSettings.get_setting("application/config/version", "0.1.0"), 12, UiTheme.DIM)
 	_place(ver, Control.PRESET_BOTTOM_LEFT, Vector2(16, 12))
@@ -403,13 +419,241 @@ func toggle_stats() -> void:
 	stats_panel.visible = not stats_panel.visible
 
 
+func _build_options() -> void:
+	options_panel = _center_panel(520)
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 10)
+	options_panel.add_child(v)
+	_label(v, "OPÇÕES", 18, UiTheme.ACCENT)
+	var grid := GridContainer.new()
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", 16)
+	grid.add_theme_constant_override("v_separation", 10)
+	v.add_child(grid)
+	_label(grid, "Volume")
+	var vol := HSlider.new()
+	vol.min_value = 0.0
+	vol.max_value = 1.0
+	vol.step = 0.05
+	vol.value = float(Settings.get_value("volume"))
+	vol.custom_minimum_size.x = 260
+	vol.value_changed.connect(func(x): _set_option("volume", x))
+	grid.add_child(vol)
+	_label(grid, "Escala da interface")
+	var sc := OptionButton.new()
+	var scales := [0.85, 1.0, 1.15, 1.3, 1.5]
+	for s in scales:
+		sc.add_item("%d%%" % int(s * 100))
+	sc.selected = maxi(scales.find(float(Settings.get_value("ui_scale"))), 1) if float(Settings.get_value("ui_scale")) != 0.85 else 0
+	sc.item_selected.connect(func(i): _set_option("ui_scale", scales[i]))
+	grid.add_child(sc)
+	_label(grid, "Velocidade da câmera")
+	var cs := HSlider.new()
+	cs.min_value = 0.5
+	cs.max_value = 2.5
+	cs.step = 0.1
+	cs.value = float(Settings.get_value("camera_speed"))
+	cs.custom_minimum_size.x = 260
+	cs.value_changed.connect(func(x): _set_option("camera_speed", x))
+	grid.add_child(cs)
+	for opt in [["fullscreen", "Tela cheia"], ["edge_pan", "Mover câmera pela borda da tela"], ["hints", "Dicas contextuais"], ["minimap", "Minimapa"]]:
+		_label(grid, opt[1])
+		var cb := CheckButton.new()
+		cb.button_pressed = bool(Settings.get_value(opt[0]))
+		cb.focus_mode = Control.FOCUS_NONE
+		cb.toggled.connect(func(on): _set_option(opt[0], on))
+		grid.add_child(cb)
+	var row := HBoxContainer.new()
+	v.add_child(row)
+	_button(row, "Rever todas as dicas", func():
+		Settings.set_value("hints_seen", [])
+		toast("As dicas voltarão a aparecer"))
+	_button(row, "Fechar", toggle_options)
+	_label(v, "Idioma: Português (Brasil). Remapeamento de teclas: em breve.", 12, UiTheme.DIM)
+
+
+func _set_option(k: String, v) -> void:
+	Settings.set_value(k, v)
+	Settings.apply(main)
+
+
+func toggle_options() -> void:
+	options_panel.visible = not options_panel.visible
+
+
+func _build_hint() -> void:
+	hint_panel = PanelContainer.new()
+	hint_panel.add_theme_stylebox_override("panel", UiTheme.panel_style(0.92, Color(0.35, 0.8, 1.0, 0.7)))
+	game_ui.add_child(hint_panel)
+	var v := VBoxContainer.new()
+	hint_panel.add_child(v)
+	_label(v, "DICA", 12, Color(0.55, 0.85, 1.0))
+	hint_label = _label(v, "")
+	hint_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	hint_label.custom_minimum_size.x = 330
+	var row := HBoxContainer.new()
+	v.add_child(row)
+	_button(row, "Entendi", _dismiss_hint).add_theme_font_size_override("font_size", 12)
+	_button(row, "Desativar dicas", func():
+		_set_option("hints", false)
+		_dismiss_hint()).add_theme_font_size_override("font_size", 12)
+	_place(hint_panel, Control.PRESET_BOTTOM_LEFT, Vector2(12, 214))
+	hint_panel.visible = false
+
+
+func _dismiss_hint() -> void:
+	if _hint_id != "":
+		var seen: Array = Settings.get_value("hints_seen").duplicate()
+		seen.append(_hint_id)
+		Settings.set_value("hints_seen", seen)
+	_hint_id = ""
+	hint_panel.visible = false
+
+
+## Contextual tutorial: the first applicable hint the player has not dismissed.
+func _hint_candidates(w) -> Array:
+	var h := []
+	var t: float = w.time
+	if t > 15 and w.list("miner").is_empty():
+		h.append(["miner", "Selecione a Mineradora (2) e posicione-a sobre as pedras alaranjadas (minério de ferro). Depois ligue a saída (seta amarela) ao Núcleo com Esteiras (1)."])
+	for b in w.buildings.values():
+		if b.power_net == -1 and float(b.def.get("power", 0)) > 0:
+			h.append(["power_net", "%s está fora da rede elétrica. Construa Postes de Energia (6): a área quadrada mostra o alcance. Postes próximos se conectam sozinhos." % b.def.name])
+			break
+	if float(w.power.totals.get("sat", 1.0)) < 0.9 and float(w.power.totals.get("demand", 0)) > 0:
+		h.append(["power_low", "A demanda de energia passou da geração. Construa um Gerador a Carvão (5) e passe uma esteira de carvão encostada nele. As defesas recebem energia antes da produção."])
+	for b in w.list("turret_gun"):
+		if b.status == "sem munição":
+			h.append(["ammo", "Torres de munição puxam pentes de qualquer esteira encostada nelas. Leve a saída da Montadora (receita: Pente de Munição) para passar ao lado das torres."])
+			break
+	if not w.ghosts.is_empty():
+		h.append(["ghosts", "Estruturas destruídas viram ruínas vermelhas. Clique numa ruína ou pressione G para reconstruir tudo com os recursos do Núcleo."])
+	if w.waves.has_more(w) and not w.waves.active and w.waves.timer < 75 and w.list("turret_gun").is_empty() and w.list("turret_tesla").is_empty():
+		h.append(["no_defense", "Uma horda está chegando e não há torres! A Torre Elétrica (8) só precisa de energia; a Balística (7) precisa de munição por esteira."])
+	if not w.list("lab").is_empty() and w.research.current == "" and w.research.done.is_empty():
+		h.append(["research", "Pressione T para escolher uma pesquisa. O Laboratório consome Pacotes de Pesquisa (Montadora: placa + componente) recebidos por esteira."])
+	var congested := 0
+	for b in w.list("belt"):
+		if b.status == "saída bloqueada":
+			congested += 1
+	if congested >= 6:
+		h.append(["congestion", "Várias esteiras estão congestionadas. Abra as estatísticas (Tab) para ver gargalos e use V para rastrear de onde vêm e para onde vão os itens."])
+	if w.stats.waves >= 1 and w.list("repair").is_empty():
+		h.append(["repair", "Uma Estação de Reparo (0) conserta estruturas próximas consumindo placas de ferro que ela puxa de esteiras encostadas."])
+	if w.list("belt").size() > 40 and w.stats.waves >= 2:
+		h.append(["blueprint", "Shift+arrastar seleciona uma área. Ctrl+C copia como planta, R gira e o clique cola — ótimo para replicar linhas de produção."])
+	return h
+
+
+func _update_hints(w, delta: float) -> void:
+	_hint_timer -= delta
+	if _hint_timer > 0.0:
+		return
+	_hint_timer = 1.0
+	if not bool(Settings.get_value("hints")):
+		hint_panel.visible = false
+		return
+	if _hint_id != "":
+		return
+	var seen: Array = Settings.get_value("hints_seen")
+	for c in _hint_candidates(w):
+		if not (c[0] in seen):
+			_hint_id = c[0]
+			hint_label.text = c[1]
+			hint_panel.visible = true
+			return
+
+
+func _build_minimap() -> void:
+	var p := _panel(game_ui)
+	minimap = TextureRect.new()
+	minimap.custom_minimum_size = Vector2(180, 180)
+	minimap.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	minimap.stretch_mode = TextureRect.STRETCH_SCALE
+	minimap.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	minimap.mouse_default_cursor_shape = Control.CURSOR_CROSS
+	minimap.gui_input.connect(_on_minimap_input)
+	minimap.tooltip_text = "Minimapa — clique para mover a câmera"
+	p.add_child(minimap)
+	_place(p, Control.PRESET_BOTTOM_LEFT, Vector2(12, 10))
+
+
+## Builds the static terrain layer of the minimap for a new world.
+func bind_world(w) -> void:
+	_mini_base = Image.create(w.width, w.height, false, Image.FORMAT_RGBA8)
+	for y in w.height:
+		for x in w.width:
+			var t: int = w.terrain[y * w.width + x]
+			var c := Color(0.13, 0.12, 0.11)
+			match t:
+				Defs.T_ROCK:
+					c = Color(0.3, 0.29, 0.27)
+				Defs.T_IRON:
+					c = Color(0.5, 0.25, 0.12)
+				Defs.T_COAL:
+					c = Color(0.04, 0.04, 0.04)
+			_mini_base.set_pixel(x, y, c)
+	for sp in w.spawn_points:
+		for dy in range(-1, 2):
+			for dx in range(-1, 2):
+				var q: Vector2i = sp + Vector2i(dx, dy)
+				if w.in_bounds(q):
+					_mini_base.set_pixel(q.x, q.y, Color(0.8, 0.1, 0.05))
+	_mini_img = _mini_base.duplicate()
+	_mini_tex = ImageTexture.create_from_image(_mini_img)
+	minimap.texture = _mini_tex
+	_mini_timer = 0.0
+
+
+func _update_minimap(w, delta: float) -> void:
+	minimap.get_parent().visible = bool(Settings.get_value("minimap"))
+	_mini_timer -= delta
+	if _mini_timer > 0.0 or _mini_base == null or not minimap.get_parent().visible:
+		return
+	_mini_timer = 0.4
+	_mini_img.copy_from(_mini_base)
+	var cols := [Color(0.75, 0.72, 0.65), Color(1.0, 0.75, 0.25), Color(1.0, 0.3, 0.2)]
+	for b in w.buildings.values():
+		var c: Color = Color(1.0, 0.6, 0.2) if b.kind == "core" else (Color(0.55, 0.55, 0.55) if b.kind == "wall" else cols[b.status_level()])
+		if b.kind == "belt":
+			c = Color(0.42, 0.4, 0.36)
+		for y in b.size.y:
+			for x in b.size.x:
+				_mini_img.set_pixel(b.pos.x + x, b.pos.y + y, c)
+	for key in w.ghosts:
+		var g: Dictionary = w.ghosts[key]
+		_mini_img.set_pixel(int(g.x), int(g.y), Color(0.6, 0.1, 0.1))
+	for e in w.enemies.values():
+		var q := Vector2i(floori(e.pos.x), floori(e.pos.y))
+		if w.in_bounds(q):
+			_mini_img.set_pixel(q.x, q.y, Color(1.0, 0.1, 0.1) if not e.def.get("flying", false) else Color(1.0, 0.4, 0.9))
+	# Camera focus marker.
+	var cp := Vector2i(floori(main.camera.position.x), floori(main.camera.position.z))
+	for d in range(-2, 3):
+		for q in [cp + Vector2i(d, 0), cp + Vector2i(0, d)]:
+			if w.in_bounds(q):
+				_mini_img.set_pixel(q.x, q.y, Color(0.4, 0.9, 1.0))
+	_mini_tex.update(_mini_img)
+
+
+func _on_minimap_input(ev: InputEvent) -> void:
+	var w = main.world
+	if w == null:
+		return
+	if (ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT) or (ev is InputEventMouseMotion and ev.button_mask & MOUSE_BUTTON_MASK_LEFT):
+		var r := Vector2(ev.position) / minimap.size
+		main.camera.focus(Vector3(r.x * w.width, 0, r.y * w.height))
+		_mini_timer = 0.0
+
+
 func toggle_research() -> void:
 	research_panel.visible = not research_panel.visible
 	_research_key = ""
 
 
 func close_overlays() -> bool:
-	var any := help_panel.visible or stats_panel.visible or research_panel.visible
+	var any := help_panel.visible or stats_panel.visible or research_panel.visible or options_panel.visible
+	options_panel.visible = false
 	help_panel.visible = false
 	stats_panel.visible = false
 	research_panel.visible = false
@@ -446,6 +690,8 @@ func _process(delta: float) -> void:
 		return
 	_update_tooltip()
 	_update_transmission(w, delta)
+	_update_minimap(w, delta)
+	_update_hints(w, delta)
 	_refresh -= delta
 	if _refresh > 0.0:
 		return
@@ -520,25 +766,39 @@ func _update_transmission(w, delta: float) -> void:
 func _update_alerts(w) -> void:
 	var n: int = w.alerts.size()
 	while alerts_box.get_child_count() < n:
-		var l := Label.new()
+		# Alerts are flat buttons: clicking one moves the camera to where it happened.
+		var l := Button.new()
+		l.flat = true
+		l.focus_mode = Control.FOCUS_NONE
+		l.alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		l.custom_minimum_size.x = 428
-		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		l.add_theme_constant_override("outline_size", 5)
 		l.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
+		l.pressed.connect(_on_alert.bind(alerts_box.get_child_count()))
 		alerts_box.add_child(l)
 	for i in alerts_box.get_child_count():
-		var l: Label = alerts_box.get_child(i)
+		var l: Button = alerts_box.get_child(i)
 		if i >= n:
 			l.visible = false
 			continue
 		var a: Dictionary = w.alerts[i]
 		var age: float = w.time - float(a.time)
 		l.visible = age < 25.0
-		l.text = a.text
+		l.text = a.text + ("  ⌖" if a.pos != null else "")
+		l.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if a.pos != null else Control.CURSOR_ARROW
 		var c: Color = {"danger": UiTheme.BAD, "warn": UiTheme.WARN, "info": UiTheme.OK}.get(a.level, UiTheme.TEXT)
-		l.add_theme_color_override("font_color", c)
+		for st in ["font_color", "font_hover_color", "font_pressed_color"]:
+			l.add_theme_color_override(st, c if st == "font_color" else c.lightened(0.3))
 		l.modulate.a = clampf(1.6 - age / 15.0, 0.25, 1.0)
+
+
+func _on_alert(i: int) -> void:
+	var w = main.world
+	if w == null or i >= w.alerts.size() or w.alerts[i].pos == null:
+		return
+	var p: Vector2 = w.alerts[i].pos
+	main.camera.focus(Vector3(p.x, 0, p.y))
 
 
 func _update_hotbar(w) -> void:
@@ -559,7 +819,10 @@ func _update_tooltip() -> void:
 	var c = main.controller
 	var w = main.world
 	var txt := ""
-	if c.tool != "":
+	if c.tool == c.BLUEPRINT_TOOL:
+		txt = "[b]Planta[/b] (%d estruturas)  [color=#8f877c]%s[/color]" % [c.blueprint.entries.size(), _cost_text(load("res://src/sim/blueprint.gd").cost(w, c.blueprint))]
+		txt += "\n" + ("[color=#ff6a50]%s[/color]" % c.last_reason if c.last_reason != "" else "[color=#8f877c]Clique cola · R gira · Clique direito/Esc cancela[/color]")
+	elif c.tool != "":
 		var def: Dictionary = w.data.buildings[c.tool]
 		txt = "[b]%s[/b]  [color=#8f877c]%s[/color]" % [def.name, _cost_text(def.get("cost", {}))]
 		if c.last_reason != "":
@@ -570,6 +833,8 @@ func _update_tooltip() -> void:
 		var b = c.hovered_building()
 		if b != null:
 			txt = "[b]%s[/b]  %d/%d\n%s" % [b.def.name, int(b.hp), int(b.max_hp), _status_bb(b)]
+			if c.trace_mode:
+				txt += "\n[color=#ffa040]■ %d fontes[/color]  [color=#50d8ff]■ %d destinos[/color]" % [c.trace_up.size(), c.trace_down.size()]
 		else:
 			var g: int = w.ghost_at(c.hover)
 			if g != -1:
@@ -598,11 +863,17 @@ func _status_bb(b) -> String:
 
 
 func _update_info(w) -> void:
+	var sel: Array = main.controller.selection
+	if sel.size() > 1:
+		_update_multi_info(w, sel)
+		return
 	var b = w.buildings.get(main.controller.selected)
 	info_panel.visible = b != null
 	if b == null:
 		_info_for = -1
 		return
+	if _info_for == -2:
+		_info_for = -1
 	if _info_for != b.id:
 		_info_for = b.id
 		for ch in info_recipes.get_children():
@@ -619,6 +890,7 @@ func _update_info(w) -> void:
 	for ch in info_recipes.get_children():
 		if ch is Button:
 			ch.set_pressed_no_signal(ch.text == w.data.recipes.get(b.recipe, {}).get("name", ""))
+	info_hp.visible = true
 	info_title.text = b.def.name
 	var lvl: int = b.status_level()
 	info_status.text = "● " + (b.status if b.status != "" else "ok")
@@ -678,6 +950,35 @@ func _update_info(w) -> void:
 	info_body.text = "\n".join(lines)
 
 
+func _update_multi_info(w, sel: Array) -> void:
+	info_panel.visible = true
+	if _info_for != -2:
+		_info_for = -2
+		for ch in info_recipes.get_children():
+			ch.queue_free()
+		_button(info_recipes, "Copiar como planta (Ctrl+C)", main.controller.copy_selection_blueprint).add_theme_font_size_override("font_size", 12)
+		info_toggle.visible = true
+		info_demolish.visible = true
+	var counts := {}
+	var levels := [0, 0, 0]
+	for id in sel:
+		var b = w.buildings.get(id)
+		if b == null:
+			continue
+		counts[b.def.name] = int(counts.get(b.def.name, 0)) + 1
+		levels[b.status_level()] += 1
+	info_title.text = "%d estruturas selecionadas" % sel.size()
+	info_status.text = "● %d ok   ● %d atenção   ● %d falha" % levels
+	info_status.add_theme_color_override("font_color", UiTheme.LEVEL_COLORS[2 if levels[2] > 0 else (1 if levels[1] > 0 else 0)])
+	info_hp.visible = false
+	var parts := []
+	for k in counts:
+		parts.append("%d× %s" % [counts[k], k])
+	var bp_cost: Dictionary = load("res://src/sim/blueprint.gd").cost(w, load("res://src/sim/blueprint.gd").capture(w, sel))
+	info_body.text = "\n".join(parts) + "\n\nCusto para replicar: " + _cost_text(bp_cost)
+	info_toggle.text = "Ligar/Desligar todas"
+
+
 func _update_research(w) -> void:
 	var rs = w.research
 	if rs.current != "":
@@ -735,15 +1036,16 @@ func _on_recipe(r: String) -> void:
 
 
 func _on_toggle() -> void:
+	if main.controller.selection.size() > 1:
+		main.controller.toggle_selection()
+		return
 	var b = main.world.buildings.get(main.controller.selected)
 	if b != null:
 		b.enabled = not b.enabled
 
 
 func _on_demolish() -> void:
-	var w = main.world
-	w.remove(main.controller.selected)
-	main.controller.selected = 0
+	main.controller.demolish_selection()
 
 
 func _update_stats(w) -> void:
@@ -789,6 +1091,8 @@ const HELP_TEXT := """[b]Objetivo:[/b] manter o Núcleo vivo. Se ele cair, a par
 
 [b]Câmera[/b]: WASD/setas movem · roda do mouse aproxima · botão do meio arrasta · Z/C giram a câmera.
 [b]Construção[/b]: teclas 1–0, -, = ou barra inferior escolhem a estrutura · clique esquerdo constrói (arraste para esteiras, muros e postes) · R gira (Shift+R inverte) · clique direito demole (arraste para várias) · Q copia o tipo sob o cursor · Ctrl+C / Ctrl+V copiam a configuração de uma máquina · G reconstrói tudo que foi destruído · Del demole a seleção.
+[b]Seleção e plantas[/b]: Shift+arrastar seleciona uma área · Ctrl+C copia a seleção como planta · R gira a planta · clique cola · B reutiliza a última planta · Ctrl+V cola a configuração em todas as selecionadas.
+[b]Diagnóstico[/b]: V liga o rastreamento de fluxo — passe o mouse sobre uma estrutura para ver suas [color=#ffa040]fontes[/color] e [color=#50d8ff]destinos[/color] · Tab mostra gargalos · clique num alerta para ir até ele · clique no minimapa para mover a câmera.
 [b]Pesquisa[/b]: construa um Laboratório e leve Pacotes de Pesquisa (Montadora: placa + componente) por esteira. T abre a árvore. Pacotes Militares (munição + componente) liberam a linha de defesa avançada.
 [b]Jogo[/b]: Espaço pausa · +/− velocidade · N chama a próxima horda agora · Tab estatísticas · F3 depuração (rotas, redes, alvos) · F5 salvar · F9 carregar · Esc menu.
 
